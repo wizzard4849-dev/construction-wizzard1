@@ -313,3 +313,17 @@ function calculateEstimate() {
     total,
   });
 }
+<button
+  onClick={calculateEstimate}
+  style={{
+    marginTop: 20,
+    padding: "12px",
+    width: "100%",
+    background: "black",
+    color: "white",
+    borderRadius: 8,
+    cursor: "pointer"
+  }}
+>
+  Calculate Estimate
+</button>
