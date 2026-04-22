@@ -30,7 +30,7 @@ export default function DemoPage() {
   const [overheadPercent, setOverheadPercent] = useState(10);
   const [profitPercent, setProfitPercent] = useState(15);
 
-  const estimate = useMemo(() => {
+  const [finalEstimate, setFinalEstimate] = useState<any>(null);
     const baseEstimate = squareFeet * costPerSqFt;
     const directCosts = baseEstimate + materialsCost + laborCost;
     const overhead = directCosts * (overheadPercent / 100);
@@ -298,3 +298,18 @@ const rowStyle: React.CSSProperties = {
   justifyContent: "space-between",
   marginBottom: 12,
 };
+function calculateEstimate() {
+  const baseEstimate = squareFeet * costPerSqFt;
+  const directCosts = baseEstimate + materialsCost + laborCost;
+  const overhead = directCosts * (overheadPercent / 100);
+  const profit = (directCosts + overhead) * (profitPercent / 100);
+  const total = directCosts + overhead + profit;
+
+  setFinalEstimate({
+    baseEstimate,
+    directCosts,
+    overhead,
+    profit,
+    total,
+  });
+}
