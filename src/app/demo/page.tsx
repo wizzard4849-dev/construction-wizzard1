@@ -89,6 +89,35 @@ export default function DemoPage() {
           }}
         >
           <h2 style={{ marginTop: 0 }}>Estimate Inputs</h2>
+          <div className="inputs-panel">
+  
+  <h2>Estimate Inputs</h2>
+
+  {/* inputs */}
+  <input ... />
+  <input ... />
+  <input ... />
+  <input ... />
+
+  {/* 👇 THIS IS WHERE IT GOES */}
+  <button 
+    onClick={calculateEstimate}
+    style={{
+      marginTop: 20,
+      padding: "14px",
+      width: "100%",
+      background: "#000",
+      color: "#fff",
+      borderRadius: "8px",
+      fontWeight: "bold",
+      fontSize: "16px",
+      cursor: "pointer"
+    }}
+  >
+    Calculate Estimate
+  </button>
+
+</div>
 <div>
   <h2>Estimate Inputs</h2>
 
