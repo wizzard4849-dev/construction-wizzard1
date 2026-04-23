@@ -391,7 +391,7 @@ export default function DemoPage() {
           <hr />
           <div style={{ ...rowStyle, fontSize: 22 }}>
             <span>Total Bid</span>
-            <strong>{money(estimate.total)}</strong>
+            <strong>{money(finalEstimate?.total || 0))}</strong>
           </div>
         </section>
       </div>
@@ -415,7 +415,7 @@ export default function DemoPage() {
           Estimated project size: <strong>{squareFeet.toLocaleString()} sq ft</strong>
         </p>
         <p>
-          Proposed contract value: <strong>{money(estimate.total)}</strong>
+          Proposed contract value: <strong>{money(finalEstimate?.total || 0))}</strong>
         </p>
       </section>
 
