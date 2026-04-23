@@ -235,6 +235,23 @@ export default function DemoPage() {
               onChange={(e) => setProfitPercent(Number(e.target.value) || 0)}
               style={inputStyle}
             />
+            <button
+  onClick={calculateEstimate}
+  style={{
+    marginTop: 20,
+    padding: "14px",
+    width: "100%",
+    background: "#000",
+    color: "#fff",
+    borderRadius: "8px",
+    fontWeight: "bold",
+    fontSize: "16px",
+    cursor: "pointer",
+    border: "none"
+  }}
+>
+  Calculate Estimate
+</button>
             <div style={{ marginBottom: 0 }}>
   <label>Profit %</label>
               <div style={{ marginBottom: 0 }}>
