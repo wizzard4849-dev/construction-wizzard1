@@ -237,6 +237,15 @@ export default function DemoPage() {
             />
             <div style={{ marginBottom: 0 }}>
   <label>Profit %</label>
+              <div style={{ marginBottom: 0 }}>
+  <label>Profit %</label>
+  <input
+    type="number"
+    value={profitPercent}
+    onChange={(e) => setProfitPercent(Number(e.target.value) || 0)}
+    style={inputStyle}
+  />
+</div>
   <input
     type="number"
     value={profitPercent}
