@@ -89,7 +89,31 @@ export default function DemoPage() {
           }}
         >
           <h2 style={{ marginTop: 0 }}>Estimate Inputs</h2>
+<div>
+  <h2>Estimate Inputs</h2>
 
+  {/* inputs */}
+  <input ... />
+  <input ... />
+  <input ... />
+
+  {/* 👇 ADD IT HERE */}
+  <button 
+    onClick={calculateEstimate} 
+    style={{
+      marginTop: 20,
+      padding: "12px",
+      width: "100%",
+      backgroundColor: "black",
+      color: "white",
+      borderRadius: "8px",
+      fontWeight: "bold",
+      cursor: "pointer"
+    }}
+  >
+    Calculate Estimate
+  </button>
+</div>
           <div style={{ marginBottom: 16 }}>
             <label>Project Name</label>
             <input
