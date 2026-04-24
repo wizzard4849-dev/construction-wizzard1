@@ -7,12 +7,13 @@ const trades = {
   painting: { label: "Painting", defaultCostPerSqFt: 1.5 },
   flooring: { label: "Flooring", defaultCostPerSqFt: 4.25 },
   hvac: { label: "HVAC", defaultCostPerSqFt: 8.5 },
+  electrical: { label: "Electrical", defaultCostPerSqFt: 7.5 },
 };
 
-function money(value: number) {
-  return new Intl.NumberFormat("en-US", {
+function money(value: number, currency: "USD" | "CAD") {
+  return new Intl.NumberFormat(currency === "CAD" ? "en-CA" : "en-US", {
     style: "currency",
-    currency: "USD",
+    currency,
     maximumFractionDigits: 2,
   }).format(value);
 }
@@ -20,6 +21,7 @@ function money(value: number) {
 export default function DemoPage() {
   const [projectName, setProjectName] = useState("Office Renovation");
   const [clientName, setClientName] = useState("North Star Builders");
+  const [currency, setCurrency] = useState<"USD" | "CAD">("USD");
   const [trade, setTrade] = useState<keyof typeof trades>("drywall");
   const [squareFeet, setSquareFeet] = useState(2000);
   const [costPerSqFt, setCostPerSqFt] = useState(trades.drywall.defaultCostPerSqFt);
@@ -59,7 +61,7 @@ export default function DemoPage() {
 
   return (
     <main style={{ padding: 40, fontFamily: "Arial, sans-serif", maxWidth: 900, margin: "0 auto" }}>
-      <h1 style={{ marginBottom: 8 }}>Construction Wizzard Demo</h1>
+      <h1 style={{ marginBottom: 8 }}>Construction Wizzard</h1>
       <p style={{ marginTop: 0, color: "#555" }}>
         Real working estimator • proposal preview • bid tracking
       </p>
@@ -74,6 +76,13 @@ export default function DemoPage() {
 
           <Field label="Client Name">
             <input value={clientName} onChange={(e) => setClientName(e.target.value)} style={inputStyle} />
+          </Field>
+
+          <Field label="Currency">
+            <select value={currency} onChange={(e) => setCurrency(e.target.value as "USD" | "CAD")} style={inputStyle}>
+              <option value="USD">U.S. Dollar (USD)</option>
+              <option value="CAD">Canadian Dollar (CAD)</option>
+            </select>
           </Field>
 
           <Field label="Trade">
@@ -120,22 +129,23 @@ export default function DemoPage() {
 
           <Row label="Project" value={projectName} />
           <Row label="Client" value={clientName} />
+          <Row label="Currency" value={currency} />
           <Row label="Trade" value={trades[trade].label} />
 
           <hr />
 
-          <Row label="Base Estimate" value={money(finalEstimate.baseEstimate)} />
-          <Row label="Materials" value={money(materialsCost)} />
-          <Row label="Labor" value={money(laborCost)} />
-          <Row label="Direct Costs" value={money(finalEstimate.directCosts)} />
-          <Row label="Overhead" value={money(finalEstimate.overhead)} />
-          <Row label="Profit" value={money(finalEstimate.profit)} />
+          <Row label="Base Estimate" value={money(finalEstimate.baseEstimate, currency)} />
+          <Row label="Materials" value={money(materialsCost, currency)} />
+          <Row label="Labor" value={money(laborCost, currency)} />
+          <Row label="Direct Costs" value={money(finalEstimate.directCosts, currency)} />
+          <Row label="Overhead" value={money(finalEstimate.overhead, currency)} />
+          <Row label="Profit" value={money(finalEstimate.profit, currency)} />
 
           <hr />
 
           <div style={{ ...rowStyle, fontSize: 22 }}>
             <span>Total Bid</span>
-            <strong>{money(finalEstimate.total)}</strong>
+            <strong>{money(finalEstimate.total, currency)}</strong>
           </div>
         </section>
       </div>
@@ -151,7 +161,7 @@ export default function DemoPage() {
           Estimated project size: <strong>{squareFeet.toLocaleString()} sq ft</strong>
         </p>
         <p>
-          Total contract value: <strong>{money(finalEstimate.total)}</strong>
+          Total contract value: <strong>{money(finalEstimate.total, currency)}</strong>
         </p>
         <p>
           This estimate includes labor, materials, overhead, and profit. All pricing is subject to site verification and final scope approval.
@@ -161,7 +171,7 @@ export default function DemoPage() {
       <section style={{ ...cardStyle, marginTop: 30, background: "#fff" }}>
         <h2 style={{ marginTop: 0 }}>Bid Tracking</h2>
         <ul style={{ paddingLeft: 20 }}>
-          <li>{projectName} — Pending — {money(finalEstimate.total)}</li>
+          <li>{projectName} — Pending — {money(finalEstimate.total, currency)}</li>
           <li>Warehouse Upgrade — Approved</li>
           <li>Retail Buildout — Rejected</li>
         </ul>
