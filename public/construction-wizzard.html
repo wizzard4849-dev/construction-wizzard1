@@ -28,7 +28,7 @@ button,input,select,textarea{font-family:var(--fb)}
 button{cursor:pointer}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:#ccc;border-radius:99px}
- 
+
 /* LAYOUT */
 #app{display:flex;flex-direction:column;height:100vh;overflow:hidden;position:relative}
 #topbar{height:52px;background:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;border-bottom:1px solid #2a2a2a;z-index:200}
@@ -42,10 +42,10 @@ button{cursor:pointer}
 .ttrial{background:#1a7040;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700}
 .tuser{display:flex;align-items:center;gap:7px;color:#ccc;font-size:12px}
 .tavatar{width:28px;height:28px;border-radius:50%;background:var(--gold2);color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
- 
+
 /* BODY */
 #body{display:flex;flex:1;overflow:hidden}
- 
+
 /* SIDEBAR */
 #sidebar{width:210px;background:var(--ink2);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column;padding-bottom:20px}
 .ssec{padding:16px 14px 4px;font-size:9px;font-weight:700;letter-spacing:.14em;color:#444;text-transform:uppercase}
@@ -59,32 +59,32 @@ button{cursor:pointer}
 .sb-user-plan{font-size:10px;color:var(--gold2);font-weight:700;letter-spacing:.04em}
 .sb-logout{margin-top:8px;width:100%;padding:6px;background:transparent;border:1px solid #333;color:#666;border-radius:6px;font-size:11px;cursor:pointer}
 .sb-logout:hover{border-color:#555;color:#aaa}
- 
+
 /* MAIN */
 #main{flex:1;overflow-y:auto;background:var(--slate)}
 .page{padding:24px;max-width:1180px;margin:0 auto;animation:pi .18s ease}
 @keyframes pi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
- 
+
 /* PAGE HEADER */
 .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border)}
 .phl{display:flex;align-items:center;gap:12px}
 .phico{width:46px;height:46px;background:var(--white);border:1px solid var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:var(--sh)}
 .phtitle{font-family:var(--fh);font-size:19px;font-weight:800;color:var(--ink)}
 .phsub{font-size:12px;color:var(--muted);margin-top:1px}
- 
+
 /* CARDS */
 .card{background:var(--white);border:1px solid var(--border);border-radius:var(--rlg);padding:20px;box-shadow:var(--sh)}
 .ch{font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
 .g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:18px}
 .g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 .g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
- 
+
 /* STAT CARDS */
 .sc{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh)}
 .sv{font-size:22px;font-weight:800;font-family:var(--fh);color:var(--ink)}
 .sl{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.07em;font-weight:600}
 .sdelta{font-size:10px;margin-top:4px;font-weight:600}
- 
+
 /* FORMS */
 .field{margin-bottom:13px}
 .field label{display:block;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
@@ -103,7 +103,7 @@ textarea.inp{resize:vertical;min-height:76px}
 .bfull{width:100%;padding:12px}
 .bsm{padding:5px 11px;font-size:11.5px}
 .bxl{padding:14px 32px;font-size:15px;border-radius:9px}
- 
+
 /* PILLS */
 .pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap}
 .pg{background:var(--gbg);color:var(--green)}
@@ -113,14 +113,14 @@ textarea.inp{resize:vertical;min-height:76px}
 .pgr{background:#f0ede8;color:var(--muted)}
 .ppro{background:#1a1200;color:var(--gold2)}
 .ptrial{background:#0a2a1a;color:#4ade80}
- 
+
 /* TABLE */
 .tbl{width:100%;border-collapse:collapse;font-size:13px}
 .tbl th{text-align:left;padding:7px 10px;font-size:9.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)}
 .tbl td{padding:10px 10px;border-bottom:.5px solid var(--border);color:var(--text);vertical-align:middle}
 .tbl tr:last-child td{border:none}
 .tbl tr:hover td{background:#faf8f4}
- 
+
 /* MISC */
 .divider{border:none;border-top:1px solid var(--border);margin:14px 0}
 .pbar{height:5px;background:#eae7e0;border-radius:99px;overflow:hidden}
@@ -137,13 +137,13 @@ textarea.inp{resize:vertical;min-height:76px}
 .toast.success{background:#1a7040}
 .toast.error{background:#a82020}
 @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
- 
+
 /* MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px}
 .modal-box{background:var(--white);border-radius:var(--rlg);padding:28px;width:100%;max-width:480px;box-shadow:var(--shlg);max-height:92vh;overflow-y:auto}
 .modal-box h3{font-family:var(--fh);font-size:19px;margin-bottom:5px}
 .modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
- 
+
 /* AUTH */
 .auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--ink);background-image:radial-gradient(circle,#ffffff07 1px,transparent 1px);background-size:22px 22px}
 .auth-card{background:var(--white);border-radius:var(--rlg);padding:36px;width:100%;max-width:420px;box-shadow:var(--shlg)}
@@ -158,7 +158,7 @@ textarea.inp{resize:vertical;min-height:76px}
 .social-btn:hover{background:var(--slate)}
 .or-divider{display:flex;align-items:center;gap:10px;margin:14px 0;font-size:11px;color:var(--faint)}
 .or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--border)}
- 
+
 /* HERO */
 .hero{background:var(--ink);padding:64px 28px 72px;position:relative;overflow:hidden}
 .hero-bg{position:absolute;inset:0;background-image:radial-gradient(circle,#ffffff08 1px,transparent 1px);background-size:24px 24px}
@@ -171,7 +171,7 @@ textarea.inp{resize:vertical;min-height:76px}
 .hero-ctas{display:flex;gap:10px;flex-wrap:wrap}
 .hero-cta{background:var(--gold2);color:var(--ink);border:none;border-radius:9px;padding:13px 26px;font-weight:700;font-size:14px}
 .hero-sec{background:transparent;color:#ddd;border:1px solid #444;border-radius:9px;padding:13px 22px;font-weight:500;font-size:14px}
- 
+
 /* PRICING */
 .pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:20px}
 .pricing-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rlg);padding:26px;position:relative;transition:transform .15s,box-shadow .15s}
@@ -185,7 +185,7 @@ textarea.inp{resize:vertical;min-height:76px}
 .pricing-feature{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--muted);padding:5px 0;border-bottom:.5px solid var(--border)}
 .pricing-feature:last-child{border:none}
 .pricing-feature::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
- 
+
 /* HOME TOOLS */
 .tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .tc{background:var(--white);border:1px solid var(--border);border-radius:var(--rlg);padding:18px;cursor:pointer;transition:transform .15s,box-shadow .15s;text-align:left}
@@ -193,27 +193,27 @@ textarea.inp{resize:vertical;min-height:76px}
 .tc-title{font-family:var(--fh);font-size:14px;font-weight:700;margin:8px 0 4px;color:var(--ink)}
 .tc-desc{font-size:11.5px;color:var(--muted);line-height:1.55}
 .tc-arrow{margin-top:11px;font-size:11px;font-weight:700;color:var(--blue)}
- 
+
 /* SAVE/LOAD */
 .project-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:box-shadow .15s;display:flex;justify-content:space-between;align-items:center}
 .project-card:hover{box-shadow:var(--sh)}
 .project-card-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px}
 .project-card-meta{font-size:11px;color:var(--muted)}
 .project-actions{display:flex;gap:6px}
- 
+
 /* STATS STRIP */
 .sstrip{background:var(--ink);padding:28px;display:flex;justify-content:center;gap:52px;flex-wrap:wrap}
- 
+
 /* GANTT */
 .gantt-label{width:140px;font-size:11px;color:var(--muted);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gantt-track{flex:1;height:22px;background:#eae7e0;border-radius:5px;position:relative;overflow:hidden}
 .gantt-bar{position:absolute;height:100%;border-radius:5px;display:flex;align-items:center;padding-left:7px;font-size:10px;font-weight:700;color:#fff}
- 
+
 /* AI CHAT */
 .ai-bubble{background:var(--white);border:1px solid var(--border);border-radius:11px;padding:11px 13px;font-size:13px;line-height:1.6;max-width:82%}
 .ai-bubble.user{background:var(--ink);color:#fff;border-color:var(--ink)}
 .ai-avatar{width:28px;height:28px;border-radius:50%;background:var(--gold2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
- 
+
 /* MOBILE RESPONSIVE */
 @media(max-width:768px){
   #sidebar{display:none}
@@ -226,7 +226,7 @@ textarea.inp{resize:vertical;min-height:76px}
 </head>
 <body>
 <div id="app"></div>
- 
+
 <script>
 // ═══════════════════════════════════════════════════════
 // APP STATE
@@ -239,14 +239,14 @@ const APP = {
   modalType: '',
   authMode: 'signup',
   authError: '',
- 
+
   // Subscription
   plans: {
     free_trial: { name:'Free Trial', price:0, limit:'7 days' },
     basic:      { name:'Basic', price:149, limit:'$149–$350/mo' },
     pro:        { name:'Pro', price:500, limit:'$500–$1,000/mo' },
   },
- 
+
   // Estimator
   est: {
     pn:'Office Renovation', cn:'North Star Builders',
@@ -254,14 +254,14 @@ const APP = {
     sqft:2000, csf:2.5, mat:1800, lab:2200, oh:10, pr:15
   },
   estRes: {b:0,d:0,o:0,p:0,t:0},
- 
+
   // Saved Projects (localStorage)
   savedProjects: [],
   activeProjectId: null,
- 
+
   // Safety
   safetyChecked:{}, safetyNote:'', safetyDone:false,
- 
+
   // Bids
   bids:[
     {id:1,p:'Downtown Office Reno',c:'North Star Builders',v:148200,s:'Pending',t:'Drywall',date:'2025-06-01'},
@@ -270,21 +270,21 @@ const APP = {
     {id:4,p:'Residential HVAC',c:'HomeBuilders Co.',v:34200,s:'Pending',t:'HVAC',date:'2025-06-03'},
   ],
   showBF:false,
- 
+
   // Logs
   logs:[
     {id:1,date:'2025-06-02',weather:'Sunny 22°C',crew:8,notes:'Framing complete FL3-4. Drywall delivery arrived.',photos:3},
     {id:2,date:'2025-06-01',weather:'Cloudy 18°C',crew:7,notes:'Electrical rough-in FL2. Minor delay.',photos:1},
   ],
   showLF:false,
- 
+
   // Punch
   punch:[
     {id:1,d:'Paint touch-up lobby wall',loc:'Lobby',as:'P. Chen',pri:'Low',s:'Open'},
     {id:2,d:'HVAC duct exposed ceiling',loc:'Floor 2',as:'R. Singh',pri:'High',s:'Open'},
     {id:3,d:'Missing door hardware Rm204',loc:'Floor 2',as:'T. Brown',pri:'Med',s:'Closed'},
   ],
- 
+
   // Schedule
   tasks:[
     {n:'Site Preparation',s:0,d:10,c:'#1848a8',pct:100},
@@ -294,20 +294,20 @@ const APP = {
     {n:'Drywall & Framing',s:40,d:16,c:'#d48a00',pct:10},
     {n:'Finishes & FFE',s:54,d:14,c:'#a82020',pct:0},
   ],
- 
+
   // Invoices
   inv:[
     {id:'INV-0041',cl:'North Star Builders',amt:14200,due:'2025-06-15',s:'Unpaid'},
     {id:'INV-0040',cl:'Apex Construction',amt:9800,due:'2025-05-30',s:'Paid'},
     {id:'INV-0039',cl:'Prime Contractors',amt:6200,due:'2025-05-20',s:'Overdue'},
   ],
- 
+
   // Change Orders
   cos:[
     {id:'CO-001',desc:'Waterproofing membrane B1',by:'Owner',v:8400,s:'Approved',date:'2025-05-20'},
     {id:'CO-002',desc:'Lobby flooring upgrade to marble',by:'Owner',v:24500,s:'Pending',date:'2025-06-01'},
   ],
- 
+
   // Job Costing
   cc:[
     {code:'1000',d:'Site Work',b:45000,a:43200,cm:1800},
@@ -316,7 +316,7 @@ const APP = {
     {code:'4000',d:'Electrical',b:87000,a:22000,cm:15000},
     {code:'5000',d:'Plumbing',b:68000,a:12000,cm:8000},
   ],
- 
+
   // Safety
   incidents:[
     {d:'2025-06-01',t:'Near Miss',desc:'Worker slipped near excavation',s:'Open'},
@@ -334,11 +334,11 @@ const APP = {
   ],
   mc:{}, mdone:false,
   compc:{},
- 
+
   // AI
   aiMsgs:[{r:'ai',t:"Hi! I'm your Construction AI Copilot. Ask me to summarize project status, predict budget risks, generate task lists, or flag safety concerns."}],
   aiInput:'', aiLoading:false,
- 
+
   // Workers
   workers:[
     {n:'James H.',t:'Framer',ci:'7:02 AM',h:6.5,on:true},
@@ -346,7 +346,7 @@ const APP = {
     {n:'Derek W.',t:'Plumber',ci:'—',h:0,on:false},
     {n:'Priya S.',t:'Drywaller',ci:'6:55 AM',h:6.8,on:true},
   ],
- 
+
   // Carbon
   carbon:[
     {n:'Concrete (ready-mix)',q:320,u:'m³',f:0.159,tot:50.9},
@@ -354,13 +354,13 @@ const APP = {
     {n:'Copper Piping (Plumbing)',q:800,u:'m',f:0.0032,tot:2.6},
     {n:'Triple Glazing',q:1200,u:'m²',f:0.024,tot:28.8},
   ],
- 
+
   // Payment
   payStep: 1,
   selectedPlan: 'pro',
   cardNumber:'', cardExpiry:'', cardCVV:'', cardName:'',
 };
- 
+
 // ═══════════════════════════════════════════════════════
 // TRADES (with Plumbing added)
 // ═══════════════════════════════════════════════════════
@@ -372,7 +372,7 @@ const TRADES = {
   electrical: {l:'Electrical',  c:7.5},
   plumbing:   {l:'Plumbing',    c:6.75},
 };
- 
+
 const SAFETY_ITEMS=[
   {id:'s1',t:'PPE inspected and worn by all crew'},
   {id:'s2',t:'Scaffolding inspected and secured'},
@@ -383,7 +383,7 @@ const SAFETY_ITEMS=[
   {id:'s7',t:'First aid kit stocked and accessible'},
   {id:'s8',t:'Toolbox talk completed with crew'},
 ];
- 
+
 const MEETING_ITEMS=[
   {id:'m1',t:'Attendance recorded for all crew'},
   {id:'m2',t:'Previous meeting minutes reviewed'},
@@ -393,7 +393,7 @@ const MEETING_ITEMS=[
   {id:'m6',t:'Near-miss reports reviewed'},
   {id:'m7',t:'Upcoming high-risk tasks identified'},
 ];
- 
+
 const COMPLIANCE_ITEMS=[
   {id:'c1',t:'OH&S Act requirements reviewed'},
   {id:'c2',t:'Site signage meets regulatory standards'},
@@ -402,7 +402,7 @@ const COMPLIANCE_ITEMS=[
   {id:'c5',t:'Subcontractor compliance docs received'},
   {id:'c6',t:'Environmental controls in place'},
 ];
- 
+
 const NAV=[
   {s:'Overview',items:[{id:'home',i:'⬡',l:'Dashboard'}]},
   {s:'Estimating & Bids',items:[
@@ -442,33 +442,33 @@ const NAV=[
     {id:'settings',i:'⚙️',l:'Settings & Plan'},
   ]},
 ];
- 
+
 // ═══════════════════════════════════════════════════════
 // UTILS
 // ═══════════════════════════════════════════════════════
 const g = id => document.getElementById(id);
 const money = (v,c='USD') => new Intl.NumberFormat(c==='CAD'?'en-CA':'en-US',{style:'currency',currency:c,maximumFractionDigits:0}).format(v);
- 
+
 function pill(s){
   const map={'Approved':'pg','Complete':'pg','Paid':'pg','Closed':'pg','Mitigated':'pg','Active':'pr','Rejected':'pr','Overdue':'pr','High':'pr','Pending':'pa','Open':'pa','Medium':'pa','Med':'pa','Low':'pg','On Track':'pg'};
   return `<span class="pill ${map[s]||'pgr'}">${s}</span>`;
 }
- 
+
 function ph2(ico,title,sub,act=''){
   return `<div class="ph"><div class="phl"><div class="phico">${ico}</div><div><div class="phtitle">${title}</div><div class="phsub">${sub}</div></div></div><div>${act}</div></div>`;
 }
- 
+
 function srow(l,v){return `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:9px"><span style="color:var(--muted)">${l}</span><strong>${v}</strong></div>`}
- 
+
 function calcEst(){
   const e=APP.est,b=e.sqft*e.csf,d=b+e.mat+e.lab,o=d*(e.oh/100),p=(d+o)*(e.pr/100);
   APP.estRes={b,d,o,p,t:d+o+p};
 }
- 
+
 function isPro(){return APP.user&&(APP.user.plan==='basic'||APP.user.plan==='pro');}
 function isTrial(){return APP.user&&APP.user.plan==='free_trial'&&APP.user.trialDaysLeft>0;}
 function hasAccess(){return isPro()||isTrial();}
- 
+
 function proGate(fn){
   if(!hasAccess()) return `<div class="locked">
     <div style="font-size:34px;margin-bottom:10px">🔒</div>
@@ -478,7 +478,7 @@ function proGate(fn){
   </div>`;
   return fn();
 }
- 
+
 function trialBanner(){
   if(!APP.user) return '';
   if(isTrial()) return `<div class="trial-banner">
@@ -488,7 +488,7 @@ function trialBanner(){
   if(!isPro()) return `<div class="banner"><span>⚡ You're on the Free plan. Upgrade to unlock all Pro features.</span><button class="btn bgold bsm" id="banBtn">View Plans →</button></div>`;
   return '';
 }
- 
+
 function showToast(msg, type='success'){
   const el = document.createElement('div');
   el.className = `toast ${type}`;
@@ -496,7 +496,7 @@ function showToast(msg, type='success'){
   document.body.appendChild(el);
   setTimeout(()=>el.remove(), 3000);
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // LOCAL STORAGE (simulates real database)
 // ═══════════════════════════════════════════════════════
@@ -506,7 +506,7 @@ function saveToStorage(key, data){
 function loadFromStorage(key, fallback=null){
   try{ const d=localStorage.getItem('cw_'+key); return d?JSON.parse(d):fallback; }catch(e){ return fallback; }
 }
- 
+
 function loadUserData(){
   const user = loadFromStorage('user');
   if(user){
@@ -521,7 +521,7 @@ function loadUserData(){
   APP.savedProjects = loadFromStorage('projects', []);
   APP.bids = loadFromStorage('bids', APP.bids);
 }
- 
+
 function saveUser(){
   saveToStorage('user', APP.user);
 }
@@ -531,22 +531,22 @@ function saveProjects(){
 function saveBids(){
   saveToStorage('bids', APP.bids);
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // AUTH (Real with localStorage persistence)
 // ═══════════════════════════════════════════════════════
 function handleSignup(email, password, name){
   if(!email||!password||!name){ APP.authError='Please fill in all fields.'; return false; }
   if(password.length<6){ APP.authError='Password must be at least 6 characters.'; return false; }
- 
+
   // Check if user exists
   const users = loadFromStorage('users', []);
   if(users.find(u=>u.email===email)){ APP.authError='An account with this email already exists.'; return false; }
- 
+
   // Create trial end date (7 days from now)
   const trialEnds = new Date();
   trialEnds.setDate(trialEnds.getDate()+7);
- 
+
   const user = {
     id: 'u_'+Date.now(),
     email, name,
@@ -555,7 +555,7 @@ function handleSignup(email, password, name){
     trialDaysLeft: 7,
     createdAt: new Date().toISOString(),
   };
- 
+
   users.push({...user, password}); // In real app: hash password
   saveToStorage('users', users);
   APP.user = user;
@@ -563,32 +563,32 @@ function handleSignup(email, password, name){
   APP.authError = '';
   return true;
 }
- 
+
 function handleSignin(email, password){
   if(!email||!password){ APP.authError='Please enter your email and password.'; return false; }
   const users = loadFromStorage('users', []);
   const user = users.find(u=>u.email===email && u.password===password);
   if(!user){ APP.authError='Incorrect email or password.'; return false; }
- 
+
   // Recalculate trial days
   if(user.plan==='free_trial' && user.trialEnds){
     const days = Math.ceil((new Date(user.trialEnds)-new Date())/(1000*60*60*24));
     user.trialDaysLeft = Math.max(0, days);
     if(days<=0) user.plan='expired';
   }
- 
+
   APP.user = user;
   saveUser();
   APP.authError = '';
   return true;
 }
- 
+
 function handleSignout(){
   APP.user = null;
   APP.page = 'home';
   render();
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // PAYMENTS (Stripe-ready frontend)
 // ═══════════════════════════════════════════════════════
@@ -610,7 +610,7 @@ function processPlanUpgrade(plan){
   showToast(`🎉 Welcome to ${APP.plans[plan]?.name||plan}! All features unlocked.`,'success');
   render();
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // SAVE / LOAD ESTIMATES
 // ═══════════════════════════════════════════════════════
@@ -632,7 +632,7 @@ function saveEstimate(){
   showToast('✓ Estimate saved to projects!','success');
   render();
 }
- 
+
 function loadEstimate(id){
   const proj = APP.savedProjects.find(p=>p.id===id);
   if(!proj) return;
@@ -643,14 +643,14 @@ function loadEstimate(id){
   showToast('✓ Estimate loaded!','success');
   render();
 }
- 
+
 function deleteProject(id){
   APP.savedProjects = APP.savedProjects.filter(p=>p.id!==id);
   saveProjects();
   showToast('Project deleted.','error');
   render();
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // RENDER ENGINE
 // ═══════════════════════════════════════════════════════
@@ -686,7 +686,7 @@ function render(){
     ${APP.showModal?modalHTML():''}`;
   bindAll();
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // TOPBAR
 // ═══════════════════════════════════════════════════════
@@ -708,7 +708,7 @@ function topbarHTML(){
     </div>
   </div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // SIDEBAR
 // ═══════════════════════════════════════════════════════
@@ -729,7 +729,7 @@ function sidebarHTML(){
     </div>
   </div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // PAGE ROUTER
 // ═══════════════════════════════════════════════════════
@@ -762,7 +762,7 @@ function pageHTML(){
   if(p==='settings') return settingsHTML();
   return '';
 }
- 
+
 function go(p){
   APP.page = p;
   if(!APP.user && p!=='home' && p!=='pricing'){
@@ -770,7 +770,7 @@ function go(p){
   }
   render();
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // HERO PAGE
 // ═══════════════════════════════════════════════════════
@@ -797,7 +797,7 @@ function heroHTML(){
       </div>
     </div>
   </div>
- 
+
   <div style="max-width:1100px;margin:0 auto;padding:56px 28px 32px">
     <div style="text-align:center;margin-bottom:40px">
       <div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:10px">Everything your team needs</div>
@@ -833,7 +833,7 @@ function heroHTML(){
         </button>`).join('')}
     </div>
   </div>
- 
+
   <div class="sstrip">
     ${[['$2.4B+','Estimated in bids'],['12,000+','Active contractors'],['6 Trades','Drywall to Plumbing'],['4.9 ★','Average rating']].map(([v,l])=>`
       <div style="text-align:center">
@@ -841,14 +841,14 @@ function heroHTML(){
         <div style="font-size:11px;color:#666;margin-top:3px">${l}</div>
       </div>`).join('')}
   </div>
- 
+
   <footer style="padding:20px 28px;display:flex;justify-content:space-between;border-top:1px solid var(--border);background:var(--slate);font-size:12px;color:var(--faint)">
     <span style="font-weight:700;font-family:var(--fh)">⬡ Construction Wizzard</span>
     <span>© ${new Date().getFullYear()} — Built for builders</span>
   </footer>
   </div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // PRICING PAGE
 // ═══════════════════════════════════════════════════════
@@ -867,7 +867,7 @@ function pricingPageHTML(){
       <h1 style="font-family:var(--fh);font-size:36px;font-weight:800;margin-bottom:10px">Start free. Scale as you grow.</h1>
       <p style="color:var(--muted);font-size:15px">7-day free trial included. No credit card required to start.</p>
     </div>
- 
+
     <div class="pricing-grid">
       <!-- FREE TRIAL -->
       <div class="pricing-card">
@@ -879,7 +879,7 @@ function pricingPageHTML(){
           ${['Full access to all features','Estimator with all 6 trades','Safety suite','Daily logs & punch lists','Invoice generation','1 user seat'].map(f=>`<div class="pricing-feature">${f}</div>`).join('')}
         </div>
       </div>
- 
+
       <!-- BASIC -->
       <div class="pricing-card">
         <div class="pricing-name">Basic</div>
@@ -890,7 +890,7 @@ function pricingPageHTML(){
           ${['Everything in Free Trial','Unlimited estimates','Save & load projects','Client database','Bid tracking','Invoice & quote system','Email support','3 user seats'].map(f=>`<div class="pricing-feature">${f}</div>`).join('')}
         </div>
       </div>
- 
+
       <!-- PRO -->
       <div class="pricing-card featured">
         <div class="pricing-badge">MOST POPULAR</div>
@@ -903,7 +903,7 @@ function pricingPageHTML(){
         </div>
       </div>
     </div>
- 
+
     <div style="text-align:center;margin-top:40px;padding:24px;background:var(--white);border-radius:var(--rlg);border:1px solid var(--border)">
       <div style="font-family:var(--fh);font-size:18px;font-weight:800;margin-bottom:6px">🚀 Blueprint Upload + AI Takeoff</div>
       <p style="color:var(--muted);font-size:13px;max-width:500px;margin:0 auto 16px">Upload a PDF blueprint and our AI automatically reads dimensions, counts materials, and generates a full estimate. The feature that turns this into a $50–$200/month product.</p>
@@ -913,7 +913,7 @@ function pricingPageHTML(){
   </div>
   ${APP.showModal?modalHTML():''}`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════════════════════════════
@@ -962,7 +962,7 @@ function dashHTML(){
     </div>
   </div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // ESTIMATOR (with Save)
 // ═══════════════════════════════════════════════════════
@@ -1013,7 +1013,7 @@ function estimHTML(){
     </div>
   </div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // SAVED PROJECTS
 // ═══════════════════════════════════════════════════════
@@ -1048,7 +1048,7 @@ function projectsHTML(){
       </div>`}
   </div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // BID TENDER
 // ═══════════════════════════════════════════════════════
@@ -1073,7 +1073,7 @@ function bidHTML(){
     </tbody></table>
   </div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // INVOICE
 // ═══════════════════════════════════════════════════════
@@ -1111,7 +1111,7 @@ function invoiceHTML(){
     </div>
   </div>`;
 }
- 
+
 // Daily Log, Punch List, Schedule, Safety pages (abbreviated for space)
 function dailyLogHTML(){
   return ph2('📓','Daily Logs','Progress, weather & photos from the field',`<button class="btn bink bsm" id="showLF">${APP.showLF?'Cancel':'+ New Log'}</button>`)+
@@ -1133,7 +1133,7 @@ function dailyLogHTML(){
     </div>`).join('')}
   </div>`;
 }
- 
+
 function punchHTML(){
   const open=APP.punch.filter(p=>p.s==='Open').length;
   return ph2('✅','Punch Lists','Quality control and deficiency tracking')+trialBanner()+
@@ -1149,7 +1149,7 @@ function punchHTML(){
     </tbody></table>
   </div>`;
 }
- 
+
 function scheduleHTML(){
   return ph2('📅','Schedule Sync','Dynamic Gantt charts — live for all stakeholders')+trialBanner()+
   `<div class="card"><div class="ch">Project Gantt — 70-Day View</div>
@@ -1163,7 +1163,7 @@ function scheduleHTML(){
     <div style="margin-top:12px;padding:10px 13px;background:var(--abg);border-radius:8px;font-size:12px;color:var(--amber);font-weight:600">⚠ Structural Steel 65% — 5 days behind. Stakeholders notified automatically.</div>
   </div>`;
 }
- 
+
 // Safety pages
 function safetyHTML(){
   const done=Object.values(APP.safetyChecked).filter(Boolean).length,pct=Math.round(done/SAFETY_ITEMS.length*100);
@@ -1187,7 +1187,7 @@ function safetyHTML(){
     </div>
   </div>`;
 }
- 
+
 function meetingsHTML(){
   return ph2('📢','Safety Meetings','Pre-shift toolbox talks and meeting records')+
   `<div class="g2">
@@ -1203,7 +1203,7 @@ function meetingsHTML(){
     </div>
   </div>`;
 }
- 
+
 function incidentsHTML(){
   return ph2('⚠️','Incident Investigation','Log, investigate and report site incidents',`<button class="btn bred bsm">+ Report Incident</button>`)+
   `<div class="g2">
@@ -1222,7 +1222,7 @@ function incidentsHTML(){
     </div>
   </div>`;
 }
- 
+
 function trainingHTML(){
   return ph2('🎓','Safety Training','Manage crew certifications and compliance')+
   `<div class="g2">
@@ -1237,7 +1237,7 @@ function trainingHTML(){
     </div>
   </div>`;
 }
- 
+
 function hazardsHTML(){
   return ph2('🔶','Hazard Register','Identify, assess and mitigate site hazards',`<button class="btn bred bsm">+ Log Hazard</button>`)+
   `<div class="card"><div class="ch">Active Hazards</div>
@@ -1246,7 +1246,7 @@ function hazardsHTML(){
     </tbody></table>
   </div>`;
 }
- 
+
 function inspectionsHTML(){
   return ph2('🔍','Inspections','Formal site inspections and risk assessments')+
   `<div class="g2">
@@ -1262,7 +1262,7 @@ function inspectionsHTML(){
     </div>
   </div>`;
 }
- 
+
 function complianceHTML(){
   const done=Object.values(APP.compc).filter(Boolean).length,pct=Math.round(done/COMPLIANCE_ITEMS.length*100);
   return ph2('📜','Compliance & Enforcement','Regulatory compliance tracking')+
@@ -1278,7 +1278,7 @@ function complianceHTML(){
     </div>
   </div>`;
 }
- 
+
 // Pro pages
 function drawingsHTML(){return ph2('🗺','Drawing Markups','View blueprints and add digital field annotations')+`<div class="card"><div style="text-align:center;padding:32px;background:var(--paper);border-radius:9px;border:2px dashed var(--border2)"><div style="font-size:36px;margin-bottom:8px">🗺</div><p style="font-weight:600;margin-bottom:3px">Upload Blueprint or Drawing</p><p style="font-size:11px;color:var(--muted);margin-bottom:14px">PDF, DWG, PNG, JPG supported</p><button class="btn bink">Choose File</button></div></div>`;}
 function droneHTML(){return ph2('🚁','Drone Uploads','Survey footage, roof inspections and site imagery')+`<div class="card"><div style="text-align:center;padding:32px;background:var(--paper);border-radius:9px;border:2px dashed var(--border2)"><div style="font-size:36px;margin-bottom:8px">🚁</div><p style="font-weight:600;margin-bottom:3px">Upload Drone Survey Files</p><p style="font-size:11px;color:var(--muted);margin-bottom:14px">MP4, MOV, JPG, GeoTIFF — max 2 GB</p><button class="btn bink">Choose Files</button></div></div>`;}
@@ -1308,7 +1308,7 @@ function carbonHTML(){
   `<div class="g4" style="margin-bottom:14px"><div class="sc"><div class="sv">${tot.toFixed(1)}</div><div class="sl">Total tCO₂e</div></div><div class="sc"><div class="sv">152</div><div class="sl">Target</div></div><div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">On Track</div><div class="sl">LEED v4</div></div><div class="sc"><div class="sv">${(tot/152*100).toFixed(0)}%</div><div class="sl">Budget Used</div></div></div>
   <div class="card"><div class="ch">Carbon by Material</div><table class="tbl"><thead><tr><th>Material</th><th>Qty</th><th>Factor</th><th>tCO₂e</th></tr></thead><tbody>${APP.carbon.map(m=>`<tr><td><strong>${m.n}</strong></td><td>${m.q} ${m.u}</td><td>${m.f} tCO₂e/${m.u}</td><td><strong>${m.tot}</strong></td></tr>`).join('')}</tbody></table></div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // AI PAGE
 // ═══════════════════════════════════════════════════════
@@ -1331,7 +1331,7 @@ function aiHTML(){
     </div>
   </div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // SETTINGS PAGE
 // ═══════════════════════════════════════════════════════
@@ -1367,7 +1367,7 @@ function settingsHTML(){
       </div>`:`<div style="padding:12px;background:var(--gbg);border-radius:8px;color:var(--green);font-size:13px;font-weight:600;text-align:center">✓ You have full Pro access</div>`}
     </div>
   </div>
- 
+
   <div style="margin-top:18px" class="card">
     <div class="ch">Pricing Plans</div>
     <div class="pricing-grid">
@@ -1377,7 +1377,7 @@ function settingsHTML(){
     </div>
   </div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // AUTH HTML
 // ═══════════════════════════════════════════════════════
@@ -1401,7 +1401,7 @@ function authHTML(){
     </div>
   </div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // PAYMENT MODAL
 // ═══════════════════════════════════════════════════════
@@ -1452,18 +1452,18 @@ function modalHTML(){
     </div>
   </div>`;
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // BIND ALL EVENTS
 // ═══════════════════════════════════════════════════════
 function bindAll(){
   const gid = id => document.getElementById(id);
   const openModal = (type='plans') => { APP.showModal=true; APP.modalType=type; render(); };
- 
+
   // Topbar
   gid('topUpgrade')?.addEventListener('click',()=>openModal('plans'));
   gid('topSignout')?.addEventListener('click',handleSignout);
- 
+
   // Upgrade buttons
   ['gateBtn','banBtn','trialUpgradeBtn','lkPdf','lkExport','upgBasic','upgPro'].forEach(id=>{
     gid(id)?.addEventListener('click',()=>{
@@ -1474,7 +1474,7 @@ function bindAll(){
   });
   ['upgBasic2','choosBasic'].forEach(id=>gid(id)?.addEventListener('click',()=>{APP.selectedPlan='basic';openModal('payment');}));
   ['upgPro2','choosPro'].forEach(id=>gid(id)?.addEventListener('click',()=>{APP.selectedPlan='pro';openModal('payment');}));
- 
+
   // Modal
   gid('modalBg')?.addEventListener('click',e=>{if(e.target===gid('modalBg')){APP.showModal=false;render();}});
   gid('closeModal')?.addEventListener('click',()=>{APP.showModal=false;render();});
@@ -1492,7 +1492,7 @@ function bindAll(){
     gid('confirmPayBtn').disabled=true;
     setTimeout(()=>{ processPlanUpgrade(APP.selectedPlan); },1500);
   });
- 
+
   // Estimator
   gid('calcBtn')?.addEventListener('click',()=>{
     ['pn','cn'].forEach(k=>{const el=gid('e'+k);if(el)APP.est[k]=el.value;});
@@ -1501,7 +1501,7 @@ function bindAll(){
     calcEst(); render();
   });
   ['saveEstBtn','saveEstBtn2'].forEach(id=>gid(id)?.addEventListener('click',saveEstimate));
- 
+
   // Bids
   gid('toggleBF')?.addEventListener('click',()=>{APP.showBF=!APP.showBF;render();});
   gid('addBidBtn')?.addEventListener('click',()=>{
@@ -1511,7 +1511,7 @@ function bindAll(){
     saveBids(); APP.showBF=false; render();
     showToast('Bid added!','success');
   });
- 
+
   // Daily Log
   gid('showLF')?.addEventListener('click',()=>{APP.showLF=!APP.showLF;render();});
   gid('submitLog')?.addEventListener('click',()=>{
@@ -1519,7 +1519,7 @@ function bindAll(){
     APP.logs.unshift({id:Date.now(),date:d,weather:gid('lw')?.value||'Clear',crew:+(gid('lc')?.value||0),notes:gid('ln')?.value||'No notes.',photos:0});
     APP.showLF=false; render(); showToast('Daily log saved!','success');
   });
- 
+
   // Safety
   document.querySelectorAll('[data-sc]').forEach(el=>el.addEventListener('change',e=>{APP.safetyChecked[el.dataset.sc]=e.target.checked;render();}));
   gid('safetyNote')?.addEventListener('input',e=>APP.safetyNote=e.target.value);
@@ -1527,15 +1527,15 @@ function bindAll(){
     if(Object.values(APP.safetyChecked).filter(Boolean).length<SAFETY_ITEMS.length){showToast(`Complete all ${SAFETY_ITEMS.length} items first`,'error');return;}
     APP.safetyDone=true; render(); showToast('Safety report submitted!','success');
   });
- 
+
   // Meetings
   document.querySelectorAll('[data-mc]').forEach(el=>el.addEventListener('change',e=>{APP.mc[el.dataset.mc]=e.target.checked;render();}));
   gid('meetingSignOff')?.addEventListener('click',()=>{APP.mdone=true;render();showToast('Meeting recorded!','success');});
- 
+
   // Compliance
   document.querySelectorAll('[data-cc]').forEach(el=>el.addEventListener('change',e=>{APP.compc[el.dataset.cc]=e.target.checked;render();}));
   gid('compSave')?.addEventListener('click',()=>showToast('Compliance record saved!','success'));
- 
+
   // Settings
   gid('saveSettings')?.addEventListener('click',()=>{
     const name = gid('settName')?.value;
@@ -1549,14 +1549,14 @@ function bindAll(){
       render();
     }
   });
- 
+
   // AI
   gid('aiSend')?.addEventListener('click',sendAI);
   gid('aiInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendAI();});
   document.querySelectorAll('[data-aip]').forEach(el=>el.addEventListener('click',()=>{
     const inp=gid('aiInput'); if(inp)inp.value=el.dataset.aip;
   }));
- 
+
   // Card formatting
   gid('cardNum')?.addEventListener('input',e=>{
     let v=e.target.value.replace(/\D/g,'').substring(0,16);
@@ -1568,7 +1568,7 @@ function bindAll(){
     e.target.value=v;
   });
 }
- 
+
 function bindHero(){
   const gid = id => document.getElementById(id);
   gid('navSignin')?.addEventListener('click',()=>{APP.authMode='signin';go('estimator');});
@@ -1579,7 +1579,7 @@ function bindHero(){
     el.addEventListener('click',()=>{const key=el.id.replace('htc-','');APP.page=TMAP[key]||'estimator';render();});
   });
 }
- 
+
 function bindPricing(){
   const gid = id => document.getElementById(id);
   gid('navSignin2')?.addEventListener('click',()=>{APP.authMode='signin';go('estimator');});
@@ -1589,7 +1589,7 @@ function bindPricing(){
   gid('buyPro')?.addEventListener('click',()=>{APP.selectedPlan='pro';if(!APP.user){APP.authMode='signup';go('estimator');}else{APP.showModal=true;APP.modalType='payment';render();}});
   if(APP.showModal) bindModal();
 }
- 
+
 function bindModal(){
   const gid = id => document.getElementById(id);
   gid('modalBg')?.addEventListener('click',e=>{if(e.target===gid('modalBg')){APP.showModal=false;render();}});
@@ -1598,7 +1598,7 @@ function bindModal(){
   gid('choosPro')?.addEventListener('click',()=>{APP.selectedPlan='pro';APP.modalType='payment';render();setTimeout(()=>bindModal(),0);});
   gid('confirmPayBtn')?.addEventListener('click',()=>{processPlanUpgrade(APP.selectedPlan);});
 }
- 
+
 function bindAuth(){
   const gid = id => document.getElementById(id);
   gid('tabSU')?.addEventListener('click',()=>{APP.authMode='signup';APP.authError='';render();});
@@ -1618,7 +1618,7 @@ function bindAuth(){
   });
   gid('aBack')?.addEventListener('click',()=>{APP.page='home';APP.authError='';render();});
 }
- 
+
 // AI responses
 const AI_RESP={
   status:'Project is 48% complete. Structural steel is 5 days behind — pushing electrical and drywall. Budget tracking within 3%. 2 open incidents need resolution.',
@@ -1628,7 +1628,7 @@ const AI_RESP={
   delay:'Steel 5 days late. Cascade: Electrical +5 days, Drywall +7 days, Finishes +10 days. Completion shifts Aug 15 → Aug 25.',
   carbon:'Embodied carbon at 154.2 tCO₂e vs 152 target — slightly over. Structural steel (70.1 tCO₂e) is largest contributor. Consider lower-carbon steel grades for future projects.',
 };
- 
+
 function sendAI(){
   const input=document.getElementById('aiInput')?.value?.trim();
   if(!input)return;
@@ -1640,7 +1640,7 @@ function sendAI(){
     setTimeout(()=>{const w=document.getElementById('aiWrap');if(w)w.scrollTop=w.scrollHeight;},50);
   },1100);
 }
- 
+
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
@@ -1649,4 +1649,3 @@ render();
 </script>
 </body>
 </html>
- 
