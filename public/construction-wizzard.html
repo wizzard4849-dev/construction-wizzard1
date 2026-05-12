@@ -1406,48 +1406,53 @@ function authHTML(){
 // PAYMENT MODAL
 // ═══════════════════════════════════════════════════════
 function modalHTML(){
-  if(APP.modalType==='payment'){
-    const plan = APP.selectedPlan;
-    const planName = plan==='pro'?'Pro':'Basic';
-    const planPrice = plan==='pro'?'$500':'$149';
-    return `<div class="modal-bg" id="modalBg">
-      <div class="modal-box">
-        <h3>Upgrade to ${planName}</h3>
-        <p class="modal-sub">${planPrice}/month · All features unlocked · Cancel anytime</p>
-        <div style="background:var(--paper);border-radius:9px;padding:14px;margin-bottom:18px;font-size:12.5px">
-          <div style="font-weight:700;margin-bottom:6px">Order Summary</div>
-          <div style="display:flex;justify-content:space-between"><span>Construction Wizzard ${planName}</span><strong>${planPrice}/mo</strong></div>
-          ${plan==='pro'?`<div style="color:var(--green);font-size:11px;margin-top:4px">✓ AI Copilot · GPS · AR · Drawing Markups · Unlimited seats</div>`:`<div style="color:var(--green);font-size:11px;margin-top:4px">✓ Unlimited estimates · Save projects · Invoice system</div>`}
-        </div>
-        <div class="field"><label>Card Number</label><input class="inp" id="cardNum" placeholder="1234 5678 9012 3456" maxlength="19"/></div>
-        <div class="r2">
-          <div class="field"><label>Expiry</label><input class="inp" id="cardExp" placeholder="MM/YY" maxlength="5"/></div>
-          <div class="field"><label>CVV</label><input class="inp" id="cardCvv" placeholder="123" maxlength="4"/></div>
-        </div>
-        <div class="field"><label>Cardholder Name</label><input class="inp" id="cardName" placeholder="Name on card"/></div>
-        <div style="display:flex;gap:8px;margin-bottom:16px;padding:10px;background:var(--paper);border-radius:7px">
-          ${['💳 Visa','💳 Mastercard','💳 Amex','💳 PayPal'].map(c=>`<span style="font-size:11px;font-weight:600;color:var(--muted)">${c}</span>`).join('')}
-        </div>
-        <div style="font-size:10.5px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:6px">🔒 Secured by Stripe · 256-bit SSL encryption</div>
-        <button class="btn bgold bfull bxl" id="confirmPayBtn">Pay ${planPrice} — Unlock ${planName}</button>
-        <button class="btn bout bfull" style="margin-top:8px" id="closeModal">Cancel</button>
-      </div>
-    </div>`;
-  }
+  const STRIPE = {
+    starter: 'https://buy.stripe.com/4gM6ozcGCdxN9Wm1ubeAg02',
+    basic:   'https://buy.stripe.com/7sY6oz0XU8dt2tU7SzeAg01',
+    pro:     'https://buy.stripe.com/9B6bITayu0L19Wmc8PeAg00',
+  };
   return `<div class="modal-bg" id="modalBg">
     <div class="modal-box">
-      <h3>Upgrade Your Plan</h3>
-      <p class="modal-sub">Choose a plan and unlock all Construction Wizzard features.</p>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
-        <button class="btn bout bfull" style="text-align:left;padding:16px" id="choosBasic">
-          <div style="font-weight:700;font-size:14px">Basic — $149/month</div>
-          <div style="font-size:11.5px;color:var(--muted);margin-top:3px">$149–$350/mo · Unlimited estimates · Save projects · Invoice system</div>
-        </button>
-        <button class="btn bgold bfull" style="text-align:left;padding:16px" id="choosPro">
-          <div style="font-weight:700;font-size:14px">Pro — $500/month ⭐ Most Popular</div>
-          <div style="font-size:11.5px;color:var(--ink);margin-top:3px">$500–$1,000/mo · AI Copilot · GPS · AR · Drawing Markups · Unlimited seats</div>
-        </button>
+      <h3>Upgrade Construction Wizzard</h3>
+      <p class="modal-sub">Secure checkout powered by Stripe · Cancel anytime</p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+
+        <a href="${STRIPE.starter}" target="_blank" style="text-decoration:none">
+          <div style="border:1px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer;transition:box-shadow .15s;background:var(--white)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='none'">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-weight:700;font-size:14px;color:var(--ink)">Starter Plan</div>
+              <div style="font-size:11.5px;color:var(--muted);margin-top:3px">Estimator · Bid tracking · Invoices · Save projects</div></div>
+              <div style="font-family:var(--fh);font-size:20px;font-weight:800;color:var(--ink)">$49<span style="font-size:11px;font-weight:500">/mo</span></div>
+            </div>
+            <div style="margin-top:10px;background:var(--ink);color:#fff;border-radius:7px;padding:10px;text-align:center;font-weight:700;font-size:13px">Pay with Stripe →</div>
+          </div>
+        </a>
+
+        <a href="${STRIPE.basic}" target="_blank" style="text-decoration:none">
+          <div style="border:1px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer;background:var(--white)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='none'">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-weight:700;font-size:14px;color:var(--ink)">Basic Plan</div>
+              <div style="font-size:11.5px;color:var(--muted);margin-top:3px">Everything in Starter + Client database · 3 seats · Email support</div></div>
+              <div style="font-family:var(--fh);font-size:20px;font-weight:800;color:var(--ink)">$149<span style="font-size:11px;font-weight:500">/mo</span></div>
+            </div>
+            <div style="margin-top:10px;background:var(--ink);color:#fff;border-radius:7px;padding:10px;text-align:center;font-weight:700;font-size:13px">Pay with Stripe →</div>
+          </div>
+        </a>
+
+        <a href="${STRIPE.pro}" target="_blank" style="text-decoration:none">
+          <div style="border:2px solid var(--gold2);border-radius:10px;padding:16px;cursor:pointer;background:linear-gradient(135deg,#fffdf0,#fff)" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='none'">
+            <div style="font-size:10px;font-weight:800;color:var(--gold);margin-bottom:6px;letter-spacing:.06em">⭐ MOST POPULAR</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-weight:700;font-size:14px;color:var(--ink)">Pro Plan</div>
+              <div style="font-size:11.5px;color:var(--muted);margin-top:3px">AI Copilot · GPS · AR · Drawings · Unlimited seats</div></div>
+              <div style="font-family:var(--fh);font-size:20px;font-weight:800;color:var(--ink)">$500<span style="font-size:11px;font-weight:500">/mo</span></div>
+            </div>
+            <div style="margin-top:10px;background:var(--gold2);color:var(--ink);border-radius:7px;padding:10px;text-align:center;font-weight:800;font-size:13px">Pay with Stripe →</div>
+          </div>
+        </a>
+
       </div>
+      <div style="text-align:center;font-size:11px;color:var(--faint);margin-bottom:14px">🔒 Secured by Stripe · Visa · Mastercard · Amex · PayPal</div>
       <button class="btn bout bfull" id="closeModal">Maybe Later</button>
     </div>
   </div>`;
@@ -1478,20 +1483,7 @@ function bindAll(){
   // Modal
   gid('modalBg')?.addEventListener('click',e=>{if(e.target===gid('modalBg')){APP.showModal=false;render();}});
   gid('closeModal')?.addEventListener('click',()=>{APP.showModal=false;render();});
-  gid('confirmPayBtn')?.addEventListener('click',()=>{
-    const cardNum = gid('cardNum')?.value?.replace(/\s/g,'');
-    const exp = gid('cardExp')?.value;
-    const cvv = gid('cardCvv')?.value;
-    const name = gid('cardName')?.value;
-    if(!cardNum||cardNum.length<13){showToast('Please enter a valid card number','error');return;}
-    if(!exp){showToast('Please enter expiry date','error');return;}
-    if(!cvv){showToast('Please enter CVV','error');return;}
-    if(!name){showToast('Please enter cardholder name','error');return;}
-    // Simulate Stripe processing
-    gid('confirmPayBtn').textContent='Processing...';
-    gid('confirmPayBtn').disabled=true;
-    setTimeout(()=>{ processPlanUpgrade(APP.selectedPlan); },1500);
-  });
+  // Payment handled by Stripe payment links - no card input needed
 
   // Estimator
   gid('calcBtn')?.addEventListener('click',()=>{
@@ -1557,16 +1549,7 @@ function bindAll(){
     const inp=gid('aiInput'); if(inp)inp.value=el.dataset.aip;
   }));
 
-  // Card formatting
-  gid('cardNum')?.addEventListener('input',e=>{
-    let v=e.target.value.replace(/\D/g,'').substring(0,16);
-    e.target.value=v.replace(/(.{4})/g,'$1 ').trim();
-  });
-  gid('cardExp')?.addEventListener('input',e=>{
-    let v=e.target.value.replace(/\D/g,'').substring(0,4);
-    if(v.length>=2)v=v.substring(0,2)+'/'+v.substring(2);
-    e.target.value=v;
-  });
+  // Card formatting handled by Stripe checkout page
 }
 
 function bindHero(){
@@ -1594,9 +1577,6 @@ function bindModal(){
   const gid = id => document.getElementById(id);
   gid('modalBg')?.addEventListener('click',e=>{if(e.target===gid('modalBg')){APP.showModal=false;render();}});
   gid('closeModal')?.addEventListener('click',()=>{APP.showModal=false;render();});
-  gid('choosBasic')?.addEventListener('click',()=>{APP.selectedPlan='basic';APP.modalType='payment';render();setTimeout(()=>bindModal(),0);});
-  gid('choosPro')?.addEventListener('click',()=>{APP.selectedPlan='pro';APP.modalType='payment';render();setTimeout(()=>bindModal(),0);});
-  gid('confirmPayBtn')?.addEventListener('click',()=>{processPlanUpgrade(APP.selectedPlan);});
 }
 
 function bindAuth(){
