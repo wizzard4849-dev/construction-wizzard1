@@ -2,8 +2,30 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1"/>
 <title>Construction Wizzard — AI-Powered Construction Platform</title>
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#0c0c0c"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Wizzard"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png"/>
+
+<!-- SEO -->
+<meta name="description" content="Construction Wizzard — AI-powered estimating, bid tracking, safety checklists, GPS time tracking and invoicing for modern construction teams."/>
+<meta name="keywords" content="construction estimating software, bid tracking, construction safety, plumbing estimator, electrical estimator, HVAC estimator"/>
+<meta property="og:title" content="Construction Wizzard — Build Smarter. Bid Sharper."/>
+<meta property="og:description" content="The all-in-one platform for modern construction teams. Free 7-day trial."/>
+<meta property="og:url" content="https://constructionwizzard.com"/>
+<meta property="og:type" content="website"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Construction Wizzard"/>
+<meta name="twitter:description" content="AI-powered construction platform. Estimates, bids, safety & invoicing."/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
 <script src="https://js.stripe.com/v3/"></script>
 <style>
@@ -319,6 +341,9 @@ const APP = {
     {code:'3000',d:'Structural Steel',b:310000,a:195000,cm:85000},
     {code:'4000',d:'Electrical',b:87000,a:22000,cm:15000},
     {code:'5000',d:'Plumbing',b:68000,a:12000,cm:8000},
+    {code:'6000',d:'Roofing',b:52000,a:8000,cm:5000},
+    {code:'7000',d:'Concrete Work',b:89000,a:14000,cm:12000},
+    {code:'8000',d:'Asphalt & Paving',b:38000,a:6000,cm:4000},
   ],
 
   // Safety
@@ -357,6 +382,8 @@ const APP = {
     {n:'Structural Steel',q:48,u:'t',f:1.46,tot:70.1},
     {n:'Copper Piping (Plumbing)',q:800,u:'m',f:0.0032,tot:2.6},
     {n:'Triple Glazing',q:1200,u:'m²',f:0.024,tot:28.8},
+    {n:'Asphalt (Hot Mix)',q:150,u:'t',f:0.0483,tot:7.2},
+    {n:'Roofing Membrane',q:500,u:'m²',f:0.0062,tot:3.1},
   ],
 
   // Payment
@@ -369,12 +396,15 @@ const APP = {
 // TRADES (with Plumbing added)
 // ═══════════════════════════════════════════════════════
 const TRADES = {
-  drywall:    {l:'Drywall',     c:2.5},
-  painting:   {l:'Painting',    c:1.5},
-  flooring:   {l:'Flooring',    c:4.25},
-  hvac:       {l:'HVAC',        c:8.5},
-  electrical: {l:'Electrical',  c:7.5},
-  plumbing:   {l:'Plumbing',    c:6.75},
+  drywall:    {l:'Drywall',              c:2.50},
+  painting:   {l:'Painting',             c:1.50},
+  flooring:   {l:'Flooring',             c:4.25},
+  hvac:       {l:'HVAC',                 c:8.50},
+  electrical: {l:'Electrical',           c:7.50},
+  plumbing:   {l:'Plumbing',             c:6.75},
+  roofing:    {l:'Roofing Contractor',   c:5.50},
+  concrete:   {l:'Concrete Contractor',  c:7.00},
+  asphalt:    {l:'Asphalt Contractor',   c:4.75},
 };
 
 const SAFETY_ITEMS=[
@@ -1630,6 +1660,84 @@ function sendAI(){
 // ═══════════════════════════════════════════════════════
 loadUserData();
 render();
+</script>
+
+<!-- PWA Install Banner -->
+<div id="pwaInstallBanner" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0c0c0c;color:#fff;padding:14px 20px;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.3);z-index:9998;display:none;align-items:center;gap:14px;max-width:340px;width:90%;border:1px solid #333">
+  <div style="font-size:28px">⬡</div>
+  <div style="flex:1">
+    <div style="font-weight:700;font-size:13px;margin-bottom:2px">Install Construction Wizzard</div>
+    <div style="font-size:11px;color:#aaa">Add to your home screen for quick access</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button id="pwaInstallBtn" style="background:#f0b800;color:#0c0c0c;border:none;border-radius:7px;padding:8px 14px;font-weight:800;font-size:12px;cursor:pointer">Install</button>
+    <button id="pwaDismiss" style="background:transparent;color:#aaa;border:1px solid #333;border-radius:7px;padding:8px 10px;font-size:12px;cursor:pointer">✕</button>
+  </div>
+</div>
+
+<!-- PWA Service Worker & Install Logic -->
+<script>
+// Register Service Worker
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW failed:', err));
+  });
+}
+
+// PWA Install Prompt
+let deferredPrompt;
+const banner = document.getElementById('pwaInstallBanner');
+const installBtn = document.getElementById('pwaInstallBtn');
+const dismissBtn = document.getElementById('pwaDismiss');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show banner after 3 seconds
+  setTimeout(() => {
+    if(banner) banner.style.display = 'flex';
+  }, 3000);
+});
+
+if(installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if(deferredPrompt) {
+      deferredPrompt.prompt();
+      const {outcome} = await deferredPrompt.userChoice;
+      if(outcome === 'accepted') {
+        if(banner) banner.style.display = 'none';
+      }
+      deferredPrompt = null;
+    }
+  });
+}
+
+if(dismissBtn) {
+  dismissBtn.addEventListener('click', () => {
+    if(banner) banner.style.display = 'none';
+  });
+}
+
+// iOS detection - show custom message
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+if(isIOS && !isStandalone) {
+  setTimeout(() => {
+    if(banner) {
+      banner.innerHTML = `
+        <div style="font-size:24px">⬡</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:13px;margin-bottom:2px">Add to Home Screen</div>
+          <div style="font-size:11px;color:#aaa">Tap <strong>Share</strong> then <strong>"Add to Home Screen"</strong> to install</div>
+        </div>
+        <button id="iosDismiss" style="background:transparent;color:#aaa;border:1px solid #333;border-radius:7px;padding:8px 10px;font-size:12px;cursor:pointer">✕</button>`;
+      banner.style.display = 'flex';
+      document.getElementById('iosDismiss')?.addEventListener('click', () => banner.style.display = 'none');
+    }
+  }, 3000);
+}
 </script>
 
 <!-- Tawk.to Live Chat -->
