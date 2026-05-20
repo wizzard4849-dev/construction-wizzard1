@@ -1,0 +1,106 @@
+python3 << 'PYEOF'
+import struct, zlib, math
+
+def make_icon(size):
+    w = h = size
+    
+    def chunk(t, d):
+        c = t + d
+        return struct.pack('>I', len(d)) + c + struct.pack('>I', zlib.crc32(c) & 0xffffffff)
+    
+    sig = b'\x89PNG\r\n\x1a\n'
+    ihdr = chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 6, 0, 0, 0))
+    
+    rows = []
+    GOLD = (240, 184, 0)
+    BG   = (12, 12, 12)
+    
+    for y in range(h):
+        row = [0]
+        yf = y / h  # 0..1 top to bottom
+        
+        for x in range(w):
+            xf = x / w  # 0..1 left to right
+            
+            # Squircle mask
+            ax = abs(xf - 0.5) / 0.47
+            ay = abs(yf - 0.5) / 0.47
+            if (ax**4 + ay**4) > 1.0:
+                row.extend([0,0,0,0])
+                continue
+            
+            pixel = list(BG) + [255]
+            
+            # ── Draw correct W ──────────────────────────
+            # W shape: two V shapes side by side
+            # Left side:  \ from top-left down to middle-bottom, / back up to middle-top
+            # Right side: \ from middle-top down to bottom-middle, / back up to top-right
+            
+            # W bounds
+            L  = 0.10   # left edge
+            R  = 0.90   # right edge  
+            T  = 0.20   # top
+            B  = 0.80   # bottom
+            M  = 0.50   # horizontal center
+            MB = 0.72   # middle-bottom (where inner V tips meet)
+            
+            sw = 0.072  # stroke half-width
+            
+            # 5 strokes of the W:
+            # 1. Left outer vertical/diagonal: top-left (L,T) → bottom inner-left (L+(M-L)*0.5, MB)
+            # 2. Left inner diagonal: bottom inner-left → top center (M, T)  
+            # 3. Right inner diagonal: top center (M,T) → bottom inner-right
+            # 4. Right outer diagonal: bottom inner-right → top-right (R,T)
+            # Plus: small serifs at top
+            
+            # Points
+            p_TL  = (L, T)           # top left
+            p_TR  = (R, T)           # top right
+            p_BL  = (L + (R-L)*0.22, B)   # bottom left valley
+            p_BR  = (L + (R-L)*0.78, B)   # bottom right valley
+            p_TM  = (M, T)           # top middle
+            
+            def dist_to_segment(px, py, ax, ay, bx, by):
+                dx, dy = bx-ax, by-ay
+                if dx==0 and dy==0:
+                    return math.sqrt((px-ax)**2+(py-ay)**2)
+                t = max(0, min(1, ((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)))
+                return math.sqrt((px-(ax+t*dx))**2+(py-(ay+t*dy))**2)
+            
+            # Draw 4 strokes of W
+            segs = [
+                (p_TL,  p_BL),   # outer left diagonal
+                (p_BL,  p_TM),   # inner left diagonal  
+                (p_TM,  p_BR),   # inner right diagonal
+                (p_BR,  p_TR),   # outer right diagonal
+            ]
+            
+            is_gold = False
+            for (ax,ay),(bx,by) in segs:
+                d = dist_to_segment(xf, yf, ax, ay, bx, by)
+                if d < sw:
+                    is_gold = True
+                    break
+            
+            # Small gold dot at top center (branding mark)
+            dot_d = math.sqrt((xf-0.5)**2 + (yf-0.08)**2)
+            if dot_d < 0.045:
+                is_gold = True
+            
+            if is_gold:
+                pixel = [GOLD[0], GOLD[1], GOLD[2], 255]
+            
+            row.extend(pixel)
+        rows.append(bytes(row))
+    
+    raw  = b''.join(rows)
+    idat = chunk(b'IDAT', zlib.compress(raw, 9))
+    iend = chunk(b'IEND', b'')
+    return sig + ihdr + idat + iend
+
+for size, fname in [(192,'icon-192.png'),(512,'icon-512.png')]:
+    data = make_icon(size)
+    with open(f'/mnt/user-data/outputs/{fname}', 'wb') as f:
+        f.write(data)
+    print(f"{fname} — {len(data):,} bytes")
+PYEOF
