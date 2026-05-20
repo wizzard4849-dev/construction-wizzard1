@@ -1,0 +1,50 @@
+python3 << 'PYEOF'
+import struct, zlib, math
+
+def make_icon(size):
+    w = h = size
+    def chunk(t, d):
+        c = t+d
+        return struct.pack('>I',len(d))+c+struct.pack('>I',zlib.crc32(c)&0xffffffff)
+    sig = b'\x89PNG\r\n\x1a\n'
+    ihdr = chunk(b'IHDR', struct.pack('>IIBBBBB',w,h,8,6,0,0,0))
+    rows = []
+    GOLD=(240,184,0); BG=(12,12,12)
+    for y in range(h):
+        row=[0]
+        yf=y/h
+        for x in range(w):
+            xf=x/w
+            ax=abs(xf-0.5)/0.47; ay=abs(yf-0.5)/0.47
+            if(ax**4+ay**4)>1.0:
+                row.extend([0,0,0,0]); continue
+            pixel=list(BG)+[255]
+            # W shape - 4 diagonal strokes forming correct W
+            # W goes: top-left → bottom-left-center → top-center → bottom-right-center → top-right
+            pts=[
+                (0.11,0.22), # A: top left
+                (0.31,0.78), # B: bottom left valley
+                (0.50,0.42), # C: top center (inner peak)
+                (0.69,0.78), # D: bottom right valley
+                (0.89,0.22), # E: top right
+            ]
+            sw=0.068
+            def seg_dist(px,py,ax,ay,bx,by):
+                dx,dy=bx-ax,by-ay
+                t=max(0,min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy+1e-9)))
+                return math.sqrt((px-(ax+t*dx))**2+(py-(ay+t*dy))**2)
+            segs=[(pts[0],pts[1]),(pts[1],pts[2]),(pts[2],pts[3]),(pts[3],pts[4])]
+            is_gold=any(seg_dist(xf,yf,a[0],a[1],b[0],b[1])<sw for a,b in segs)
+            # Gold dot at top
+            if math.sqrt((xf-0.5)**2+(yf-0.08)**2)<0.042: is_gold=True
+            if is_gold: pixel=[GOLD[0],GOLD[1],GOLD[2],255]
+            row.extend(pixel)
+        rows.append(bytes(row))
+    raw=b''.join(rows)
+    return sig+ihdr+chunk(b'IDAT',zlib.compress(raw,9))+chunk(b'IEND',b'')
+
+for size,name in [(192,'icon-192.png'),(512,'icon-512.png')]:
+    d=make_icon(size)
+    with open(f'/mnt/user-data/outputs/{name}','wb') as f: f.write(d)
+    print(f"{name}: {len(d):,} bytes ✓")
+PYEOF
