@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1"/>
 <title>Construction Wizzard — AI-Powered Construction Platform</title>
 
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  // Initialize EmailJS
+  (function(){
+    if(window.emailjs) emailjs.init({ publicKey: "Da113FA7sH9X1lUEe" });
+  })();
+</script>
+
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json"/>
 <meta name="theme-color" content="#0c0c0c"/>
@@ -254,6 +265,60 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 <div id="app"></div>
 
 <script>
+// ═══════════════════════════════════════════════════════
+// SUPABASE + EMAILJS SETUP
+// ═══════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://vmouusslvsthanusfpjo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtb3V1c3NsdnN0aGFudXNmcGpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2NTM5NDUsImV4cCI6MjA2MjIyOTk0NX0.eyJhbGciOiJIUzI1NiJ9';
+const EMAILJS_SERVICE_ID = 'service_nzakyyb';
+const EMAILJS_TEMPLATE_ID = 'template_kqwspj8';
+
+let supabaseClient = null;
+try {
+  if(window.supabase) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✅ Supabase connected');
+  }
+} catch(e) { console.log('Supabase init error:', e); }
+
+async function saveSignupToSupabase(user) {
+  try {
+    if(!supabaseClient) return;
+    const { data, error } = await supabaseClient
+      .from('signups')
+      .insert([{
+        name: user.name,
+        email: user.email,
+        plan: user.plan || 'free_trial',
+        created_at: new Date().toISOString()
+      }]);
+    if(error) console.log('Supabase error:', error);
+    else console.log('✅ User saved to Supabase:', user.email);
+  } catch(e) { console.log('Supabase save error:', e); }
+}
+
+async function sendSignupEmail(user) {
+  try {
+    if(!window.emailjs) return;
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      user_name: user.name,
+      user_email: user.email,
+      plan: 'Free Trial (7 days)',
+      signup_time: new Date().toLocaleString('en-CA', {timeZone:'America/Toronto'}),
+      site_url: 'https://constructionwizzard.com'
+    });
+    console.log('✅ Signup email sent for:', user.email);
+  } catch(e) { console.log('EmailJS error:', e); }
+}
+
+async function onNewSignup(user) {
+  // Run both in parallel - don't block the app
+  Promise.all([
+    saveSignupToSupabase(user),
+    sendSignupEmail(user)
+  ]).catch(e => console.log('Notification error:', e));
+}
+
 // ═══════════════════════════════════════════════════════
 // APP STATE
 // ═══════════════════════════════════════════════════════
@@ -595,6 +660,10 @@ function handleSignup(email, password, name){
   APP.user = user;
   saveUser();
   APP.authError = '';
+  
+  // Notify you of new signup via Supabase + Email
+  onNewSignup(user);
+  
   return true;
 }
 
