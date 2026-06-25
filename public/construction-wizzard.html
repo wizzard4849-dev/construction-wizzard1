@@ -271,17 +271,16 @@ window.va = window.va || function () { (window.vaq = window.vaq || []).push(argu
 // SUPABASE + EMAILJS SETUP
 // ═══════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://vmouusslvsthanusfpjo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtb3V1c3NsdnN0aGFudXNmcGpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY2NTM5NDUsImV4cCI6MjA2MjIyOTk0NX0.eyJhbGciOiJIUzI1NiJ9';
+const SUPABASE_ANON_KEY = ''; // Add your full anon key here
+// Supabase disabled until key is updated - using localStorage only
 const EMAILJS_SERVICE_ID = 'service_nzakyyb';
 const EMAILJS_TEMPLATE_ID = 'template_kqwspj8';
 
-let supabaseClient = null;
-try {
-  if(window.supabase) {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('✅ Supabase connected');
-  }
-} catch(e) { console.log('Supabase init error:', e); }
+var supabaseClient = null;
+var _sb = typeof window !== 'undefined' && window.supabase;
+if(_sb && SUPABASE_ANON_KEY && SUPABASE_URL) {
+  try { supabaseClient = _sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(_e) {}
+}
 
 async function saveSignupToSupabase(user) {
   try {
@@ -635,8 +634,11 @@ const g = id => document.getElementById(id);
 const money = (v,c='USD') => new Intl.NumberFormat(c==='CAD'?'en-CA':'en-US',{style:'currency',currency:c,maximumFractionDigits:0}).format(v);
 
 function pill(s){
-  const map={'Approved':'pg','Complete':'pg','Paid':'pg','Closed':'pg','Mitigated':'pg','Active':'pr','Rejected':'pr','Overdue':'pr','High':'pr','Pending':'pa','Open':'pa','Medium':'pa','Med':'pa','Low':'pg','On Track':'pg'};
-  return `<span class="pill ${map[s]||'pgr'}">${s}</span>`;
+  var cls='pgr';
+  if(s==='Approved'||s==='Complete'||s==='Paid'||s==='Closed'||s==='Mitigated'||s==='Low'||s==='On Track') cls='pg';
+  else if(s==='Rejected'||s==='Overdue'||s==='Active'||s==='High') cls='pr';
+  else if(s==='Pending'||s==='Open'||s==='Medium'||s==='Med') cls='pa';
+  return '<span class="pill '+cls+'">'+s+'</span>';
 }
 
 function ph2(ico,title,sub,act=''){
@@ -655,22 +657,14 @@ function isTrial(){return APP.user&&APP.user.plan==='free_trial'&&APP.user.trial
 function hasAccess(){return isPro()||isTrial();}
 
 function proGate(fn){
-  if(!hasAccess()) return `<div class="locked">
-    <div style="font-size:34px;margin-bottom:10px">🔒</div>
-    <div style="font-family:var(--fh);font-size:18px;font-weight:800;margin-bottom:6px">Pro Feature</div>
-    <p style="color:var(--muted);margin-bottom:18px;max-width:320px;margin-left:auto;margin-right:auto">Upgrade to unlock this module.</p>
-    <button class="btn bgold" id="gateBtn">View Plans & Upgrade →</button>
-  </div>`;
+  if(!hasAccess()) return '<div class="locked"><div style="font-size:34px;margin-bottom:10px">🔒</div><div style="font-family:var(--fh);font-size:18px;font-weight:800;margin-bottom:6px">Pro Feature</div><p style="color:var(--muted);margin-bottom:18px;max-width:320px;margin-left:auto;margin-right:auto">Upgrade to unlock this module and all Pro features.</p><button class="btn bgold" id="gateBtn">Upgrade to Pro →</button></div>';
   return fn();
 }
 
 function trialBanner(){
   if(!APP.user) return '';
-  if(isTrial()) return `<div class="trial-banner">
-    <div><div class="tb-text">🎉 Free Trial Active — ${APP.user.trialDaysLeft} days remaining</div><div class="tb-sub">Upgrade before your trial ends to keep all features.</div></div>
-    <button class="btn bgold bsm" id="trialUpgradeBtn">Upgrade Now →</button>
-  </div>`;
-  if(!isPro()) return `<div class="banner"><span>⚡ You're on the Free plan. Upgrade to unlock all Pro features.</span><button class="btn bgold bsm" id="banBtn">View Plans →</button></div>`;
+  if(isTrial()) return '<div class="trial-banner"><div><div class="tb-text">Free Trial Active - '+(APP.user.trialDaysLeft||0)+' days remaining</div><div class="tb-sub">Upgrade before your trial ends to keep all features.</div></div><button class="btn bgold bsm" id="trialUpgradeBtn">Upgrade Now</button></div>';
+  if(!isPro()) return '<div class="banner"><span>You are on the Free plan. Upgrade to unlock all Pro features.</span><button class="btn bgold bsm" id="banBtn">View Plans</button></div>';
   return '';
 }
 
@@ -782,9 +776,6 @@ function handleSignout(){
 // PAYMENTS (Stripe-ready frontend)
 // ═══════════════════════════════════════════════════════
 function processPlanUpgrade(plan){
-  // In production: call your backend /api/create-checkout-session
-  // Then redirect to Stripe Checkout
-  // For now: simulate successful payment + update plan
   const users = loadFromStorage('users', []);
   const idx = users.findIndex(u=>u.id===APP.user.id);
   if(idx>-1){
@@ -880,18 +871,19 @@ function render(){
 // TOPBAR
 // ═══════════════════════════════════════════════════════
 function topbarHTML(){
-  const plan = APP.user?.plan||'';
-  const planBadge = plan==='pro'?`<span class="tpro">✦ PRO</span>`:
-    plan==='basic'?`<span class="tpro" style="background:linear-gradient(135deg,#1848a8,#4a80e8)">BASIC</span>`:
-    isTrial()?`<span class="ttrial">⏱ TRIAL ${APP.user?.trialDaysLeft}d</span>`:
-    `<button class="tupgrade" id="topUpgrade">Upgrade ✦</button>`;
+  var plan = APP.user.plan||'';
+  var planBadge;
+  if(plan==='pro') planBadge='<span class="tpro">✦ PRO</span>';
+  else if(plan==='basic') planBadge='<span class="tpro" style="background:linear-gradient(135deg,#1848a8,#4a80e8)">BASIC</span>';
+  else if(isTrial()) planBadge='<span class="ttrial">⏱ TRIAL '+(APP.user.trialDaysLeft||0)+'d</span>';
+  else planBadge='<button class="tupgrade" id="topUpgrade">Upgrade</button>';
   return `<div id="topbar">
     <button class="tlogo" onclick="go('home')">⬡ <span class="badge">Wizzard</span></button>
     <div class="tright">
       ${planBadge}
       <div class="tuser">
-        <span style="display:none" id="userName">${APP.user?.name||''}</span>
-        <div class="tavatar">${(APP.user?.name||'U')[0].toUpperCase()}</div>
+        <span style="display:none" id="userName">${APP.user.name||''}</span>
+        <div class="tavatar">${(APP.user.name||'U')[0].toUpperCase()}</div>
       </div>
       <button class="tpill" id="topSignout">Sign Out</button>
     </div>
@@ -912,8 +904,8 @@ function sidebarHTML(){
         </button>`).join('')}
     `).join('')}
     <div class="sb-user">
-      <div class="sb-user-name">${APP.user?.name||APP.user?.email||''}</div>
-      <div class="sb-user-plan">${APP.user?.plan==='free_trial'?`FREE TRIAL — ${APP.user?.trialDaysLeft}d left`:APP.user?.plan?.toUpperCase()||'FREE'}</div>
+      <div class="sb-user-name">${APP.user.name||APP.user.email||''}</div>
+      <div class="sb-user-plan">${APP.user.plan==='free_trial'?`FREE TRIAL — ${APP.user.trialDaysLeft}d left`:APP.user.plan?.toUpperCase()||'FREE'}</div>
       ${!isPro()?`<button class="btn bgold bfull" style="margin-top:8px;padding:8px" onclick="go('settings')">Upgrade Plan</button>`:''}
     </div>
   </div>`;
@@ -1117,7 +1109,7 @@ function pricingPageHTML(){
 function dashHTML(){
   const tot=APP.bids.reduce((a,b)=>a+b.v,0);
   const open=APP.punch.filter(p=>p.s==='Open').length;
-  return ph2('⬡','Dashboard',`Welcome back, ${APP.user?.name||'Builder'}!`)+
+  return ph2('⬡','Dashboard',`Welcome back, ${APP.user.name||'Builder'}!`)+
   trialBanner()+
   `<div class="g4" style="margin-bottom:18px">
     <div class="sc"><div class="sv">$${(tot/1000).toFixed(0)}k</div><div class="sl">Bid Pipeline</div><div class="sdelta" style="color:var(--green)">↑ 12% this month</div></div>
@@ -1295,7 +1287,7 @@ function invoiceHTML(){
         <div style="font-size:11px;color:var(--muted)">Jun 1, 2025 · Due Jun 15, 2025</div></div>${pill('Unpaid')}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;font-size:12px">
-        <div><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:4px">From</div><strong>${APP.user?.name||'Your Company'}</strong><br/>${APP.user?.email||'your@email.com'}</div>
+        <div><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:4px">From</div><strong>${APP.user.name||'Your Company'}</strong><br/>${APP.user.email||'your@email.com'}</div>
         <div><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin-bottom:4px">To</div><strong>North Star Builders</strong><br/>456 Site Road, Mississauga ON</div>
       </div>
       <table class="tbl" style="margin-bottom:14px"><thead><tr><th>Description</th><th>Qty</th><th>Amount</th></tr></thead><tbody>
@@ -2154,8 +2146,8 @@ function settingsHTML(){
   `<div class="g2">
     <div class="card">
       <div class="ch">Account Details</div>
-      <div class="field"><label>Full Name</label><input class="inp" id="settName" value="${APP.user?.name||''}"/></div>
-      <div class="field"><label>Email</label><input class="inp" value="${APP.user?.email||''}" disabled style="opacity:.6"/></div>
+      <div class="field"><label>Full Name</label><input class="inp" id="settName" value="${APP.user.name||''}"/></div>
+      <div class="field"><label>Email</label><input class="inp" value="${APP.user.email||''}" disabled style="opacity:.6"/></div>
       <div class="field"><label>New Password</label><input class="inp" type="password" placeholder="Leave blank to keep current"/></div>
       <button class="btn bink" id="saveSettings">Save Changes</button>
     </div>
@@ -2163,10 +2155,10 @@ function settingsHTML(){
       <div class="ch">Current Plan</div>
       <div style="padding:16px;background:var(--paper);border-radius:9px;margin-bottom:16px;border:1px solid var(--border)">
         <div style="font-family:var(--fh);font-size:18px;font-weight:800;margin-bottom:4px">
-          ${APP.user?.plan==='free_trial'?`Free Trial ${APP.user?.trialDaysLeft?`(${APP.user.trialDaysLeft} days left)`:''}`:
-            APP.user?.plan==='basic'?'Basic Plan':APP.user?.plan==='pro'?'Pro Plan':'Free / Expired'}
+          ${APP.user.plan==='free_trial'?`Free Trial ${APP.user.trialDaysLeft?`(${APP.user.trialDaysLeft} days left)`:''}`:
+            APP.user.plan==='basic'?'Basic Plan':APP.user.plan==='pro'?'Pro Plan':'Free / Expired'}
         </div>
-        ${isTrial()?`<p style="font-size:12px;color:var(--amber)">Your trial expires in ${APP.user?.trialDaysLeft} days.</p>`:''}
+        ${isTrial()?`<p style="font-size:12px;color:var(--amber)">Your trial expires in ${APP.user.trialDaysLeft} days.</p>`:''}
         ${isPro()?`<p style="font-size:12px;color:var(--green)">All features unlocked ✓</p>`:''}
       </div>
       ${!isPro()?`<div style="display:flex;flex-direction:column;gap:8px">
