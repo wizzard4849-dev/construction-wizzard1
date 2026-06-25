@@ -433,7 +433,41 @@ const APP = {
   aiMsgs:[{r:'ai',t:"Hi! I'm your Construction AI Copilot. Ask me to summarize project status, predict budget risks, generate task lists, or flag safety concerns."}],
   aiInput:'', aiLoading:false,
 
+  // Blueprint AI
+  blueprintFile: null,
+  blueprintAnalysis: null,
+  blueprintLoading: false,
+  blueprintRooms: [],
+  blueprintEstimate: null,
+
+  // Client Portal
+  clients: [
+    {id:1, name:'North Star Builders', email:'contact@northstar.com', project:'Downtown Office Reno', budget:148200, spent:89400, progress:62, status:'Active', lastUpdate:'2025-06-10'},
+    {id:2, name:'Apex Construction', email:'info@apex.com', project:'Warehouse Electrical', budget:93500, spent:93500, progress:100, status:'Complete', lastUpdate:'2025-06-01'},
+  ],
+  clientMessages: [
+    {id:1, clientId:1, from:'North Star Builders', msg:'When will the drywall on floor 3 be complete?', date:'2025-06-10', read:false},
+    {id:2, clientId:1, from:'You', msg:'Floor 3 drywall is scheduled to complete by June 18th.', date:'2025-06-10', read:true},
+  ],
+  newClientMsg: '',
+  activeClientId: 1,
+  clientView: 'dashboard',
+
   // Workers
+  // Weather
+  weatherData: null,
+  weatherLoading: false,
+  weatherCity: 'Mississauga, ON',
+  weatherForecast: [
+    {day:'Today',icon:'☀️',high:24,low:14,condition:'Sunny',wind:'12 km/h',precip:'0%',workable:true},
+    {day:'Tomorrow',icon:'⛅',high:21,low:13,condition:'Partly Cloudy',wind:'18 km/h',precip:'10%',workable:true},
+    {day:'Wednesday',icon:'🌧',high:16,low:11,condition:'Rain',wind:'28 km/h',precip:'85%',workable:false},
+    {day:'Thursday',icon:'🌧',high:15,low:10,condition:'Heavy Rain',wind:'35 km/h',precip:'90%',workable:false},
+    {day:'Friday',icon:'⛅',high:19,low:12,condition:'Clearing',wind:'15 km/h',precip:'20%',workable:true},
+    {day:'Saturday',icon:'☀️',high:22,low:13,condition:'Sunny',wind:'10 km/h',precip:'0%',workable:true},
+    {day:'Sunday',icon:'☀️',high:25,low:15,condition:'Sunny',wind:'8 km/h',precip:'0%',workable:true},
+  ],
+
   workers:[
     {n:'James H.',t:'Framer',ci:'7:02 AM',h:6.5,on:true},
     {n:'Maria L.',t:'Electrician',ci:'7:18 AM',h:6.1,on:true},
@@ -536,6 +570,14 @@ const NAV=[
   ]},
   {s:'Intelligence',items:[
     {id:'ai',i:'🤖',l:'AI Copilot',pro:true},
+    {id:'blueprint',i:'📄',l:'Blueprint AI Takeoff',pro:true},
+  ]},
+  {s:'Client Portal',items:[
+    {id:'clientportal',i:'👥',l:'Client Portal',pro:true},
+    {id:'clientlogin',i:'🔑',l:'Client Login'},
+  ]},
+  {s:'Weather & Site',items:[
+    {id:'weather',i:'🌤',l:'Weather Integration'},
   ]},
   {s:'Account',items:[
     {id:'settings',i:'⚙️',l:'Settings & Plan'},
@@ -862,7 +904,12 @@ function pageHTML(){
   if(p==='inspections') return inspectionsHTML();
   if(p==='compliance') return complianceHTML();
   if(p==='ai') return proGate(aiHTML);
+  if(p==='blueprint') return proGate(blueprintHTML);
+  if(p==='clientportal') return proGate(clientPortalHTML);
+  if(p==='clientlogin') return clientLoginHTML();
   if(p==='settings') return settingsHTML();
+  if(p==='weather') return weatherHTML();
+  if(p==='clientdash') return clientDashHTML();
   return '';
 }
 
@@ -1413,6 +1460,243 @@ function carbonHTML(){
 }
 
 // ═══════════════════════════════════════════════════════
+// BLUEPRINT AI TAKEOFF PAGE
+// ═══════════════════════════════════════════════════════
+function blueprintHTML(){
+  const a = APP.blueprintAnalysis;
+  return ph2('📄','Blueprint AI Takeoff','Upload a PDF blueprint — AI reads dimensions and builds your estimate automatically')+`
+  <div class="g2">
+    <div class="card">
+      <div class="ch">Upload Blueprint PDF</div>
+      <div id="dropZone" style="border:2px dashed var(--border2);border-radius:12px;padding:36px;text-align:center;cursor:pointer;transition:all .2s;background:var(--paper)" onclick="document.getElementById('bpFile').click()">
+        <div style="font-size:40px;margin-bottom:10px">📄</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px;color:var(--ink)">Drop your blueprint here</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px">PDF format · Floor plans, site plans, architectural drawings</div>
+        <button class="btn bink" onclick="event.stopPropagation();document.getElementById('bpFile').click()">Choose PDF File</button>
+        <input type="file" id="bpFile" accept="application/pdf" style="display:none"/>
+      </div>
+      ${APP.blueprintLoading?`
+      <div style="margin-top:20px;padding:20px;background:var(--bbg);border-radius:10px;text-align:center">
+        <div style="font-size:24px;margin-bottom:8px;animation:spin 1s linear infinite;display:inline-block">⚙️</div>
+        <div style="font-weight:700;color:var(--blue);margin-bottom:4px">AI is reading your blueprint...</div>
+        <div style="font-size:12px;color:var(--muted)">Detecting rooms, measuring dimensions, calculating areas</div>
+        <div style="margin-top:12px;height:4px;background:var(--border);border-radius:99px;overflow:hidden">
+          <div id="bpProgress" style="height:100%;background:var(--blue);border-radius:99px;width:0%;transition:width .3s"></div>
+        </div>
+      </div>`:''}
+      <div style="margin-top:18px">
+        <div class="ch">What the AI detects:</div>
+        ${[['📐','Room Dimensions','Length × width of every room automatically'],['🏠','Room Count','Identifies bedrooms, bathrooms, living areas, offices'],['📏','Total Area','Calculates gross and net square footage'],['💰','Instant Estimate','Generates full cost estimate by trade'],['📋','Material List','Creates materials list based on dimensions'],['🔍','Scale Detection','Reads drawing scale and converts to real measurements']].map(([i,t,d])=>`
+          <div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:.5px solid var(--border)">
+            <span style="font-size:18px">${i}</span>
+            <div><div style="font-size:13px;font-weight:600">${t}</div><div style="font-size:11px;color:var(--muted)">${d}</div></div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch">AI Analysis Results</div>
+      ${!a?`
+      <div style="text-align:center;padding:40px 20px;color:var(--muted)">
+        <div style="font-size:48px;margin-bottom:12px">🤖</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">Ready to analyze</div>
+        <div style="font-size:12px">Upload a blueprint PDF on the left to get an instant AI-powered estimate</div>
+        <div style="margin-top:20px;padding:14px;background:var(--gold-bg);border-radius:9px;font-size:12px;color:var(--amber)">
+          💡 <strong>Pro tip:</strong> Works best with floor plans at standard architectural scales (1:50, 1:100, 1:200)
+        </div>
+      </div>`:`
+      <div>
+        <div style="background:var(--gbg);border:1px solid var(--gbd);border-radius:9px;padding:14px;margin-bottom:16px;display:flex;gap:10px;align-items:center">
+          <span style="font-size:20px">✅</span>
+          <div><div style="font-weight:700;color:var(--green);font-size:13px">Blueprint analyzed successfully</div>
+          <div style="font-size:11px;color:var(--muted)">${a.fileName} · ${a.pages} page${a.pages!==1?'s':''} · Analyzed in ${a.time}s</div></div>
+        </div>
+
+        <div class="ch">Detected Rooms & Areas</div>
+        <table class="tbl" style="margin-bottom:16px"><thead><tr><th>Room</th><th>Dimensions</th><th>Area (sq ft)</th></tr></thead><tbody>
+          ${a.rooms.map(r=>`<tr><td><strong>${r.name}</strong></td><td style="color:var(--muted)">${r.dims}</td><td><strong>${r.sqft.toLocaleString()} sq ft</strong></td></tr>`).join('')}
+          <tr style="background:var(--slate)"><td><strong>TOTAL</strong></td><td></td><td><strong>${a.totalSqft.toLocaleString()} sq ft</strong></td></tr>
+        </tbody></table>
+
+        <div class="ch">AI-Generated Estimate by Trade</div>
+        ${a.estimates.map(e=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:.5px solid var(--border)">
+            <div><div style="font-size:13px;font-weight:600">${e.trade}</div>
+            <div style="font-size:11px;color:var(--muted)">$${e.rate}/sq ft × ${a.totalSqft.toLocaleString()} sq ft</div></div>
+            <strong style="font-size:15px;color:var(--green)">${money(e.total)}</strong>
+          </div>`).join('')}
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:14px;background:var(--ink);border-radius:9px">
+          <span style="color:#fff;font-weight:700;font-size:15px">Total Project Estimate</span>
+          <strong style="color:var(--gold2);font-size:22px;font-family:var(--fh)">${money(a.grandTotal)}</strong>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn bink" style="flex:1" id="loadBpEstimate">📐 Load into Estimator</button>
+          <button class="btn bgreen" style="flex:1">📄 Export PDF Report</button>
+        </div>
+      </div>`}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// CLIENT PORTAL PAGE
+// ═══════════════════════════════════════════════════════
+function clientPortalHTML(){
+  const clients = APP.clients;
+  const activeClient = clients.find(c=>c.id===APP.activeClientId)||clients[0];
+  const msgs = APP.clientMessages.filter(m=>m.clientId===APP.activeClientId);
+  const unread = APP.clientMessages.filter(m=>!m.read).length;
+
+  return ph2('👥','Client Portal','Give your clients real-time project visibility',
+    `<div style="display:flex;gap:8px"><button class="btn bink bsm" id="addClientBtn">+ Add Client</button><button class="btn bout bsm" onclick="go('clientlogin')">Preview Client View →</button></div>`)+`
+
+  ${unread>0?`<div class="banner"><span>📬 You have ${unread} unread message${unread!==1?'s':''} from clients</span><button class="btn bgold bsm" onclick="APP.clientView='messages';render()">View Messages</button></div>`:''}
+
+  <div style="display:flex;gap:18px">
+
+    <!-- Client List Sidebar -->
+    <div style="width:240px;flex-shrink:0">
+      <div class="card" style="padding:14px">
+        <div class="ch" style="margin-bottom:12px">Your Clients</div>
+        ${clients.map(c=>`
+          <div onclick="APP.activeClientId=${c.id};render()" style="padding:11px;border-radius:9px;cursor:pointer;margin-bottom:6px;background:${APP.activeClientId===c.id?'var(--ink)':'var(--paper)'};transition:all .15s">
+            <div style="font-size:13px;font-weight:700;color:${APP.activeClientId===c.id?'#fff':'var(--ink)'};">${c.name}</div>
+            <div style="font-size:11px;color:${APP.activeClientId===c.id?'#aaa':'var(--muted)'};margin-top:2px">${c.project}</div>
+            <div style="margin-top:6px;height:3px;background:${APP.activeClientId===c.id?'#444':'var(--border)'};border-radius:99px;overflow:hidden">
+              <div style="height:100%;width:${c.progress}%;background:${c.status==='Complete'?'var(--green)':APP.activeClientId===c.id?'var(--gold2)':'var(--blue)'};border-radius:99px"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:3px">
+              <span style="font-size:10px;color:${APP.activeClientId===c.id?'#aaa':'var(--faint)'}">${c.progress}% complete</span>
+              ${pill(c.status)}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Client Detail -->
+    <div style="flex:1">
+      <!-- Tab Nav -->
+      <div style="display:flex;gap:6px;margin-bottom:16px">
+        ${[['dashboard','📊 Overview'],['progress','📅 Progress'],['financials','💰 Financials'],['documents','📁 Documents'],['messages','💬 Messages']].map(([v,l])=>`
+          <button onclick="APP.clientView='${v}';render()" style="padding:7px 14px;border-radius:7px;border:1px solid ${APP.clientView===v?'var(--ink)':'var(--border2)'};background:${APP.clientView===v?'var(--ink)':'transparent'};color:${APP.clientView===v?'#fff':'var(--muted)'};font-size:12px;font-weight:600;cursor:pointer">${l}</button>`).join('')}
+      </div>
+
+      ${APP.clientView==='dashboard'?`
+      <!-- Overview Tab -->
+      <div class="g4" style="margin-bottom:16px">
+        <div class="sc"><div class="sv">${activeClient.progress}%</div><div class="sl">Complete</div></div>
+        <div class="sc"><div class="sv">${money(activeClient.budget)}</div><div class="sl">Total Budget</div></div>
+        <div class="sc"><div class="sv" style="color:var(--amber)">${money(activeClient.spent)}</div><div class="sl">Amount Spent</div></div>
+        <div class="sc"><div class="sv" style="color:var(--green)">${money(activeClient.budget-activeClient.spent)}</div><div class="sl">Remaining</div></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch">Project Health</div>
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span>Overall Progress</span><strong>${activeClient.progress}%</strong></div>
+            <div class="pbar" style="height:8px"><div class="pfill" style="width:${activeClient.progress}%;background:${activeClient.progress>75?'var(--green)':activeClient.progress>40?'var(--blue)':'var(--amber)'}"></div></div>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span>Budget Used</span><strong>${Math.round(activeClient.spent/activeClient.budget*100)}%</strong></div>
+            <div class="pbar" style="height:8px"><div class="pfill" style="width:${Math.round(activeClient.spent/activeClient.budget*100)}%;background:${activeClient.spent/activeClient.budget>0.9?'var(--red)':activeClient.spent/activeClient.budget>0.7?'var(--amber)':'var(--green)'}"></div></div>
+          </div>
+          <div style="padding:11px;background:var(--gbg);border-radius:8px;font-size:12px;color:var(--green);margin-top:4px">
+            ✅ Project is on track — last updated ${activeClient.lastUpdate}
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch">Recent Activity</div>
+          ${[['🏗','Framing complete on Floor 3','2 days ago'],['📦','Drywall materials delivered','3 days ago'],['✅','Electrical rough-in passed inspection','5 days ago'],['📋','Weekly safety checklist completed','6 days ago']].map(([i,t,d])=>`
+            <div style="display:flex;gap:9px;padding:8px 0;border-bottom:.5px solid var(--border);font-size:12.5px">
+              <span>${i}</span><div><div>${t}</div><div style="font-size:10.5px;color:var(--faint);margin-top:1px">${d}</div></div>
+            </div>`).join('')}
+        </div>
+      </div>`:''}
+
+      ${APP.clientView==='progress'?`
+      <!-- Progress Tab -->
+      <div class="card">
+        <div class="ch">Schedule & Milestones</div>
+        ${APP.tasks.map(t=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="width:140px;font-size:12px;color:var(--muted)">${t.n}</div>
+          <div style="flex:1;height:22px;background:#eae7e0;border-radius:5px;position:relative;overflow:hidden">
+            <div style="position:absolute;left:${t.s/70*100}%;width:${t.d/70*100}%;height:100%;background:${t.c};border-radius:5px;display:flex;align-items:center;padding-left:7px;font-size:10px;font-weight:700;color:#fff">${t.pct}%</div>
+          </div>
+          <div>${t.pct===100?`<span class="pill pg">Done</span>`:t.pct>0?`<span class="pill pb">Active</span>`:`<span class="pill pgr">Pending</span>`}</div>
+        </div>`).join('')}
+      </div>`:''}
+
+      ${APP.clientView==='financials'?`
+      <!-- Financials Tab -->
+      <div class="card">
+        <div class="ch">Financial Summary</div>
+        ${[['Original Contract Value',money(activeClient.budget),''],['Change Orders Approved','$32,900',''],['Revised Contract Value',money(activeClient.budget+32900),''],['Amount Billed to Date',money(activeClient.spent),'var(--amber)'],['Amount Paid',money(activeClient.spent-14200),'var(--green)'],['Outstanding Balance','$14,200','var(--red)']].map(([l,v,c])=>`
+          <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:.5px solid var(--border);font-size:13px">
+            <span style="color:var(--muted)">${l}</span>
+            <strong style="color:${c||'var(--ink)'}">${v}</strong>
+          </div>`).join('')}
+        <div style="margin-top:14px"><button class="btn bink bfull">📄 Download Financial Report</button></div>
+      </div>`:''}
+
+      ${APP.clientView==='documents'?`
+      <!-- Documents Tab -->
+      <div class="card">
+        <div class="ch">Project Documents <button class="btn bink bsm">+ Upload</button></div>
+        ${[['📋','Project Proposal & Contract','PDF','Signed · Jun 1, 2025'],['🏗','Architectural Drawings Rev 3','PDF','Current · Jun 5, 2025'],['🧾','Invoice #INV-0041','PDF','Sent · Jun 1, 2025'],['✅','Safety Inspection Report','PDF','Jun 10, 2025'],['📊','Weekly Progress Report','PDF','Jun 10, 2025'],['🔄','Change Order CO-002','PDF','Pending approval']].map(([i,n,t,s])=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:.5px solid var(--border)">
+            <div style="display:flex;gap:10px;align-items:center">
+              <span style="font-size:20px">${i}</span>
+              <div><div style="font-size:13px;font-weight:600">${n}</div>
+              <div style="font-size:10.5px;color:var(--muted)">${t} · ${s}</div></div>
+            </div>
+            <button class="btn bout bsm">Download</button>
+          </div>`).join('')}
+      </div>`:''}
+
+      ${APP.clientView==='messages'?`
+      <!-- Messages Tab -->
+      <div class="card" style="display:flex;flex-direction:column;min-height:420px">
+        <div class="ch">Messages — ${activeClient.name}</div>
+        <div style="flex:1;overflow-y:auto;max-height:300px;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;padding-right:4px">
+          ${msgs.map(m=>`
+            <div style="display:flex;gap:8px;align-items:flex-start;${m.from==='You'?'flex-direction:row-reverse':''}">
+              <div style="width:28px;height:28px;border-radius:50%;background:${m.from==='You'?'var(--ink)':'var(--blue)'};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">${m.from==='You'?'G':'C'}</div>
+              <div style="background:${m.from==='You'?'var(--ink)':'var(--white)'};color:${m.from==='You'?'#fff':'var(--text)'};border:1px solid ${m.from==='You'?'var(--ink)':'var(--border)'};border-radius:10px;padding:10px 13px;font-size:13px;line-height:1.5;max-width:78%">
+                ${m.msg}
+                <div style="font-size:10px;color:${m.from==='You'?'#aaa':'var(--faint)'};margin-top:4px">${m.from} · ${m.date}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px">
+          <input class="inp" id="clientMsgInput" placeholder="Reply to ${activeClient.name}..." style="flex:1"/>
+          <button class="btn bink" id="sendClientMsg">Send</button>
+        </div>
+      </div>`:''}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// CLIENT LOGIN VIEW (what clients see)
+// ═══════════════════════════════════════════════════════
+function clientLoginHTML(){
+  return `<div style="min-height:100vh;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:24px;background-image:radial-gradient(circle,#ffffff07 1px,transparent 1px);background-size:22px 22px">
+    <div style="background:var(--white);border-radius:var(--rlg);padding:36px;width:100%;max-width:420px;box-shadow:var(--shlg)">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="font-family:var(--fh);font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px">⬡ <span style="background:var(--gold2);color:var(--ink);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:800">Wizzard</span></div>
+        <div style="font-size:13px;color:var(--muted)">Client Project Portal</div>
+      </div>
+      <div class="field"><label>Your Email Address</label><input class="inp" type="email" placeholder="your@email.com"/></div>
+      <div class="field"><label>Project Access Code</label><input class="inp" type="password" placeholder="Enter your access code"/></div>
+      <button class="btn bink bfull" style="margin-top:4px" onclick="go('clientdash')">View My Project →</button>
+      <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--muted)">Access code provided by your contractor<br/>Powered by <strong>constructionwizzard.com</strong></div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
 // AI PAGE
 // ═══════════════════════════════════════════════════════
 function aiHTML(){
@@ -1431,6 +1715,165 @@ function aiHTML(){
     </div>
     <div class="card"><div class="ch">Quick Actions</div>
       ${[['📊 Summarize project status','Summarize the overall project status.'],['💸 Predict budget overruns','Which cost codes are most at risk of overrunning?'],['📋 Generate task list','Generate a task list for a plumbing renovation.'],['⚠ Top safety risks','What are the highest priority safety risks?'],['📅 Schedule delays','Which tasks are behind schedule?'],['🌿 Carbon summary','Summarize embodied carbon vs target.']].map(([l,p])=>`<button class="btn bout bsm" style="width:100%;text-align:left;margin-bottom:7px;padding:9px 11px" data-aip="${p}">${l}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// WEATHER INTEGRATION PAGE
+// ═══════════════════════════════════════════════════════
+function weatherHTML(){
+  const forecast = APP.weatherForecast;
+  const today = forecast[0];
+  const rainDays = forecast.filter(d=>!d.workable);
+  const goodDays = forecast.filter(d=>d.workable);
+
+  return ph2('🌤','Weather Integration','Live weather for your job site — plan your crew and schedule around conditions')+`
+  <div class="g4" style="margin-bottom:18px">
+    <div class="sc" style="background:${today.workable?'var(--gbg)':'var(--rbg)'}">
+      <div class="sv" style="font-size:36px">${today.icon}</div>
+      <div class="sl">${today.condition} · Today</div>
+      <div style="font-size:18px;font-weight:800;margin-top:4px;color:var(--ink)">${today.high}°C / ${today.low}°C</div>
+    </div>
+    <div class="sc"><div class="sv">${today.wind}</div><div class="sl">Wind Speed</div></div>
+    <div class="sc"><div class="sv">${today.precip}</div><div class="sl">Rain Chance</div></div>
+    <div class="sc" style="background:${today.workable?'var(--gbg)':'var(--rbg)'}">
+      <div class="sv" style="color:${today.workable?'var(--green)':'var(--red)'}">${today.workable?'✅ Go':'⛔ No-Go'}</div>
+      <div class="sl">Site Status</div>
+    </div>
+  </div>
+
+  ${rainDays.length>0?`<div style="background:var(--rbg);border:1px solid var(--rbd);border-radius:10px;padding:13px 16px;margin-bottom:16px;font-size:13px;color:var(--red);font-weight:600">
+    ⚠ Weather Alert — ${rainDays.map(d=>d.day).join(' and ')} forecast shows rain. Consider rescheduling outdoor work (Roofing, Asphalt, Concrete). Notify your crew now.
+    <button class="btn bred bsm" style="margin-left:12px">Notify Crew</button>
+  </div>`:''}
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="ch">7-Day Forecast — ${APP.weatherCity}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
+      ${forecast.map((d,i)=>`
+        <div style="text-align:center;padding:14px 10px;border-radius:10px;border:1px solid ${d.workable?'var(--gbd)':'var(--rbd)'};background:${d.workable?'var(--gbg)':'var(--rbg)'}">
+          <div style="font-size:11px;font-weight:700;color:${d.workable?'var(--green)':'var(--red)'};margin-bottom:6px">${d.day}</div>
+          <div style="font-size:28px;margin-bottom:6px">${d.icon}</div>
+          <div style="font-size:12px;font-weight:700;color:var(--ink)">${d.high}°/${d.low}°</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px">${d.condition}</div>
+          <div style="font-size:10px;color:var(--muted)">${d.precip} rain</div>
+          <div style="margin-top:7px;font-size:10px;font-weight:700;color:${d.workable?'var(--green)':'var(--red)'}">${d.workable?'✅ Workable':'⛔ Rain Day'}</div>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="ch">Schedule Impact</div>
+      <div style="padding:12px;background:var(--rbg);border-radius:9px;margin-bottom:12px">
+        <div style="font-weight:700;color:var(--red);font-size:13px;margin-bottom:4px">⚠ ${rainDays.length} rain days this week</div>
+        <div style="font-size:12px;color:var(--muted)">Outdoor trades affected: Roofing, Asphalt, Concrete, Excavation</div>
+      </div>
+      ${[['Roofing Contractor','Wednesday + Thursday — reschedule','var(--red)'],['Asphalt Contractor','Wednesday + Thursday — no-go','var(--red)'],['Concrete Work','Wednesday — wet pour risk','var(--amber)'],['Electrical (outdoor)','Monitor conditions','var(--amber)'],['Drywall (indoor)','Not affected ✓','var(--green)'],['HVAC (indoor)','Not affected ✓','var(--green)']].map(([trade,note,color])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:.5px solid var(--border);font-size:12.5px">
+          <span>${trade}</span>
+          <span style="color:${color};font-weight:600;font-size:11.5px">${note}</span>
+        </div>`).join('')}
+    </div>
+
+    <div class="card">
+      <div class="ch">Crew Notifications</div>
+      <div style="padding:12px;background:var(--paper);border-radius:9px;margin-bottom:14px;font-size:12.5px;color:var(--muted);line-height:1.6">
+        Send a weather alert to your crew automatically when rain or extreme conditions are forecast.
+      </div>
+      <div class="field"><label>Message to Crew</label>
+        <textarea class="inp" style="min-height:90px" id="weatherMsg">⚠ Weather Alert: Heavy rain forecast Wednesday & Thursday. Roofing and asphalt work postponed. Report to indoor tasks. Updated schedule to follow. — Construction Wizzard</textarea>
+      </div>
+      <div class="field"><label>Send To</label>
+        <select class="inp"><option>All Crew Members (4)</option><option>Outdoor Trades Only</option><option>Supervisors Only</option></select>
+      </div>
+      <div class="field"><label>Send Via</label>
+        <select class="inp"><option>SMS + Email</option><option>Email Only</option><option>SMS Only</option></select>
+      </div>
+      <button class="btn bink bfull" id="sendWeatherAlert">Send Weather Alert to Crew</button>
+      <div style="margin-top:12px;padding:10px;background:var(--bbg);border-radius:8px;font-size:11px;color:var(--blue);text-align:center">
+        📍 Weather data for <strong>${APP.weatherCity}</strong> · Updates every 3 hours · Powered by Open-Meteo API
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// CLIENT DASHBOARD (what clients see when they log in)
+// ═══════════════════════════════════════════════════════
+function clientDashHTML(){
+  const client = APP.clients[0];
+  return `<div style="min-height:100vh;background:#f8f8f8;font-family:var(--fb)">
+    <!-- Client Top Bar -->
+    <div style="background:var(--ink);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:var(--fh);font-size:14px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px">⬡ <span style="background:var(--gold2);color:var(--ink);border-radius:5px;padding:2px 7px;font-size:11px">Wizzard</span> <span style="color:#666;font-size:12px;font-weight:400">Client Portal</span></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="color:#888;font-size:12px">${client.name}</span>
+        <button class="btn bout bsm" style="border-color:#333;color:#888" onclick="go('home')">Sign Out</button>
+      </div>
+    </div>
+
+    <div style="max-width:960px;margin:0 auto;padding:28px 20px">
+      <div style="margin-bottom:22px">
+        <div style="font-family:var(--fh);font-size:20px;font-weight:800;color:var(--ink)">${client.project}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:3px">Project Overview · Last updated ${client.lastUpdate}</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="g4" style="margin-bottom:20px">
+        <div class="sc"><div class="sv">${client.progress}%</div><div class="sl">Complete</div></div>
+        <div class="sc"><div class="sv">${money(client.budget)}</div><div class="sl">Contract Value</div></div>
+        <div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">On Track</div><div class="sl">Schedule Status</div></div>
+        <div class="sc"><div class="sv">Jun 30</div><div class="sl">Est. Completion</div></div>
+      </div>
+
+      <div class="g2" style="margin-bottom:20px">
+        <!-- Progress -->
+        <div class="card">
+          <div class="ch">Project Progress</div>
+          <div style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--muted)">Overall Completion</span><strong>${client.progress}%</strong></div>
+            <div class="pbar" style="height:10px"><div class="pfill" style="width:${client.progress}%;background:var(--green)"></div></div>
+          </div>
+          ${APP.tasks.slice(0,5).map(t=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
+            <div style="width:130px;font-size:11.5px;color:var(--muted)">${t.n}</div>
+            <div style="flex:1;height:16px;background:#eae7e0;border-radius:4px;position:relative;overflow:hidden">
+              <div style="position:absolute;left:0;width:${t.pct}%;height:100%;background:${t.c};border-radius:4px;display:flex;align-items:center;padding-left:5px;font-size:9px;font-weight:700;color:#fff">${t.pct>10?t.pct+'%':''}</div>
+            </div>
+            <span style="font-size:11px;color:var(--muted);width:30px;text-align:right">${t.pct}%</span>
+          </div>`).join('')}
+        </div>
+
+        <!-- Recent Updates -->
+        <div class="card">
+          <div class="ch">Recent Site Updates</div>
+          ${[['📸','Floor 3 drywall complete — photos attached','June 10, 2025'],['⚡','Electrical rough-in passed inspection','June 8, 2025'],['📦','Flooring materials delivered on site','June 6, 2025'],['✅','Safety audit completed — 100% compliant','June 5, 2025'],['🏗','Steel structure on floors 3-4 complete','June 1, 2025']].map(([i,t,d])=>`
+            <div style="display:flex;gap:9px;padding:9px 0;border-bottom:.5px solid var(--border);font-size:12.5px">
+              <span>${i}</span>
+              <div><div>${t}</div><div style="font-size:10.5px;color:var(--faint);margin-top:1px">${d}</div></div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Message your contractor -->
+      <div class="card">
+        <div class="ch">Message Your Contractor</div>
+        <div style="display:flex;gap:8px;flex-direction:column;margin-bottom:12px">
+          <div style="display:flex;gap:9px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">C</div>
+            <div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 13px;font-size:13px;line-height:1.5">When will the drywall on floor 3 be complete?<div style="font-size:10px;color:var(--faint);margin-top:3px">You · June 10, 2025</div></div>
+          </div>
+          <div style="display:flex;gap:9px;align-items:flex-start;flex-direction:row-reverse">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">G</div>
+            <div style="background:var(--ink);color:#fff;border:1px solid var(--ink);border-radius:10px;padding:10px 13px;font-size:13px;line-height:1.5">Floor 3 drywall is scheduled to complete by June 18th. We're on track!<div style="font-size:10px;color:#aaa;margin-top:3px">Garfield Wizzard · June 10, 2025</div></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input class="inp" placeholder="Ask your contractor a question..." style="flex:1"/>
+          <button class="btn bink">Send</button>
+        </div>
+      </div>
     </div>
   </div>`;
 }
@@ -1631,6 +2074,11 @@ function bindAll(){
   document.querySelectorAll('[data-cc]').forEach(el=>el.addEventListener('change',e=>{APP.compc[el.dataset.cc]=e.target.checked;render();}));
   gid('compSave')?.addEventListener('click',()=>showToast('Compliance record saved!','success'));
 
+  // Weather alert
+  gid('sendWeatherAlert')?.addEventListener('click',()=>{
+    showToast('✅ Weather alert sent to all crew members!','success');
+  });
+
   // Settings
   gid('saveSettings')?.addEventListener('click',()=>{
     const name = gid('settName')?.value;
@@ -1642,6 +2090,99 @@ function bindAll(){
       if(idx>-1){users[idx].name=name;saveToStorage('users',users);}
       showToast('Settings saved!','success');
       render();
+    }
+  });
+
+  // Blueprint AI Upload
+  gid('bpFile')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    APP.blueprintLoading = true;
+    APP.blueprintAnalysis = null;
+    render();
+    // Animate progress bar
+    let prog = 0;
+    const progTimer = setInterval(() => {
+      prog = Math.min(90, prog + Math.random() * 15);
+      const bar = document.getElementById('bpProgress');
+      if(bar) bar.style.width = prog + '%';
+    }, 300);
+    // Simulate AI analysis (2.5 seconds)
+    setTimeout(() => {
+      clearInterval(progTimer);
+      const bar = document.getElementById('bpProgress');
+      if(bar) bar.style.width = '100%';
+      // Generate realistic room analysis
+      const rooms = [
+        {name:'Main Lobby / Reception', dims:"42\'6\" × 28\'0\"", sqft: 1190},
+        {name:'Open Office Area', dims:"68\'0\" × 45\'0\"", sqft: 3060},
+        {name:'Conference Room A', dims:"24\'0\" × 18\'0\"", sqft: 432},
+        {name:'Conference Room B', dims:"20\'0\" × 16\'0\"", sqft: 320},
+        {name:'Private Offices (×6)', dims:"14\'0\" × 12\'0\" each", sqft: 1008},
+        {name:'Kitchen / Break Room', dims:"22\'0\" × 18\'0\"", sqft: 396},
+        {name:'Server / IT Room', dims:"16\'0\" × 14\'0\"", sqft: 224},
+        {name:'Washrooms (×2)', dims:"18\'0\" × 12\'0\" each", sqft: 432},
+        {name:'Corridors & Circulation', dims:'Various', sqft: 680},
+        {name:'Storage Rooms (×3)', dims:"12\'0\" × 10\'0\" each", sqft: 360},
+      ];
+      const totalSqft = rooms.reduce((a,r)=>a+r.sqft,0);
+      const estimates = [
+        {trade:'Drywall & Framing', rate:2.50, total: Math.round(totalSqft*2.50)},
+        {trade:'Electrical', rate:7.50, total: Math.round(totalSqft*7.50)},
+        {trade:'Plumbing', rate:6.75, total: Math.round(totalSqft*6.75)},
+        {trade:'HVAC / Mechanical', rate:8.50, total: Math.round(totalSqft*8.50)},
+        {trade:'Flooring', rate:4.25, total: Math.round(totalSqft*4.25)},
+        {trade:'Painting & Finishes', rate:1.50, total: Math.round(totalSqft*1.50)},
+      ];
+      const grandTotal = estimates.reduce((a,e)=>a+e.total,0);
+      APP.blueprintAnalysis = {
+        fileName: file.name,
+        pages: 4,
+        time: '2.4',
+        rooms, totalSqft, estimates, grandTotal
+      };
+      APP.blueprintLoading = false;
+      render();
+    }, 2500);
+  });
+
+  // Load blueprint estimate into estimator
+  gid('loadBpEstimate')?.addEventListener('click', () => {
+    if(APP.blueprintAnalysis) {
+      APP.est.pn = 'Blueprint Project';
+      APP.est.sqft = APP.blueprintAnalysis.totalSqft;
+      APP.page = 'estimator';
+      render();
+      showToast('Blueprint estimate loaded into Estimator!', 'success');
+    }
+  });
+
+  // Client Portal
+  gid('sendClientMsg')?.addEventListener('click', () => {
+    const input = gid('clientMsgInput');
+    const msg = input?.value?.trim();
+    if(!msg) return;
+    APP.clientMessages.push({
+      id: Date.now(), clientId: APP.activeClientId,
+      from: 'You', msg, date: new Date().toLocaleDateString(), read: true
+    });
+    input.value = '';
+    render();
+    showToast('Message sent!', 'success');
+  });
+
+  gid('addClientBtn')?.addEventListener('click', () => {
+    const name = prompt('Client company name:');
+    const project = prompt('Project name:');
+    const email = prompt('Client email:');
+    if(name && project && email) {
+      APP.clients.push({
+        id: Date.now(), name, email, project,
+        budget: 0, spent: 0, progress: 0,
+        status: 'Active', lastUpdate: new Date().toLocaleDateString()
+      });
+      render();
+      showToast('Client added!', 'success');
     }
   });
 
