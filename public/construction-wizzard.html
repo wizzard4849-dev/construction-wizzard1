@@ -454,6 +454,45 @@ const APP = {
   clientView: 'dashboard',
 
   // Workers
+  // Material Prices
+  materials:[
+    {id:1,name:'Lumber (2x4x8)',unit:'per piece',price:8.49,prev:7.20,trend:'up',supplier:'Home Depot Pro',updated:'Jun 10'},
+    {id:2,name:'Drywall 4x8 Sheet',unit:'per sheet',price:12.99,prev:13.50,trend:'down',supplier:'Rona Pro',updated:'Jun 10'},
+    {id:3,name:'Concrete (ready-mix)',unit:'per m³',price:185.00,prev:172.00,trend:'up',supplier:'Lafarge',updated:'Jun 9'},
+    {id:4,name:'Structural Steel',unit:'per tonne',price:1240.00,prev:1180.00,trend:'up',supplier:'Metals Plus',updated:'Jun 8'},
+    {id:5,name:'Copper Wire (14AWG)',unit:'per 75m roll',price:89.99,prev:94.00,trend:'down',supplier:'Electrical Plus',updated:'Jun 10'},
+    {id:6,name:'PVC Pipe (4" dia)',unit:'per 6m length',price:24.50,prev:24.50,trend:'flat',supplier:'Plumbing World',updated:'Jun 7'},
+    {id:7,name:'Asphalt (hot mix)',unit:'per tonne',price:95.00,prev:88.00,trend:'up',supplier:'Miller Paving',updated:'Jun 9'},
+    {id:8,name:'Roofing Shingles',unit:'per bundle',price:42.99,prev:39.99,trend:'up',supplier:'Roofmart',updated:'Jun 10'},
+    {id:9,name:'Insulation R20',unit:'per bag',price:54.99,prev:54.99,trend:'flat',supplier:'Home Depot Pro',updated:'Jun 6'},
+    {id:10,name:'Paint (interior)',unit:'per 3.78L',price:68.99,prev:72.00,trend:'down',supplier:'Benjamin Moore',updated:'Jun 10'},
+  ],
+  materialSearch:'',
+
+  // RFI Management
+  rfis:[
+    {id:'RFI-001',subject:'Clarification on FL3 ceiling height',from:'Apex Electrical',to:'Architect',priority:'High',status:'Open',date:'2025-06-08',due:'2025-06-15',response:''},
+    {id:'RFI-002',subject:'Waterproofing membrane spec for B1',from:'GC',to:'Engineer',priority:'Medium',status:'Answered',date:'2025-06-05',due:'2025-06-12',response:'Use Tremco Paraseal membrane, min 60 mil thickness. See spec section 07 1300.'},
+    {id:'RFI-003',subject:'Door hardware schedule missing Rm 204',from:'GC',to:'Architect',priority:'Low',status:'Open',date:'2025-06-09',due:'2025-06-16',response:''},
+    {id:'RFI-004',subject:'Structural steel connection detail grid C-4',from:'Steel Sub',to:'Engineer',priority:'High',status:'Answered',date:'2025-06-01',due:'2025-06-08',response:'Use moment connection per drawing S-14 Rev 2. Verify with site engineer before proceeding.'},
+    {id:'RFI-005',subject:'Electrical panel location conflict FL2',from:'Electrician',to:'Architect',priority:'High',status:'Open',date:'2025-06-10',due:'2025-06-17',response:''},
+  ],
+  showRFIForm:false,
+  rfiFilter:'All',
+
+  // Cert Expiry
+  certifications:[
+    {id:1,worker:'James H.',trade:'Framer',cert:'Working at Heights',issued:'2024-06-15',expires:'2025-06-15',daysLeft:5,status:'Expiring Soon'},
+    {id:2,worker:'Maria L.',trade:'Electrician',cert:'Electrical Safety',issued:'2024-01-10',expires:'2026-01-10',daysLeft:580,status:'Valid'},
+    {id:3,worker:'Derek W.',trade:'Laborer',cert:'First Aid Level 1',issued:'2023-09-01',expires:'2025-06-01',daysLeft:-9,status:'Expired'},
+    {id:4,worker:'Priya S.',trade:'Drywaller',cert:'WHMIS 2015',issued:'2024-03-15',expires:'2025-09-15',daysLeft:97,status:'Valid'},
+    {id:5,worker:'James H.',trade:'Framer',cert:'Fall Protection',issued:'2023-06-01',expires:'2025-07-01',daysLeft:21,status:'Expiring Soon'},
+    {id:6,worker:'Maria L.',trade:'Electrician',cert:'First Aid Level 2',issued:'2024-06-01',expires:'2026-06-01',daysLeft:357,status:'Valid'},
+    {id:7,worker:'Derek W.',trade:'Laborer',cert:'WHMIS 2015',issued:'2022-05-01',expires:'2025-05-01',daysLeft:-40,status:'Expired'},
+    {id:8,worker:'Priya S.',trade:'Drywaller',cert:'Working at Heights',issued:'2024-08-01',expires:'2025-08-01',daysLeft:52,status:'Valid'},
+  ],
+  alertsSent:[],
+
   // Weather
   weatherData: null,
   weatherLoading: false,
@@ -578,6 +617,9 @@ const NAV=[
   ]},
   {s:'Weather & Site',items:[
     {id:'weather',i:'🌤',l:'Weather Integration'},
+    {id:'materials',i:'🏗',l:'Material Price Tracker'},
+    {id:'rfi',i:'📝',l:'RFI Management'},
+    {id:'certexpiry',i:'🎓',l:'Cert Expiry Alerts'},
   ]},
   {s:'Account',items:[
     {id:'settings',i:'⚙️',l:'Settings & Plan'},
@@ -909,6 +951,9 @@ function pageHTML(){
   if(p==='clientlogin') return clientLoginHTML();
   if(p==='settings') return settingsHTML();
   if(p==='weather') return weatherHTML();
+  if(p==='materials') return materialsHTML();
+  if(p==='rfi') return rfiHTML();
+  if(p==='certexpiry') return certExpiryHTML();
   if(p==='clientdash') return clientDashHTML();
   return '';
 }
@@ -1879,6 +1924,227 @@ function clientDashHTML(){
 }
 
 // ═══════════════════════════════════════════════════════
+// MATERIAL PRICE TRACKER
+// ═══════════════════════════════════════════════════════
+function materialsHTML(){
+  const mats = APP.materials.filter(m=>
+    APP.materialSearch==='' ||
+    m.name.toLowerCase().includes(APP.materialSearch.toLowerCase())
+  );
+  const up = APP.materials.filter(m=>m.trend==='up').length;
+  const down = APP.materials.filter(m=>m.trend==='down').length;
+
+  return ph2('🏗','Material Price Tracker','Live construction material prices — auto-update your estimates when costs change')+`
+  <div class="g4" style="margin-bottom:18px">
+    <div class="sc"><div class="sv">${APP.materials.length}</div><div class="sl">Materials Tracked</div></div>
+    <div class="sc" style="background:var(--rbg)"><div class="sv" style="color:var(--red)">↑ ${up}</div><div class="sl">Prices Rising</div></div>
+    <div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">↓ ${down}</div><div class="sl">Prices Falling</div></div>
+    <div class="sc"><div class="sv">Today</div><div class="sl">Last Updated</div></div>
+  </div>
+
+  <div class="card">
+    <div class="ch">
+      Live Material Prices
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="inp" id="matSearch" placeholder="Search materials..." style="width:200px;padding:6px 10px;font-size:12px" value="${APP.materialSearch}"/>
+        <button class="btn bink bsm">+ Add Material</button>
+      </div>
+    </div>
+
+    <table class="tbl">
+      <thead><tr><th>Material</th><th>Unit</th><th>Current Price</th><th>Previous</th><th>Change</th><th>Trend</th><th>Supplier</th><th>Updated</th></tr></thead>
+      <tbody>
+        ${mats.map(m=>{
+          const change = m.price - m.prev;
+          const changePct = ((change/m.prev)*100).toFixed(1);
+          const trendColor = m.trend==='up'?'var(--red)':m.trend==='down'?'var(--green)':'var(--muted)';
+          const trendIcon = m.trend==='up'?'↑':m.trend==='down'?'↓':'→';
+          return `<tr>
+            <td><strong>${m.name}</strong></td>
+            <td style="color:var(--muted)">${m.unit}</td>
+            <td><strong style="font-size:14px">$${m.price.toFixed(2)}</strong></td>
+            <td style="color:var(--muted)">$${m.prev.toFixed(2)}</td>
+            <td style="color:${trendColor};font-weight:700">${change>=0?'+':''}$${Math.abs(change).toFixed(2)}<div style="font-size:9.5px">${change>=0?'+':''}${changePct}%</div></td>
+            <td><span style="font-size:18px;color:${trendColor}">${trendIcon}</span></td>
+            <td style="color:var(--muted);font-size:12px">${m.supplier}</td>
+            <td style="color:var(--faint);font-size:11px">${m.updated}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+
+    <div style="margin-top:16px;padding:12px 14px;background:var(--gold-bg);border:1px solid var(--abd);border-radius:9px;font-size:12.5px;color:var(--amber)">
+      💡 <strong>Price Alert:</strong> Lumber (+17.9%), Concrete (+7.6%), Structural Steel (+5.1%) and Asphalt (+7.9%) have risen since last month.
+      <button class="btn bgold bsm" style="margin-left:10px" id="updateEstimates">Update All Estimates →</button>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// RFI MANAGEMENT
+// ═══════════════════════════════════════════════════════
+function rfiHTML(){
+  const filters = ['All','Open','Answered','High Priority'];
+  const filtered = APP.rfis.filter(r=>{
+    if(APP.rfiFilter==='All') return true;
+    if(APP.rfiFilter==='Open') return r.status==='Open';
+    if(APP.rfiFilter==='Answered') return r.status==='Answered';
+    if(APP.rfiFilter==='High Priority') return r.priority==='High';
+    return true;
+  });
+  const open = APP.rfis.filter(r=>r.status==='Open').length;
+  const overdue = APP.rfis.filter(r=>r.status==='Open' && new Date(r.due)<new Date()).length;
+
+  return ph2('📝','RFI Management','Track every Request for Information from submission to answer',
+    `<button class="btn bink bsm" id="showRFIForm">${APP.showRFIForm?'Cancel':'+ New RFI'}</button>`)+`
+
+  <div class="g4" style="margin-bottom:16px">
+    <div class="sc"><div class="sv">${APP.rfis.length}</div><div class="sl">Total RFIs</div></div>
+    <div class="sc" style="background:var(--abg)"><div class="sv" style="color:var(--amber)">${open}</div><div class="sl">Open</div></div>
+    <div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">${APP.rfis.filter(r=>r.status==='Answered').length}</div><div class="sl">Answered</div></div>
+    <div class="sc" style="background:${overdue>0?'var(--rbg)':'var(--white)'}"><div class="sv" style="color:${overdue>0?'var(--red)':'var(--ink)'}">${overdue}</div><div class="sl">Overdue</div></div>
+  </div>
+
+  ${APP.showRFIForm?`<div class="card" style="margin-bottom:16px">
+    <div class="ch">Submit New RFI</div>
+    <div class="r2">
+      <div class="field"><label>RFI Subject</label><input class="inp" id="rfiSubject" placeholder="e.g. Clarification on ceiling height FL3"/></div>
+      <div class="field"><label>Priority</label><select class="inp" id="rfiPriority"><option>High</option><option>Medium</option><option>Low</option></select></div>
+    </div>
+    <div class="r2">
+      <div class="field"><label>From</label><input class="inp" id="rfiFrom" placeholder="Your name / company"/></div>
+      <div class="field"><label>Directed To</label><input class="inp" id="rfiTo" placeholder="Architect / Engineer / GC"/></div>
+    </div>
+    <div class="r2">
+      <div class="field"><label>Date Required</label><input class="inp" type="date" id="rfiDue"/></div>
+      <div class="field"><label>Related Drawing</label><input class="inp" placeholder="e.g. A-201 Rev 3"/></div>
+    </div>
+    <div class="field"><label>Full Description / Question</label><textarea class="inp" id="rfiDesc" placeholder="Describe the issue or question in detail..."></textarea></div>
+    <div class="field"><label>Attach Drawing / Photo</label><input class="inp" type="file" accept="image/*,application/pdf"/></div>
+    <button class="btn bink" id="submitRFI">Submit RFI</button>
+  </div>`:''}
+
+  <!-- Filter tabs -->
+  <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+    ${filters.map(f=>`<button onclick="APP.rfiFilter='${f}';render()" style="padding:6px 14px;border-radius:7px;border:1px solid ${APP.rfiFilter===f?'var(--ink)':'var(--border2)'};background:${APP.rfiFilter===f?'var(--ink)':'transparent'};color:${APP.rfiFilter===f?'#fff':'var(--muted)'};font-size:12px;font-weight:600;cursor:pointer">${f}</button>`).join('')}
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:12px">
+    ${filtered.map(r=>`<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:700;color:var(--faint)">${r.id}</span>
+            ${pill(r.priority)}
+            ${pill(r.status)}
+            ${r.status==='Open'&&new Date(r.due)<new Date()?`<span class="pill pr">Overdue</span>`:''}
+          </div>
+          <div style="font-size:14px;font-weight:700;color:var(--ink)">${r.subject}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:3px">From: <strong>${r.from}</strong> → To: <strong>${r.to}</strong> · Submitted: ${r.date} · Response needed: ${r.due}</div>
+        </div>
+        ${r.status==='Open'?`<button class="btn bgreen bsm" onclick="APP.rfis.find(x=>x.id==='${r.id}').status='Answered';render();showToast('RFI marked as answered','success')">Mark Answered</button>`:''}
+      </div>
+      ${r.response?`<div style="background:var(--gbg);border:1px solid var(--gbd);border-radius:8px;padding:11px 13px;font-size:12.5px;color:var(--text)"><strong style="color:var(--green);font-size:11px;display:block;margin-bottom:4px">✅ RESPONSE:</strong>${r.response}</div>`:`
+      <div style="background:var(--paper);border-radius:8px;padding:10px 13px">
+        <input class="inp" placeholder="Type response here..." id="rfiResp_${r.id}" style="margin-bottom:8px"/>
+        <button class="btn bink bsm" onclick="(()=>{const v=document.getElementById('rfiResp_${r.id}').value;if(v){APP.rfis.find(x=>x.id==='${r.id}').response=v;APP.rfis.find(x=>x.id==='${r.id}').status='Answered';render();showToast('Response saved!','success');}})()">Save Response</button>
+      </div>`}
+    </div>`).join('')}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// CREW CERT EXPIRY ALERTS
+// ═══════════════════════════════════════════════════════
+function certExpiryHTML(){
+  const certs = APP.certifications;
+  const expired = certs.filter(c=>c.status==='Expired');
+  const expiringSoon = certs.filter(c=>c.status==='Expiring Soon');
+  const valid = certs.filter(c=>c.status==='Valid');
+
+  function statusBg(s){
+    if(s==='Expired') return 'var(--rbg)';
+    if(s==='Expiring Soon') return 'var(--abg)';
+    return 'var(--gbg)';
+  }
+
+  return ph2('🎓','Cert Expiry Alerts','Automatic alerts before crew certifications expire — stay compliant',
+    `<button class="btn bink bsm" id="sendAllAlerts">📧 Send All Expiry Alerts</button>`)+`
+
+  ${expired.length>0||expiringSoon.length>0?`<div style="background:var(--rbg);border:1px solid var(--rbd);border-radius:10px;padding:13px 16px;margin-bottom:16px">
+    <div style="font-weight:700;color:var(--red);font-size:13px;margin-bottom:4px">🚨 Action Required</div>
+    <div style="font-size:12.5px;color:var(--red)">
+      ${expired.length>0?`<strong>${expired.length} certification${expired.length!==1?'s':''} EXPIRED</strong> — workers cannot legally perform these tasks.<br/>`:''}
+      ${expiringSoon.length>0?`<strong>${expiringSoon.length} certification${expiringSoon.length!==1?'s':''} expiring within 30 days</strong> — schedule renewals now.`:''}
+    </div>
+  </div>`:''}
+
+  <div class="g4" style="margin-bottom:18px">
+    <div class="sc"><div class="sv">${certs.length}</div><div class="sl">Total Certs</div></div>
+    <div class="sc" style="background:var(--rbg)"><div class="sv" style="color:var(--red)">${expired.length}</div><div class="sl">Expired</div></div>
+    <div class="sc" style="background:var(--abg)"><div class="sv" style="color:var(--amber)">${expiringSoon.length}</div><div class="sl">Expiring Soon</div></div>
+    <div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">${valid.length}</div><div class="sl">Valid</div></div>
+  </div>
+
+  <!-- Expired First -->
+  ${expired.length>0?`<div class="card" style="margin-bottom:14px;border-color:var(--rbd)">
+    <div class="ch" style="color:var(--red)">🚨 Expired — Immediate Action Required</div>
+    <table class="tbl"><thead><tr><th>Worker</th><th>Trade</th><th>Certification</th><th>Expired</th><th>Days Overdue</th><th>Action</th></tr></thead><tbody>
+      ${expired.map(c=>`<tr style="background:var(--rbg)">
+        <td><strong>${c.worker}</strong></td>
+        <td>${c.trade}</td>
+        <td>${c.cert}</td>
+        <td style="color:var(--red);font-weight:600">${c.expires}</td>
+        <td><span class="pill pr">${Math.abs(c.daysLeft)} days overdue</span></td>
+        <td><button class="btn bred bsm" onclick="showToast('Alert sent to ${c.worker}!','success')">Send Alert</button></td>
+      </tr>`).join('')}
+    </tbody></table>
+  </div>`:''}
+
+  <!-- Expiring Soon -->
+  ${expiringSoon.length>0?`<div class="card" style="margin-bottom:14px;border-color:var(--abd)">
+    <div class="ch" style="color:var(--amber)">⚠ Expiring Within 30 Days</div>
+    <table class="tbl"><thead><tr><th>Worker</th><th>Trade</th><th>Certification</th><th>Expires</th><th>Days Left</th><th>Action</th></tr></thead><tbody>
+      ${expiringSoon.map(c=>`<tr style="background:var(--abg)">
+        <td><strong>${c.worker}</strong></td>
+        <td>${c.trade}</td>
+        <td>${c.cert}</td>
+        <td style="color:var(--amber);font-weight:600">${c.expires}</td>
+        <td><span class="pill pa">${c.daysLeft} days left</span></td>
+        <td><button class="btn b-out bsm" style="border-color:var(--amber);color:var(--amber)" onclick="showToast('Renewal reminder sent to ${c.worker}!','success')">Send Reminder</button></td>
+      </tr>`).join('')}
+    </tbody></table>
+  </div>`:''}
+
+  <!-- All Valid -->
+  <div class="card">
+    <div class="ch">✅ All Certifications</div>
+    <table class="tbl"><thead><tr><th>Worker</th><th>Trade</th><th>Certification</th><th>Issued</th><th>Expires</th><th>Status</th></tr></thead><tbody>
+      ${certs.map(c=>`<tr>
+        <td><strong>${c.worker}</strong></td>
+        <td>${c.trade}</td>
+        <td>${c.cert}</td>
+        <td style="color:var(--muted)">${c.issued}</td>
+        <td style="color:var(--muted)">${c.expires}</td>
+        <td>${c.status==='Expired'?`<span class="pill pr">Expired</span>`:c.status==='Expiring Soon'?`<span class="pill pa">Expiring in ${c.daysLeft}d</span>`:`<span class="pill pg">Valid · ${c.daysLeft}d left</span>`}</td>
+      </tr>`).join('')}
+    </tbody></table>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="ch">Auto-Alert Settings</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      ${[['Alert me 30 days before expiry','checked'],['Alert me 7 days before expiry','checked'],['Alert me on day of expiry','checked'],['Send alerts to worker directly',''],['Send weekly compliance summary','checked']].map(([label,chk])=>`
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px">
+          <input type="checkbox" ${chk} style="accent-color:var(--gold);width:15px;height:15px"/>
+          ${label}
+        </label>`).join('')}
+    </div>
+    <button class="btn bink" style="margin-top:14px" onclick="showToast('Alert settings saved!','success')">Save Alert Settings</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
 // SETTINGS PAGE
 // ═══════════════════════════════════════════════════════
 function settingsHTML(){
@@ -2073,6 +2339,80 @@ function bindAll(){
   // Compliance
   document.querySelectorAll('[data-cc]').forEach(el=>el.addEventListener('change',e=>{APP.compc[el.dataset.cc]=e.target.checked;render();}));
   gid('compSave')?.addEventListener('click',()=>showToast('Compliance record saved!','success'));
+
+  // Material Prices
+  materials:[
+    {id:1,name:'Lumber (2x4x8)',unit:'per piece',price:8.49,prev:7.20,trend:'up',supplier:'Home Depot Pro',updated:'Jun 10'},
+    {id:2,name:'Drywall 4x8 Sheet',unit:'per sheet',price:12.99,prev:13.50,trend:'down',supplier:'Rona Pro',updated:'Jun 10'},
+    {id:3,name:'Concrete (ready-mix)',unit:'per m³',price:185.00,prev:172.00,trend:'up',supplier:'Lafarge',updated:'Jun 9'},
+    {id:4,name:'Structural Steel',unit:'per tonne',price:1240.00,prev:1180.00,trend:'up',supplier:'Metals Plus',updated:'Jun 8'},
+    {id:5,name:'Copper Wire (14AWG)',unit:'per 75m roll',price:89.99,prev:94.00,trend:'down',supplier:'Electrical Plus',updated:'Jun 10'},
+    {id:6,name:'PVC Pipe (4" dia)',unit:'per 6m length',price:24.50,prev:24.50,trend:'flat',supplier:'Plumbing World',updated:'Jun 7'},
+    {id:7,name:'Asphalt (hot mix)',unit:'per tonne',price:95.00,prev:88.00,trend:'up',supplier:'Miller Paving',updated:'Jun 9'},
+    {id:8,name:'Roofing Shingles',unit:'per bundle',price:42.99,prev:39.99,trend:'up',supplier:'Roofmart',updated:'Jun 10'},
+    {id:9,name:'Insulation R20',unit:'per bag',price:54.99,prev:54.99,trend:'flat',supplier:'Home Depot Pro',updated:'Jun 6'},
+    {id:10,name:'Paint (interior)',unit:'per 3.78L',price:68.99,prev:72.00,trend:'down',supplier:'Benjamin Moore',updated:'Jun 10'},
+  ],
+  materialSearch:'',
+
+  // RFI Management
+  rfis:[
+    {id:'RFI-001',subject:'Clarification on FL3 ceiling height',from:'Apex Electrical',to:'Architect',priority:'High',status:'Open',date:'2025-06-08',due:'2025-06-15',response:''},
+    {id:'RFI-002',subject:'Waterproofing membrane spec for B1',from:'GC',to:'Engineer',priority:'Medium',status:'Answered',date:'2025-06-05',due:'2025-06-12',response:'Use Tremco Paraseal membrane, min 60 mil thickness. See spec section 07 1300.'},
+    {id:'RFI-003',subject:'Door hardware schedule missing Rm 204',from:'GC',to:'Architect',priority:'Low',status:'Open',date:'2025-06-09',due:'2025-06-16',response:''},
+    {id:'RFI-004',subject:'Structural steel connection detail grid C-4',from:'Steel Sub',to:'Engineer',priority:'High',status:'Answered',date:'2025-06-01',due:'2025-06-08',response:'Use moment connection per drawing S-14 Rev 2. Verify with site engineer before proceeding.'},
+    {id:'RFI-005',subject:'Electrical panel location conflict FL2',from:'Electrician',to:'Architect',priority:'High',status:'Open',date:'2025-06-10',due:'2025-06-17',response:''},
+  ],
+  showRFIForm:false,
+  rfiFilter:'All',
+
+  // Cert Expiry
+  certifications:[
+    {id:1,worker:'James H.',trade:'Framer',cert:'Working at Heights',issued:'2024-06-15',expires:'2025-06-15',daysLeft:5,status:'Expiring Soon'},
+    {id:2,worker:'Maria L.',trade:'Electrician',cert:'Electrical Safety',issued:'2024-01-10',expires:'2026-01-10',daysLeft:580,status:'Valid'},
+    {id:3,worker:'Derek W.',trade:'Laborer',cert:'First Aid Level 1',issued:'2023-09-01',expires:'2025-06-01',daysLeft:-9,status:'Expired'},
+    {id:4,worker:'Priya S.',trade:'Drywaller',cert:'WHMIS 2015',issued:'2024-03-15',expires:'2025-09-15',daysLeft:97,status:'Valid'},
+    {id:5,worker:'James H.',trade:'Framer',cert:'Fall Protection',issued:'2023-06-01',expires:'2025-07-01',daysLeft:21,status:'Expiring Soon'},
+    {id:6,worker:'Maria L.',trade:'Electrician',cert:'First Aid Level 2',issued:'2024-06-01',expires:'2026-06-01',daysLeft:357,status:'Valid'},
+    {id:7,worker:'Derek W.',trade:'Laborer',cert:'WHMIS 2015',issued:'2022-05-01',expires:'2025-05-01',daysLeft:-40,status:'Expired'},
+    {id:8,worker:'Priya S.',trade:'Drywaller',cert:'Working at Heights',issued:'2024-08-01',expires:'2025-08-01',daysLeft:52,status:'Valid'},
+  ],
+  alertsSent:[],
+
+  // Material Price Tracker
+  gid('matSearch')?.addEventListener('input',e=>{APP.materialSearch=e.target.value;render();});
+  gid('updateEstimates')?.addEventListener('click',()=>{
+    showToast('✅ All estimates updated with current material prices!','success');
+  });
+
+  // RFI Management
+  gid('showRFIForm')?.addEventListener('click',()=>{APP.showRFIForm=!APP.showRFIForm;render();});
+  gid('submitRFI')?.addEventListener('click',()=>{
+    const subject=document.getElementById('rfiSubject')?.value;
+    const from=document.getElementById('rfiFrom')?.value;
+    const to=document.getElementById('rfiTo')?.value;
+    const due=document.getElementById('rfiDue')?.value;
+    const priority=document.getElementById('rfiPriority')?.value;
+    if(!subject||!from||!to){showToast('Please fill in all required fields','error');return;}
+    const id='RFI-00'+(APP.rfis.length+1);
+    APP.rfis.unshift({
+      id,subject,from,to,priority,
+      status:'Open',
+      date:new Date().toLocaleDateString('en-CA'),
+      due:due||'TBD',
+      response:''
+    });
+    APP.showRFIForm=false;
+    render();
+    showToast('✅ RFI submitted successfully!','success');
+  });
+
+  // Cert Expiry Alerts
+  gid('sendAllAlerts')?.addEventListener('click',()=>{
+    const expired=APP.certifications.filter(c=>c.status==='Expired').length;
+    const soon=APP.certifications.filter(c=>c.status==='Expiring Soon').length;
+    showToast(`✅ Alerts sent — ${expired} expired + ${soon} expiring soon notified!`,'success');
+  });
 
   // Weather alert
   gid('sendWeatherAlert')?.addEventListener('click',()=>{
