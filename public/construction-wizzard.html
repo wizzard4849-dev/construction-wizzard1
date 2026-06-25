@@ -153,6 +153,8 @@ textarea.inp{resize:vertical;min-height:76px}
 .tbl td{padding:10px 10px;border-bottom:.5px solid var(--border);color:var(--text);vertical-align:middle}
 .tbl tr:last-child td{border:none}
 .tbl tr:hover td{background:#faf8f4}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
 /* MISC */
 .divider{border:none;border-top:1px solid var(--border);margin:14px 0}
@@ -2111,7 +2113,7 @@ function certExpiryHTML(){
         <td>${c.cert}</td>
         <td style="color:var(--amber);font-weight:600">${c.expires}</td>
         <td><span class="pill pa">${c.daysLeft} days left</span></td>
-        <td><button class="btn b-out bsm" style="border-color:var(--amber);color:var(--amber)" onclick="showToast('Renewal reminder sent to ${c.worker}!','success')">Send Reminder</button></td>
+        <td><button class="btn bout bsm" style="border-color:var(--amber);color:var(--amber)" onclick="showToast('Renewal reminder sent to ${c.worker}!','success')">Send Reminder</button></td>
       </tr>`).join('')}
     </tbody></table>
   </div>`:''}
