@@ -164,6 +164,12 @@ var NAV = [
   {s:'Clients', items:[
     {id:'clientportal',i:'👥',l:'Client Portal',pro:true}
   ]},
+  {s:'Ontario / Canada', items:[
+    {id:'wsib',i:'🏛',l:'WSIB Tracking'},
+    {id:'hst',i:'💲',l:'HST Calculator'},
+    {id:'obc',i:'📖',l:'Ontario Building Code'},
+    {id:'subcontract',i:'📃',l:'Subcontract Generator'}
+  ]},
   {s:'Account', items:[
     {id:'settings',i:'⚙️',l:'Settings & Plan'}
   ]}
@@ -310,6 +316,36 @@ var BP_RESULT = null;
 
 var AI_MSGS = [{r:'ai',t:'Hi! I am your Construction AI Copilot. Ask about project status, budget risks, safety concerns, or task planning.'}];
 var AI_LOADING = false;
+
+// WSIB State
+var WSIB_WORKERS = [
+  {id:1,n:'James H.',trade:'Framer',wsib:'7000012345',rate:2.85,hrs:1240,wages:61400,prem:1750,s:'Compliant',exp:'2026-03-31'},
+  {id:2,n:'Maria L.',trade:'Electrician',wsib:'7000023456',rate:3.12,hrs:980,wages:58800,prem:1835,s:'Compliant',exp:'2026-03-31'},
+  {id:3,n:'Derek W.',trade:'Laborer',wsib:'',rate:2.30,hrs:640,wages:29440,prem:0,s:'Missing',exp:''},
+  {id:4,n:'Priya S.',trade:'Drywaller',wsib:'7000034567',rate:2.65,hrs:1100,wages:52800,prem:1399,s:'Compliant',exp:'2026-03-31'}
+];
+var WSIB_SUBS = [
+  {id:1,n:'Apex Electrical Inc.',trade:'Electrical',wsib:'8000011111',coa:'COA-2025-441',exp:'2026-01-15',s:'Verified'},
+  {id:2,n:'Green Mechanical Ltd.',trade:'HVAC',wsib:'8000022222',coa:'COA-2025-229',exp:'2025-11-30',s:'Expiring Soon'},
+  {id:3,n:'FastFrame Carpentry',trade:'Framing',wsib:'',coa:'',exp:'',s:'Missing'}
+];
+
+// HST State
+var HST_INPUTS = {amount:'',type:'contract',province:'ON'};
+var HST_RESULT = null;
+
+// Subcontract State
+var SC_FORM = {
+  gcName:'Garfield Wizzard Construction',gcAddr:'28 Ann St, Mississauga ON L5G 0E1',gcPhone:'14077800',
+  subName:'',subAddr:'',subPhone:'',subWsib:'',
+  projName:'',projAddr:'',projOwner:'',
+  scope:'',trade:'drywall',startDate:'',endDate:'',
+  contractAmt:'',payTerms:'Net 30',retainage:'10',
+  warranty:'1 year',dispute:'Ontario',
+  hst:true,prevailingWage:false,lien:true
+};
+var SC_STEP = 1;
+var SC_GENERATED = false;
 
 var WORKERS = [
   {n:'James H.',t:'Framer',ci:'7:02 AM',h:6.5,on:true},
@@ -571,6 +607,10 @@ function pageContent() {
   if (PAGE === 'rfi') return rfiPage();
   if (PAGE === 'clientportal') return gate(clientPortalPage);
   if (PAGE === 'settings') return settingsPage();
+  if (PAGE === 'wsib') return wsibPage();
+  if (PAGE === 'hst') return hstPage();
+  if (PAGE === 'obc') return obcPage();
+  if (PAGE === 'subcontract') return subcontractPage();
   return dashPage();
 }
 
@@ -807,7 +847,7 @@ function certExpiryPage() {
   for (var i = 0; i < CERTS.length; i++) {
     var c = CERTS[i];
     var bg = c.status === 'Expired' ? 'background:var(--rbg)' : c.status === 'Expiring Soon' ? 'background:var(--abg)' : '';
-    rows += '<tr style="' + bg + '"><td><strong>' + c.worker + '</strong></td><td>' + c.trade + '</td><td>' + c.cert + '</td><td>' + c.expires + '</td><td>' + pill(c.status) + '</td><td><button class="btn bout bsm" onclick="toast(\'Alert sent to ' + c.worker + '!\')">Send Alert</button></td></tr>';
+    rows += '<tr style="' + bg + '"><td><strong>' + c.worker + '</strong></td><td>' + c.trade + '</td><td>' + c.cert + '</td><td>' + c.expires + '</td><td>' + pill(c.status) + '</td><td><button class="btn bout bsm" data-w="' + c.worker + '" onclick="toast(String.fromCharCode(65,108,101,114,116,32,115,101,110,116,33))">Send Alert</button></td></tr>';
   }
   return ph('📋', 'Cert Expiry Alerts', 'Stay compliant - automatic expiry tracking', '<button class="btn bink bsm" id="sendAllAlerts">Send All Alerts</button>') +
     alert +
@@ -1032,6 +1072,255 @@ function clientPortalPage() {
     '<div style="display:flex;gap:18px"><div style="width:230px;flex-shrink:0"><div class="card" style="padding:14px"><div class="ch" style="margin-bottom:12px">Your Clients</div>' + clist + '</div></div><div style="flex:1"><div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">' + tabNav + '</div>' + body + '</div></div>';
 }
 
+// ── WSIB TRACKING ────────────────────────────────────────────────────────────
+function showToast() { toast('COA request sent!'); }
+function wsibPage() {
+  var compliant = 0, missing = 0, expiring = 0;
+  for (var i = 0; i < WSIB_WORKERS.length; i++) {
+    if (WSIB_WORKERS[i].s === 'Compliant') compliant++;
+    else if (WSIB_WORKERS[i].s === 'Missing') missing++;
+  }
+  for (var i = 0; i < WSIB_SUBS.length; i++) {
+    if (WSIB_SUBS[i].s === 'Missing') missing++;
+    if (WSIB_SUBS[i].s === 'Expiring Soon') expiring++;
+  }
+  var totalPrem = 0;
+  for (var i = 0; i < WSIB_WORKERS.length; i++) totalPrem += WSIB_WORKERS[i].prem;
+  var totalWages = 0;
+  for (var i = 0; i < WSIB_WORKERS.length; i++) totalWages += WSIB_WORKERS[i].wages;
+
+  var workerRows = '';
+  for (var i = 0; i < WSIB_WORKERS.length; i++) {
+    var w = WSIB_WORKERS[i];
+    var bg = w.s === 'Missing' ? 'background:var(--rbg)' : '';
+    workerRows += '<tr style="' + bg + '"><td><strong>' + w.n + '</strong></td><td>' + w.trade + '</td><td style="font-size:12px">' + (w.wsib || '<span style="color:var(--red);font-weight:700">MISSING</span>') + '</td><td>$' + w.rate.toFixed(2) + '</td><td>' + money(w.wages) + '</td><td>' + money(w.prem) + '</td><td>' + pill(w.s) + '</td></tr>';
+  }
+
+  var subRows = '';
+  for (var i = 0; i < WSIB_SUBS.length; i++) {
+    var s = WSIB_SUBS[i];
+    var bg2 = s.s === 'Missing' ? 'background:var(--rbg)' : s.s === 'Expiring Soon' ? 'background:var(--abg)' : '';
+    var coaBtn = '<button class="btn bout bsm" onclick="toast(String.fromCharCode(67,79,65,32,115,101,110,116,33))">Request COA</button>';
+    subRows += '<tr style="' + bg2 + '"><td><strong>' + s.n + '</strong></td><td>' + s.trade + '</td><td style="font-size:12px">' + (s.wsib || '<span style="color:var(--red);font-weight:700">MISSING</span>') + '</td><td style="font-size:12px">' + (s.coa || '--') + '</td><td>' + (s.exp || '--') + '</td><td>' + pill(s.s) + '</td><td>' + coaBtn + '</td></tr>';
+  }
+
+  var alert = '';
+  if (missing > 0) {
+    alert = '<div style="background:var(--rbg);border:1px solid var(--rbd);border-radius:10px;padding:13px 16px;margin-bottom:16px"><div style="font-weight:700;color:var(--red);margin-bottom:4px">WSIB Compliance Issue</div><div style="font-size:12.5px;color:var(--red)">' + missing + ' workers or subs are missing WSIB registration. You may be liable for their premiums if audited by WSIB Ontario.</div></div>';
+  }
+
+  return ph('🏛', 'WSIB Tracking', 'Workers Compensation Insurance Board - Ontario compliance') +
+    alert +
+    '<div class="g4"><div class="sc"><div class="sv">' + compliant + '</div><div class="sl">Compliant</div></div><div class="sc" style="background:var(--rbg)"><div class="sv" style="color:var(--red)">' + missing + '</div><div class="sl">Missing WSIB</div></div><div class="sc" style="background:var(--abg)"><div class="sv" style="color:var(--amber)">' + expiring + '</div><div class="sl">Expiring Soon</div></div><div class="sc"><div class="sv">' + money(totalPrem) + '</div><div class="sl">Total Premiums</div></div></div>' +
+    '<div class="card"><div class="ch">Worker WSIB Status <button class="btn bink bsm" onclick="toast(String.fromCharCode(87,83,73,66,32,114,101,112,111,114,116,33))">Download Report</button></div>' +
+    '<table class="tbl"><thead><tr><th>Worker</th><th>Trade</th><th>WSIB Account #</th><th>Rate</th><th>Insurable Wages</th><th>Premium</th><th>Status</th></tr></thead><tbody>' + workerRows + '</tbody></table>' +
+    '<div style="display:flex;justify-content:space-between;padding:12px 10px;background:var(--paper);border-radius:8px;font-size:13px;margin-top:10px"><span style="color:var(--muted)">Total Insurable Wages</span><strong>' + money(totalWages) + '</strong></div>' +
+    '<div style="display:flex;justify-content:space-between;padding:10px 10px;background:var(--ink);border-radius:8px;font-size:13px;margin-top:6px"><span style="color:#fff;font-weight:700">Total WSIB Premiums Due</span><strong style="color:var(--gold2)">' + money(totalPrem) + '</strong></div>' +
+    '</div>' +
+    '<div class="card"><div class="ch">Subcontractor WSIB Clearance Certificates <button class="btn bink bsm" onclick="toast(String.fromCharCode(82,101,109,105,110,100,101,114,32,115,101,110,116,33))">Request All COAs</button></div>' +
+    '<table class="tbl"><thead><tr><th>Subcontractor</th><th>Trade</th><th>WSIB #</th><th>COA #</th><th>Expires</th><th>Status</th><th>Action</th></tr></thead><tbody>' + subRows + '</tbody></table></div>' +
+    '<div class="card"><div class="ch">WSIB Ontario Key Information</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">' +
+    [['WSIB Premium Due Date','March 31 (Annual)'],['Rate Class — Framing','$2.85 per $100 wages'],['Rate Class — Electrical','$3.12 per $100 wages'],['Rate Class — Drywall','$2.65 per $100 wages'],['Rate Class — Plumbing','$2.80 per $100 wages'],['Clearance Certificate','Required for all subs over $1,000']].map(function(r) {
+      return '<div style="padding:12px;background:var(--paper);border-radius:8px"><div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;margin-bottom:4px">' + r[0] + '</div><div style="font-size:13px;font-weight:600">' + r[1] + '</div></div>';
+    }).join('') +
+    '</div><div style="margin-top:14px;padding:12px;background:var(--bbg);border-radius:8px;font-size:12px;color:var(--blue)"><strong>Tip:</strong> Always get a WSIB Clearance Certificate (COA) from every subcontractor before payment. If a sub has no WSIB coverage, you are responsible for their accident costs under the Workplace Safety and Insurance Act.</div></div>';
+}
+
+// ── HST CALCULATOR ────────────────────────────────────────────────────────────
+function hstPage() {
+  var res = HST_RESULT;
+  var resultHtml = '';
+  if (res) {
+    resultHtml = '<div style="background:var(--gbg);border:1px solid var(--gbd);border-radius:10px;padding:18px;margin-top:16px">' +
+      '<div style="font-family:var(--fh);font-size:16px;font-weight:800;margin-bottom:14px">Calculation Result</div>' +
+      '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:.5px solid var(--gbd);font-size:13px"><span style="color:var(--muted)">Subtotal (before HST)</span><strong>' + money(res.sub) + '</strong></div>' +
+      '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:.5px solid var(--gbd);font-size:13px"><span style="color:var(--muted)">HST (13% Ontario)</span><strong style="color:var(--amber)">' + money(res.hst) + '</strong></div>' +
+      '<div style="display:flex;justify-content:space-between;padding:12px 0;font-size:15px;font-weight:800"><span>Total (with HST)</span><strong style="color:var(--green);font-size:20px;font-family:var(--fh)">' + money(res.total) + '</strong></div>' +
+      '<div style="margin-top:12px;font-size:12px;color:var(--muted)">HST Number required on all invoices over $30. Register at canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses</div></div>';
+  }
+
+  return ph('💲', 'HST Calculator', 'Ontario Harmonized Sales Tax - 13% (5% GST + 8% PST)') +
+    '<div class="g2"><div class="card"><div class="ch">Calculate HST</div>' +
+    '<div class="field"><label>Contract / Invoice Amount ($)</label><input class="inp" id="hstAmt" placeholder="e.g. 50000" value="' + HST_INPUTS.amount + '"/></div>' +
+    '<div class="field"><label>Type</label><select class="inp" id="hstType"><option value="contract"' + (HST_INPUTS.type==='contract'?' selected':'') + '>Construction Contract</option><option value="invoice"' + (HST_INPUTS.type==='invoice'?' selected':'') + '>Invoice Amount</option><option value="materials"' + (HST_INPUTS.type==='materials'?' selected':'') + '>Material Purchase</option><option value="equipment"' + (HST_INPUTS.type==='equipment'?' selected':'') + '>Equipment Rental</option></select></div>' +
+    '<div class="field"><label>Province</label><select class="inp" id="hstProv"><option value="ON" selected>Ontario — 13%</option><option value="BC">British Columbia — 12%</option><option value="AB">Alberta — 5% (GST only)</option><option value="QC">Quebec — 14.975%</option></select></div>' +
+    '<button class="btn bink bfull" id="calcHST">Calculate HST</button>' +
+    resultHtml + '</div>' +
+    '<div class="card"><div class="ch">Ontario HST Quick Reference</div>' +
+    [['Standard HST Rate','13% (5% GST + 8% OPST)'],['New Residential Housing','Rebate available — 36% of federal portion'],['Commercial Construction','Fully taxable at 13%'],['Equipment Rental','13% HST applies'],['Labour Only Contracts','13% HST applies'],['HST Registration Required','Over $30,000 in annual revenue'],['Invoice Requirement','HST # on all invoices over $30'],['Remittance Schedule','Monthly (over $6M), Quarterly ($1.5M-$6M), Annual (under $1.5M)'],['Input Tax Credits','Claim HST paid on business expenses'],['CRA Business Number','Format: 123456789 RT0001']].map(function(r) {
+      return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:.5px solid var(--border);font-size:12.5px"><span style="color:var(--muted)">' + r[0] + '</span><strong style="text-align:right;max-width:55%">' + r[1] + '</strong></div>';
+    }).join('') +
+    '</div></div>';
+}
+
+// ── ONTARIO BUILDING CODE ─────────────────────────────────────────────────────
+function obcPage() {
+  var sections = [
+    {code:'OBC Part 3',title:'Fire Protection, Occupant Safety and Accessibility',desc:'Occupancy classifications, fire resistance ratings, means of egress, emergency lighting, and accessibility requirements for all occupancies.'},
+    {code:'OBC Part 4',title:'Structural Design',desc:'Loads, load combinations, foundations, wood frame, steel, concrete, and masonry structural requirements for all building types.'},
+    {code:'OBC Part 5',title:'Environmental Separation',desc:'Vapour barriers, air barriers, thermal insulation requirements, window and door specifications, and moisture control.'},
+    {code:'OBC Part 6',title:'Heating, Ventilation and Air Conditioning',desc:'HVAC system requirements, minimum fresh air rates, heat recovery, combustion air, and mechanical ventilation standards.'},
+    {code:'OBC Part 7',title:'Plumbing',desc:'Drain, waste and vent systems, water supply, fixture requirements, backflow prevention, and plumbing materials specifications.'},
+    {code:'OBC Part 8',title:'Sewage Systems',desc:'Private sewage systems, septic tank sizing, leaching bed requirements, and holding tanks for properties not on municipal sewer.'},
+    {code:'OBC Part 9',title:'Housing and Small Buildings',desc:'Requirements for houses and small buildings up to 600 m² — the most commonly used section for residential construction.'},
+    {code:'OHSA S.51',title:'Notice of Project (NOP)',desc:'Required for projects over $50,000 or 14 days. Must be submitted to Ministry of Labour before work begins.'},
+    {code:'Reg. 213/91',title:'Construction Projects',desc:'Ontario core construction safety regulation. Covers excavation, scaffolding, fall protection, cranes, electrical, and all hazardous work.'},
+    {code:'Reg. 629/94',title:'Construction Lien Act',desc:'Holdback requirements (10%), lien filing deadlines (45 days after substantial performance), and trust obligations.'}
+  ];
+
+  var cards = '';
+  for (var i = 0; i < sections.length; i++) {
+    var s = sections[i];
+    cards += '<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="font-family:var(--fh);font-size:14px;font-weight:800">' + s.code + '</div><div style="font-size:13px;font-weight:600;color:var(--ink);margin-top:2px">' + s.title + '</div></div><button class="btn bink bsm" onclick="toast(String.fromCharCode(79,112,101,110,101,100,33))">View Full Code</button></div><p style="font-size:12.5px;color:var(--muted);line-height:1.6">' + s.desc + '</p></div>';
+  }
+
+  var labourRates = [
+    ['Carpenter (UBC)','$38.50 - $48.00/hr'],
+    ['Electrician (IBEW)','$44.00 - $56.00/hr'],
+    ['Plumber (UA)','$46.00 - $58.00/hr'],
+    ['Ironworker','$42.00 - $54.00/hr'],
+    ['Drywaller (LIUNA)','$34.00 - $44.00/hr'],
+    ['Operating Engineer','$45.00 - $62.00/hr'],
+    ['Roofer','$36.00 - $48.00/hr'],
+    ['Laborer (LIUNA)','$30.00 - $38.00/hr']
+  ];
+
+  return ph('📖', 'Ontario Building Code', 'OBC reference, labour rates, and key regulations') +
+    '<div class="g2">' +
+    '<div>' + cards + '</div>' +
+    '<div><div class="card"><div class="ch">Ontario Prevailing Labour Rates (GTA 2025)</div>' +
+    labourRates.map(function(r) { return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:.5px solid var(--border);font-size:13px"><span>' + r[0] + '</span><strong style="color:var(--green)">' + r[1] + '</strong></div>'; }).join('') +
+    '<div style="margin-top:12px;font-size:11px;color:var(--faint)">Source: OGCA / Provincial Trade Unions. Rates vary by collective agreement and region.</div></div>' +
+    '<div class="card"><div class="ch">Key Deadlines</div>' +
+    [['Notice of Project (NOP)','Before work starts'],['Lien Filing Deadline','45 days after substantial performance'],['Holdback Release','46 days after lien period expires'],['WSIB Annual Premium','March 31'],['T4 Slips','Last day of February'],['CIS Filing (sub payments)','Quarterly']].map(function(r) { return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:.5px solid var(--border);font-size:12.5px"><span style="color:var(--muted)">' + r[0] + '</span><strong style="color:var(--red)">' + r[1] + '</strong></div>'; }).join('') +
+    '</div></div></div>';
+}
+
+// ── SUBCONTRACT GENERATOR ─────────────────────────────────────────────────────
+function subcontractPage() {
+  if (SC_GENERATED) return subcontractPreview();
+
+  var steps = ['Parties','Project','Scope & Trade','Payment Terms','Legal Terms'];
+  var stepNav = '<div style="display:flex;gap:0;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid var(--border)">';
+  for (var i = 0; i < steps.length; i++) {
+    var active = SC_STEP === i + 1;
+    var done = SC_STEP > i + 1;
+    stepNav += '<div style="flex:1;padding:10px 4px;text-align:center;font-size:11px;font-weight:700;background:' + (active ? 'var(--ink)' : done ? 'var(--gbg)' : 'var(--paper)') + ';color:' + (active ? '#fff' : done ? 'var(--green)' : 'var(--faint)') + ';border-right:1px solid var(--border)">' + (done ? '✓ ' : '') + steps[i] + '</div>';
+  }
+  stepNav += '</div>';
+
+  var form = '';
+  if (SC_STEP === 1) {
+    form = '<div class="card"><div class="ch">Step 1 — Party Information</div>' +
+      '<div style="padding:12px;background:var(--ink);border-radius:9px;color:var(--gold2);font-size:12.5px;font-weight:600;margin-bottom:16px">GENERAL CONTRACTOR</div>' +
+      '<div class="r2"><div class="field"><label>GC Company Name</label><input class="inp" id="sc_gcName" value="' + SC_FORM.gcName + '"/></div><div class="field"><label>GC Phone</label><input class="inp" id="sc_gcPhone" value="' + SC_FORM.gcPhone + '"/></div></div>' +
+      '<div class="field"><label>GC Address</label><input class="inp" id="sc_gcAddr" value="' + SC_FORM.gcAddr + '"/></div>' +
+      '<hr class="divider"/>' +
+      '<div style="padding:12px;background:var(--bbg);border-radius:9px;color:var(--blue);font-size:12.5px;font-weight:600;margin-bottom:16px">SUBCONTRACTOR</div>' +
+      '<div class="r2"><div class="field"><label>Sub Company Name</label><input class="inp" id="sc_subName" placeholder="ABC Electrical Inc." value="' + SC_FORM.subName + '"/></div><div class="field"><label>Sub Phone</label><input class="inp" id="sc_subPhone" placeholder="416-555-0100" value="' + SC_FORM.subPhone + '"/></div></div>' +
+      '<div class="field"><label>Sub Address</label><input class="inp" id="sc_subAddr" placeholder="456 Trade St, Toronto ON" value="' + SC_FORM.subAddr + '"/></div>' +
+      '<div class="field"><label>Sub WSIB Account Number</label><input class="inp" id="sc_subWsib" placeholder="8000012345" value="' + SC_FORM.subWsib + '"/></div>' +
+      '<button class="btn bink" id="scNext1" style="margin-top:8px">Next: Project Details →</button></div>';
+  } else if (SC_STEP === 2) {
+    form = '<div class="card"><div class="ch">Step 2 — Project Details</div>' +
+      '<div class="field"><label>Project Name</label><input class="inp" id="sc_projName" placeholder="Downtown Office Renovation" value="' + SC_FORM.projName + '"/></div>' +
+      '<div class="field"><label>Project Address</label><input class="inp" id="sc_projAddr" placeholder="123 Main St, Toronto ON M5V 1A1" value="' + SC_FORM.projAddr + '"/></div>' +
+      '<div class="field"><label>Project Owner</label><input class="inp" id="sc_projOwner" placeholder="North Star Properties Inc." value="' + SC_FORM.projOwner + '"/></div>' +
+      '<div class="r2"><div class="field"><label>Start Date</label><input class="inp" type="date" id="sc_start" value="' + SC_FORM.startDate + '"/></div><div class="field"><label>End Date</label><input class="inp" type="date" id="sc_end" value="' + SC_FORM.endDate + '"/></div></div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px"><button class="btn bout" id="scBack2">← Back</button><button class="btn bink" id="scNext2">Next: Scope & Trade →</button></div></div>';
+  } else if (SC_STEP === 3) {
+    var trOpts = '';
+    var tkeys = Object.keys(TRADES);
+    for (var i = 0; i < tkeys.length; i++) trOpts += '<option value="' + tkeys[i] + '"' + (SC_FORM.trade === tkeys[i] ? ' selected' : '') + '>' + TRADES[tkeys[i]].l + '</option>';
+    form = '<div class="card"><div class="ch">Step 3 — Scope & Trade</div>' +
+      '<div class="field"><label>Trade</label><select class="inp" id="sc_trade">' + trOpts + '</select></div>' +
+      '<div class="field"><label>Full Scope of Work</label><textarea class="inp" id="sc_scope" placeholder="Provide and install all drywall, framing, taping and finishing as per architectural drawings Rev 3 dated June 1, 2025. Work includes all labour, materials and equipment necessary to complete the scope per the specifications and building code." style="min-height:140px">' + SC_FORM.scope + '</textarea></div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px"><button class="btn bout" id="scBack3">← Back</button><button class="btn bink" id="scNext3">Next: Payment Terms →</button></div></div>';
+  } else if (SC_STEP === 4) {
+    form = '<div class="card"><div class="ch">Step 4 — Payment Terms</div>' +
+      '<div class="r2"><div class="field"><label>Contract Amount ($)</label><input class="inp" id="sc_amt" placeholder="85000" value="' + SC_FORM.contractAmt + '"/></div><div class="field"><label>Payment Terms</label><select class="inp" id="sc_payTerms"><option' + (SC_FORM.payTerms==='Net 30'?' selected':'') + '>Net 30</option><option' + (SC_FORM.payTerms==='Net 15'?' selected':'') + '>Net 15</option><option' + (SC_FORM.payTerms==='Net 45'?' selected':'') + '>Net 45</option><option' + (SC_FORM.payTerms==='Progress Billing'?' selected':'') + '>Progress Billing</option></select></div></div>' +
+      '<div class="r2"><div class="field"><label>Holdback / Retainage %</label><input class="inp" type="number" id="sc_ret" value="' + SC_FORM.retainage + '" placeholder="10"/></div><div class="field"><label>HST</label><select class="inp" id="sc_hst"><option value="yes"' + (SC_FORM.hst?' selected':'') + '>Yes - 13% HST applies</option><option value="no"' + (!SC_FORM.hst?' selected':'') + '>No HST</option></select></div></div>' +
+      '<div style="padding:12px;background:var(--gold-bg);border:1px solid var(--abd);border-radius:9px;font-size:12px;color:var(--amber);margin-bottom:14px"><strong>Ontario Construction Lien Act:</strong> A 10% holdback is mandatory on all construction contracts in Ontario. Release holdback only after the lien period expires (46 days after substantial performance is published).</div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px"><button class="btn bout" id="scBack4">← Back</button><button class="btn bink" id="scNext4">Next: Legal Terms →</button></div></div>';
+  } else if (SC_STEP === 5) {
+    form = '<div class="card"><div class="ch">Step 5 — Legal Terms</div>' +
+      '<div class="r2"><div class="field"><label>Warranty Period</label><select class="inp" id="sc_warranty"><option' + (SC_FORM.warranty==='1 year'?' selected':'') + '>1 year</option><option' + (SC_FORM.warranty==='2 years'?' selected':'') + '>2 years</option><option' + (SC_FORM.warranty==='Per OBC'?' selected':'') + '>Per OBC</option></select></div><div class="field"><label>Dispute Resolution</label><select class="inp" id="sc_dispute"><option' + (SC_FORM.dispute==='Ontario'?' selected':'') + '>Ontario Courts</option><option>Arbitration (ADRIC)</option><option>Mediation First</option></select></div></div>' +
+      '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">' +
+      '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px"><input type="checkbox" id="sc_lien"' + (SC_FORM.lien?' checked':'') + ' style="accent-color:var(--gold2);width:15px;height:15px"/> Lien rights waiver on final payment (Ontario Construction Act)</label>' +
+      '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px"><input type="checkbox" id="sc_wage"' + (SC_FORM.prevailingWage?' checked':'') + ' style="accent-color:var(--gold2);width:15px;height:15px"/> Prevailing wage requirements apply (if public project)</label>' +
+      '</div>' +
+      '<div style="padding:12px;background:var(--bbg);border-radius:9px;font-size:12px;color:var(--blue);margin-bottom:16px">This subcontract will be generated in accordance with the Ontario Construction Act (R.S.O. 1990), Workplace Safety and Insurance Act, and Ontario Building Code.</div>' +
+      '<div style="display:flex;gap:8px;margin-top:8px"><button class="btn bout" id="scBack5">← Back</button><button class="btn bgold" id="scGenerate">Generate Subcontract →</button></div></div>';
+  }
+
+  return ph('📃', 'Subcontract Generator', 'Create a professional Ontario-compliant subcontract in minutes', '') +
+    stepNav + form;
+}
+
+function subcontractPreview() {
+  var f = SC_FORM;
+  var amt = parseFloat(f.contractAmt) || 0;
+  var ret = parseFloat(f.retainage) || 10;
+  var holdback = amt * ret / 100;
+  var hstAmt = f.hst ? amt * 0.13 : 0;
+  var total = amt + hstAmt;
+  var today = new Date().toLocaleDateString('en-CA');
+
+  return ph('📃', 'Subcontract Generated', 'Ontario-compliant subcontract agreement',
+    '<div style="display:flex;gap:8px"><button class="btn bink bsm" onclick="window.print()">Print / Save PDF</button><button class="btn bout bsm" id="scReset">Start New</button></div>') +
+    '<div class="card" style="max-width:800px;margin:0 auto" id="subcontractDoc">' +
+    '<div style="text-align:center;padding:20px 0;border-bottom:2px solid var(--ink);margin-bottom:24px">' +
+    '<div style="font-family:var(--fh);font-size:22px;font-weight:800;margin-bottom:4px">SUBCONTRACT AGREEMENT</div>' +
+    '<div style="font-size:13px;color:var(--muted)">Province of Ontario — Construction Act Compliant</div>' +
+    '<div style="font-size:12px;color:var(--faint);margin-top:4px">Agreement Date: ' + today + '</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">' +
+    '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:6px">General Contractor</div><div style="font-size:14px;font-weight:700">' + (f.gcName || 'N/A') + '</div><div style="font-size:12px;color:var(--muted);margin-top:3px">' + (f.gcAddr || '') + '</div><div style="font-size:12px;color:var(--muted)">' + (f.gcPhone || '') + '</div></div>' +
+    '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:6px">Subcontractor</div><div style="font-size:14px;font-weight:700">' + (f.subName || 'N/A') + '</div><div style="font-size:12px;color:var(--muted);margin-top:3px">' + (f.subAddr || '') + '</div><div style="font-size:12px;color:var(--muted)">' + (f.subPhone || '') + '</div>' + (f.subWsib ? '<div style="font-size:12px;color:var(--muted)">WSIB: ' + f.subWsib + '</div>' : '') + '</div>' +
+    '</div>' +
+    '<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">' +
+    '<div style="font-weight:700;margin-bottom:10px">PROJECT DETAILS</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">' +
+    '<div><span style="color:var(--muted)">Project Name: </span><strong>' + (f.projName || '--') + '</strong></div>' +
+    '<div><span style="color:var(--muted)">Project Owner: </span><strong>' + (f.projOwner || '--') + '</strong></div>' +
+    '<div style="grid-column:span 2"><span style="color:var(--muted)">Project Address: </span><strong>' + (f.projAddr || '--') + '</strong></div>' +
+    '<div><span style="color:var(--muted)">Start Date: </span><strong>' + (f.startDate || '--') + '</strong></div>' +
+    '<div><span style="color:var(--muted)">End Date: </span><strong>' + (f.endDate || '--') + '</strong></div>' +
+    '</div></div>' +
+    '<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">' +
+    '<div style="font-weight:700;margin-bottom:10px">1. SCOPE OF WORK — ' + (TRADES[f.trade] ? TRADES[f.trade].l.toUpperCase() : '') + '</div>' +
+    '<div style="font-size:13px;color:var(--text);line-height:1.7;background:var(--paper);padding:14px;border-radius:8px">' + (f.scope || 'As per drawings and specifications.') + '</div>' +
+    '</div>' +
+    '<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">' +
+    '<div style="font-weight:700;margin-bottom:10px">2. CONTRACT SUM & PAYMENT</div>' +
+    '<table style="width:100%;font-size:13px;border-collapse:collapse">' +
+    '<tr><td style="padding:7px 0;color:var(--muted);border-bottom:.5px solid var(--border)">Contract Amount (excluding HST)</td><td style="text-align:right;font-weight:700;border-bottom:.5px solid var(--border)">' + money(amt) + '</td></tr>' +
+    (f.hst ? '<tr><td style="padding:7px 0;color:var(--muted);border-bottom:.5px solid var(--border)">HST (13%)</td><td style="text-align:right;font-weight:700;border-bottom:.5px solid var(--border)">' + money(hstAmt) + '</td></tr>' : '') +
+    '<tr><td style="padding:7px 0;color:var(--muted);border-bottom:.5px solid var(--border)">Statutory Holdback (' + ret + '% — Ontario Construction Act)</td><td style="text-align:right;font-weight:700;color:var(--amber);border-bottom:.5px solid var(--border)">(' + money(holdback) + ')</td></tr>' +
+    '<tr><td style="padding:9px 0;font-weight:700;font-size:14px">Total Contract Value</td><td style="text-align:right;font-weight:800;font-size:16px;font-family:var(--fh);color:var(--green)">' + money(total) + '</td></tr>' +
+    '</table>' +
+    '<div style="margin-top:12px;font-size:12px;color:var(--muted)">Payment Terms: ' + f.payTerms + '. Holdback shall be released 46 days after publication of Substantial Performance pursuant to the Ontario Construction Act.</div>' +
+    '</div>' +
+    '<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">' +
+    '<div style="font-weight:700;margin-bottom:10px">3. LEGAL TERMS & CONDITIONS</div>' +
+    '<div style="font-size:12.5px;line-height:1.8;color:var(--muted)">' +
+    '<p style="margin-bottom:8px"><strong style="color:var(--ink)">3.1 Compliance:</strong> The Subcontractor shall comply with all applicable laws, codes, and regulations including the Ontario Building Code, Ontario Health and Safety Act (Reg. 213/91), and the Workplace Safety and Insurance Act.</p>' +
+    '<p style="margin-bottom:8px"><strong style="color:var(--ink)">3.2 WSIB:</strong> The Subcontractor shall maintain WSIB coverage for all workers and shall provide a Clearance Certificate (Certificate of Accident Insurance) prior to commencement and upon each payment request. WSIB Account: ' + (f.subWsib || 'To be provided') + '.</p>' +
+    '<p style="margin-bottom:8px"><strong style="color:var(--ink)">3.3 Insurance:</strong> The Subcontractor shall maintain Commercial General Liability insurance of not less than $2,000,000 per occurrence and shall name the General Contractor as additional insured.</p>' +
+    '<p style="margin-bottom:8px"><strong style="color:var(--ink)">3.4 Warranty:</strong> The Subcontractor warrants all work for a period of ' + f.warranty + ' from the date of Substantial Performance.</p>' +
+    '<p style="margin-bottom:8px"><strong style="color:var(--ink)">3.5 Changes:</strong> No changes to the scope of work shall be made without written authorization from the General Contractor. Unauthorized extra work will not be compensated.</p>' +
+    '<p style="margin-bottom:8px"><strong style="color:var(--ink)">3.6 Dispute Resolution:</strong> Any disputes arising from this agreement shall be resolved through ' + f.dispute + '. The prevailing party shall be entitled to reasonable legal fees.</p>' +
+    (f.lien ? '<p style="margin-bottom:8px"><strong style="color:var(--ink)">3.7 Lien Rights:</strong> Upon receipt of final payment, the Subcontractor shall provide a Statutory Declaration and a waiver of lien rights in form acceptable to the General Contractor pursuant to the Ontario Construction Act.</p>' : '') +
+    '</div></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:32px;padding-top:20px;border-top:2px solid var(--ink)">' +
+    '<div><div style="font-size:11px;color:var(--faint);margin-bottom:4px">General Contractor Signature</div><div style="border-bottom:1px solid var(--border2);height:40px;margin-bottom:8px"></div><div style="font-size:12px;font-weight:600">' + (f.gcName || '') + '</div><div style="font-size:11px;color:var(--faint)">Authorized Signatory / Date</div></div>' +
+    '<div><div style="font-size:11px;color:var(--faint);margin-bottom:4px">Subcontractor Signature</div><div style="border-bottom:1px solid var(--border2);height:40px;margin-bottom:8px"></div><div style="font-size:12px;font-weight:600">' + (f.subName || '') + '</div><div style="font-size:11px;color:var(--faint)">Authorized Signatory / Date</div></div>' +
+    '</div>' +
+    '<div style="text-align:center;margin-top:20px;font-size:10px;color:var(--faint)">Generated by Construction Wizzard — constructionwizzard.com — This document is for informational purposes. Consult a lawyer for legal advice.</div>' +
+    '</div>';
+}
+
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function settingsPage() {
   var planName = U ? (U.plan === 'pro' ? 'Pro Plan' : U.plan === 'basic' ? 'Basic Plan' : isTrial() ? 'Free Trial (' + U.trialDays + ' days left)' : 'Free Plan') : '';
@@ -1254,6 +1543,76 @@ function bindAll() {
     CLIENT_MSGS.push({id:Date.now(), cid:CLIENT_ID, from:'You', msg:msg, date:new Date().toLocaleDateString(), read:true});
     if (inp) inp.value = '';
     render(); toast('Message sent!');
+  };
+
+  // HST Calculator
+  el = gid('calcHST'); if (el) el.onclick = function() {
+    var amt = parseFloat(gid('hstAmt') ? gid('hstAmt').value : 0) || 0;
+    var prov = gid('hstProv') ? gid('hstProv').value : 'ON';
+    var rates = {ON:0.13, BC:0.12, AB:0.05, QC:0.14975};
+    var rate = rates[prov] || 0.13;
+    var hst = amt * rate;
+    HST_INPUTS.amount = gid('hstAmt').value;
+    HST_RESULT = {sub: amt, hst: hst, total: amt + hst};
+    render();
+  };
+
+  // Subcontract step navigation
+  el = gid('scNext1'); if (el) el.onclick = function() {
+    var v;
+    v = gid('sc_gcName'); if (v) SC_FORM.gcName = v.value;
+    v = gid('sc_gcAddr'); if (v) SC_FORM.gcAddr = v.value;
+    v = gid('sc_gcPhone'); if (v) SC_FORM.gcPhone = v.value;
+    v = gid('sc_subName'); if (v) SC_FORM.subName = v.value;
+    v = gid('sc_subAddr'); if (v) SC_FORM.subAddr = v.value;
+    v = gid('sc_subPhone'); if (v) SC_FORM.subPhone = v.value;
+    v = gid('sc_subWsib'); if (v) SC_FORM.subWsib = v.value;
+    if (!SC_FORM.subName) { toast('Please enter subcontractor name', 'err'); return; }
+    SC_STEP = 2; render();
+  };
+  el = gid('scNext2'); if (el) el.onclick = function() {
+    var v;
+    v = gid('sc_projName'); if (v) SC_FORM.projName = v.value;
+    v = gid('sc_projAddr'); if (v) SC_FORM.projAddr = v.value;
+    v = gid('sc_projOwner'); if (v) SC_FORM.projOwner = v.value;
+    v = gid('sc_start'); if (v) SC_FORM.startDate = v.value;
+    v = gid('sc_end'); if (v) SC_FORM.endDate = v.value;
+    SC_STEP = 3; render();
+  };
+  el = gid('scBack2'); if (el) el.onclick = function() { SC_STEP = 1; render(); };
+  el = gid('scNext3'); if (el) el.onclick = function() {
+    var v;
+    v = gid('sc_trade'); if (v) SC_FORM.trade = v.value;
+    v = gid('sc_scope'); if (v) SC_FORM.scope = v.value;
+    SC_STEP = 4; render();
+  };
+  el = gid('scBack3'); if (el) el.onclick = function() { SC_STEP = 2; render(); };
+  el = gid('scNext4'); if (el) el.onclick = function() {
+    var v;
+    v = gid('sc_amt'); if (v) SC_FORM.contractAmt = v.value;
+    v = gid('sc_payTerms'); if (v) SC_FORM.payTerms = v.value;
+    v = gid('sc_ret'); if (v) SC_FORM.retainage = v.value;
+    v = gid('sc_hst'); if (v) SC_FORM.hst = v.value === 'yes';
+    if (!SC_FORM.contractAmt) { toast('Please enter contract amount', 'err'); return; }
+    SC_STEP = 5; render();
+  };
+  el = gid('scBack4'); if (el) el.onclick = function() { SC_STEP = 3; render(); };
+  el = gid('scNext5'); if (el) el.onclick = function() { SC_STEP = 4; render(); };
+  el = gid('scBack5'); if (el) el.onclick = function() { SC_STEP = 4; render(); };
+  el = gid('scGenerate'); if (el) el.onclick = function() {
+    var v;
+    v = gid('sc_warranty'); if (v) SC_FORM.warranty = v.value;
+    v = gid('sc_dispute'); if (v) SC_FORM.dispute = v.value;
+    v = gid('sc_lien'); if (v) SC_FORM.lien = v.checked;
+    v = gid('sc_wage'); if (v) SC_FORM.prevailingWage = v.checked;
+    SC_GENERATED = true;
+    render();
+    toast('Subcontract generated! Ready to print.');
+  };
+  el = gid('scReset'); if (el) el.onclick = function() {
+    SC_GENERATED = false; SC_STEP = 1;
+    SC_FORM.subName = ''; SC_FORM.projName = ''; SC_FORM.contractAmt = ''; SC_FORM.scope = '';
+    render();
   };
 
   // Settings
