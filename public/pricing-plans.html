@@ -1,1 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Construction Wizzard — Pricing Plans</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif}
+body{background:#f0ede8;padding:28px 16px;min-height:100vh}
+.wrap{max-width:960px;margin:0 auto}
+h1{font-size:24px;font-weight:800;color:#0c0c0c;text-align:center;margin-bottom:6px;letter-spacing:-.01em}
+.sub{text-align:center;color:#6a6560;font-size:13px;margin-bottom:32px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:start}
+.card{background:#fff;border:1.5px solid #e0ddd6;border-radius:16px;padding:24px;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card.featured{border:2.5px solid #f0b800;background:#fffdf0;box-shadow:0 4px 20px rgba(240,184,0,.15)}
+.pop-badge{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:#f0b800;color:#0c0c0c;font-size:10px;font-weight:800;padding:4px 16px;border-radius:0 0 10px 10px;letter-spacing:.06em}
+.plan-name{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a8a39a;margin-bottom:10px}
+.price{font-size:40px;font-weight:800;color:#0c0c0c;line-height:1;display:flex;align-items:flex-end;gap:3px}
+.price-mo{font-size:14px;font-weight:500;color:#6a6560;margin-bottom:5px}
+.tagline{font-size:12px;color:#a8a39a;margin-top:4px;margin-bottom:18px}
+.divider{border:none;border-top:1px solid #e0ddd6;margin:16px 0}
+.section-label{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a8a39a;margin:14px 0 7px}
+.feat{display:flex;align-items:flex-start;gap:8px;padding:3px 0;font-size:12.5px;color:#1c1c1c;line-height:1.4}
+.ck{color:#1a7040;font-size:12px;flex-shrink:0;font-weight:800;margin-top:1px}
+.xx{color:#d0cdc6;font-size:12px;flex-shrink:0;margin-top:1px}
+.new-badge{background:#e8f5ee;color:#1a7040;font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;margin-left:4px;letter-spacing:.04em}
+.cta{display:block;width:100%;margin-top:20px;padding:12px;border-radius:9px;font-size:13.5px;font-weight:700;text-align:center;cursor:pointer;border:none;text-decoration:none;transition:opacity .15s}
+.cta:hover{opacity:.87}
+.cta-dark{background:#0c0c0c;color:#fff}
+.cta-gold{background:#f0b800;color:#0c0c0c}
+.trial-note{text-align:center;margin-top:20px;font-size:12px;color:#a8a39a}
+.back-link{display:block;text-align:center;margin-bottom:20px;font-size:13px;color:#6a6560;text-decoration:none}
+.back-link:hover{color:#0c0c0c}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/construction-wizzard.html" class="back-link">← Back to Construction Wizzard</a>
+  <h1>⬡ Construction Wizzard</h1>
+  <p class="sub">7-day free trial on all plans &nbsp;·&nbsp; No credit card required &nbsp;·&nbsp; Cancel anytime</p>
 
+  <div class="grid">
+
+    <!-- STARTER -->
+    <div class="card">
+      <div class="plan-name">Starter</div>
+      <div class="price">$49<span class="price-mo">/mo</span></div>
+      <div class="tagline">Perfect for solo contractors</div>
+
+      <div class="section-label">📐 Estimating</div>
+      <div class="feat"><span class="ck">✓</span> Estimator — all 9 trades</div>
+      <div class="feat"><span class="ck">✓</span> Saved Projects</div>
+      <div class="feat"><span class="ck">✓</span> Bid Tender</div>
+      <div class="feat"><span class="ck">✓</span> Invoice & Quote</div>
+
+      <div class="section-label">📓 Field Management</div>
+      <div class="feat"><span class="ck">✓</span> Daily Logs</div>
+      <div class="feat"><span class="ck">✓</span> Schedule (Gantt)</div>
+      <div class="feat"><span class="xx">–</span> Punch Lists</div>
+
+      <div class="section-label">🦺 Safety</div>
+      <div class="feat"><span class="ck">✓</span> Daily Safety Checklist</div>
+      <div class="feat"><span class="ck">✓</span> Cert Expiry Alerts <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="xx">–</span> Incidents & Training</div>
+
+      <div class="section-label">🏗 Intelligence</div>
+      <div class="feat"><span class="ck">✓</span> Material Price Tracker <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="xx">–</span> Weather Integration</div>
+      <div class="feat"><span class="xx">–</span> RFI Management</div>
+      <div class="feat"><span class="xx">–</span> PDF Blueprint AI Takeoff</div>
+      <div class="feat"><span class="xx">–</span> AI Copilot</div>
+
+      <div class="section-label">🏛 Ontario / Canada</div>
+      <div class="feat"><span class="ck">✓</span> HST Calculator <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> Ontario Building Code <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="xx">–</span> WSIB Tracking</div>
+      <div class="feat"><span class="xx">–</span> Subcontract Generator</div>
+
+      <div class="section-label">👥 Clients & Finance</div>
+      <div class="feat"><span class="xx">–</span> Client Portal</div>
+      <div class="feat"><span class="xx">–</span> Job Costing</div>
+      <div class="feat"><span class="xx">–</span> Change Orders</div>
+
+      <div class="divider"></div>
+      <div class="feat"><span class="ck">✓</span> 1 seat</div>
+      <div class="feat"><span class="ck">✓</span> Email support</div>
+      <div class="feat"><span class="ck">✓</span> 7-day free trial</div>
+
+      <a href="https://buy.stripe.com/4gM6ozcGCdxN9Wm1ubeAg02" target="_blank" class="cta cta-dark">Get Starter →</a>
+    </div>
+
+    <!-- BASIC -->
+    <div class="card">
+      <div class="plan-name">Basic</div>
+      <div class="price">$149<span class="price-mo">/mo</span></div>
+      <div class="tagline">Perfect for small teams</div>
+
+      <div class="section-label">📐 Estimating</div>
+      <div class="feat"><span class="ck">✓</span> Estimator — all 9 trades</div>
+      <div class="feat"><span class="ck">✓</span> Saved Projects</div>
+      <div class="feat"><span class="ck">✓</span> Bid Tender</div>
+      <div class="feat"><span class="ck">✓</span> Invoice & Quote</div>
+
+      <div class="section-label">📓 Field Management</div>
+      <div class="feat"><span class="ck">✓</span> Daily Logs</div>
+      <div class="feat"><span class="ck">✓</span> Schedule (Gantt)</div>
+      <div class="feat"><span class="ck">✓</span> Punch Lists</div>
+
+      <div class="section-label">🦺 Safety</div>
+      <div class="feat"><span class="ck">✓</span> Daily Safety Checklist</div>
+      <div class="feat"><span class="ck">✓</span> Cert Expiry Alerts <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> Incidents & Training</div>
+
+      <div class="section-label">🏗 Intelligence</div>
+      <div class="feat"><span class="ck">✓</span> Material Price Tracker <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> Weather Integration <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> RFI Management <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="xx">–</span> PDF Blueprint AI Takeoff</div>
+      <div class="feat"><span class="xx">–</span> AI Copilot</div>
+
+      <div class="section-label">🏛 Ontario / Canada</div>
+      <div class="feat"><span class="ck">✓</span> HST Calculator <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> Ontario Building Code <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> WSIB Tracking <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> Subcontract Generator <span class="new-badge">NEW</span></div>
+
+      <div class="section-label">👥 Clients & Finance</div>
+      <div class="feat"><span class="ck">✓</span> Client Portal <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> Job Costing</div>
+      <div class="feat"><span class="ck">✓</span> Change Orders</div>
+
+      <div class="divider"></div>
+      <div class="feat"><span class="ck">✓</span> Up to 3 seats</div>
+      <div class="feat"><span class="ck">✓</span> Email support</div>
+      <div class="feat"><span class="ck">✓</span> 7-day free trial</div>
+
+      <a href="https://buy.stripe.com/7sY6oz0XU8dt2tU7SzeAg01" target="_blank" class="cta cta-dark">Get Basic →</a>
+    </div>
+
+    <!-- PRO -->
+    <div class="card featured">
+      <div class="pop-badge">⭐ MOST POPULAR</div>
+      <div class="plan-name">Pro</div>
+      <div class="price">$500<span class="price-mo">/mo</span></div>
+      <div class="tagline">For growing contractor businesses</div>
+
+      <div class="section-label">📐 Estimating</div>
+      <div class="feat"><span class="ck">✓</span> Estimator — all 9 trades</div>
+      <div class="feat"><span class="ck">✓</span> Saved Projects</div>
+      <div class="feat"><span class="ck">✓</span> Bid Tender</div>
+      <div class="feat"><span class="ck">✓</span> Invoice & Quote</div>
+
+      <div class="section-label">📓 Field Management</div>
+      <div class="feat"><span class="ck">✓</span> Daily Logs</div>
+      <div class="feat"><span class="ck">✓</span> Schedule (Gantt)</div>
+      <div class="feat"><span class="ck">✓</span> Punch Lists</div>
+
+      <div class="section-label">🦺 Safety</div>
+      <div class="feat"><span class="ck">✓</span> Daily Safety Checklist</div>
+      <div class="feat"><span class="ck">✓</span> Cert Expiry Alerts <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> Incidents & Training</div>
+
+      <div class="section-label">🏗 Intelligence</div>
+      <div class="feat"><span class="ck">✓</span> Material Price Tracker <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> Weather Integration <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> RFI Management <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> PDF Blueprint AI Takeoff <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> AI Copilot</div>
+
+      <div class="section-label">🏛 Ontario / Canada</div>
+      <div class="feat"><span class="ck">✓</span> HST Calculator <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> Ontario Building Code <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> WSIB Tracking <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> Subcontract Generator <span class="new-badge">NEW</span></div>
+
+      <div class="section-label">👥 Clients & Finance</div>
+      <div class="feat"><span class="ck">✓</span> Client Portal <span class="new-badge">NEW</span></div>
+      <div class="feat"><span class="ck">✓</span> Job Costing</div>
+      <div class="feat"><span class="ck">✓</span> Change Orders</div>
+
+      <div class="divider"></div>
+      <div class="feat"><span class="ck">✓</span> Unlimited seats</div>
+      <div class="feat"><span class="ck">✓</span> Priority support</div>
+      <div class="feat"><span class="ck">✓</span> GPS Time Tracking</div>
+      <div class="feat"><span class="ck">✓</span> 7-day free trial</div>
+
+      <a href="https://buy.stripe.com/9B6bITayu0L19Wmc8PeAg00" target="_blank" class="cta cta-gold">Get Pro →</a>
+    </div>
+
+  </div>
+
+  <p class="trial-note">All plans include a 7-day free trial &nbsp;·&nbsp; Secure payments via Stripe &nbsp;·&nbsp; Visa · Mastercard · Amex · PayPal</p>
+</div>
+</body>
+</html>
