@@ -106,7 +106,48 @@ textarea.inp{resize:vertical;min-height:76px}
 .banner{background:#fdf5e0;border:1px solid var(--abd);border-radius:9px;padding:10px 15px;font-size:12px;color:var(--amber);display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap}
 .trial-b{background:linear-gradient(135deg,#0a2a1a,#0f3d28);border-radius:10px;padding:14px 18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .proj-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-@media(max-width:768px){#sidebar{display:none}.page{padding:16px}.hero h1{font-size:30px}.g2,.g4{grid-template-columns:1fr}}
+@media(max-width:768px){
+  #sidebar{display:none}
+  .page{padding:14px;padding-bottom:76px}
+  .hero h1{font-size:30px}
+  .g2,.g4{grid-template-columns:1fr}
+  #mob-nav{display:flex!important}
+}
+@media(min-width:769px){#mob-nav{display:none!important}}
+#mob-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;
+  background:var(--ink);border-top:1px solid #2a2a2a;
+  height:60px;z-index:500;align-items:center;
+  justify-content:space-around;padding:0 2px;
+}
+.mn-btn{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  background:none;border:none;color:#666;font-size:9.5px;font-weight:600;
+  cursor:pointer;padding:5px 8px;border-radius:8px;flex:1;
+  letter-spacing:.01em;
+}
+.mn-btn .mi{font-size:22px;line-height:1}
+.mn-btn.active,.mn-btn:active{color:var(--gold2)}
+.mob-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:490}
+.mob-bg.show{display:block}
+.mob-drawer{
+  position:fixed;bottom:60px;left:0;right:0;
+  background:var(--ink2);border-top:1px solid #333;
+  z-index:495;max-height:78vh;overflow-y:auto;
+  transform:translateY(110%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+  border-radius:18px 18px 0 0;
+}
+.mob-drawer.open{transform:translateY(0)}
+.mob-sec{font-size:9px;font-weight:700;letter-spacing:.14em;color:#444;
+  text-transform:uppercase;padding:14px 16px 5px;margin-top:4px}
+.mob-item{display:flex;align-items:center;gap:12px;padding:12px 16px;
+  color:#888;font-size:14px;cursor:pointer;border:none;background:none;
+  width:100%;text-align:left;border-bottom:.5px solid #222}
+.mob-item:last-child{border:none}
+.mob-item:active{background:#252525;color:#fff}
+.mob-item .mi2{font-size:18px;width:24px;text-align:center;flex-shrink:0}
+.mob-pro{margin-left:auto;background:#2a1800;color:var(--gold2);
+  font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px}
 </style>
 </head>
 <body>
@@ -141,7 +182,7 @@ var NAV = [
   ]},
   {s:'Field', items:[
     {id:'dailylog',i:'📓',l:'Daily Logs'},
-    {id:'punchlist',i:'✅',l:'Punch Lists'},
+    {id:'punchlist',i:'✅',l:'Punch Lists',pro:true},
     {id:'schedule',i:'📅',l:'Schedule'}
   ]},
   {s:'Finance', items:[
@@ -150,28 +191,29 @@ var NAV = [
   ]},
   {s:'Safety', items:[
     {id:'safety',i:'🦺',l:'Daily Checklist'},
-    {id:'incidents',i:'⚠️',l:'Incidents'},
-    {id:'training',i:'🎓',l:'Training'},
+    {id:'incidents',i:'⚠️',l:'Incidents',pro:true},
+    {id:'training',i:'🎓',l:'Training',pro:true},
     {id:'certexpiry',i:'📋',l:'Cert Expiry Alerts'}
   ]},
   {s:'Intelligence', items:[
     {id:'ai',i:'🤖',l:'AI Copilot',pro:true},
     {id:'blueprint',i:'📄',l:'Blueprint AI Takeoff',pro:true},
-    {id:'weather',i:'🌤',l:'Weather Integration'},
+    {id:'weather',i:'🌤',l:'Weather Integration',pro:true},
     {id:'materials',i:'🏗',l:'Material Prices'},
-    {id:'rfi',i:'📝',l:'RFI Management'}
+    {id:'rfi',i:'📝',l:'RFI Management',pro:true}
   ]},
   {s:'Clients', items:[
     {id:'clientportal',i:'👥',l:'Client Portal',pro:true}
   ]},
   {s:'Ontario / Canada', items:[
-    {id:'wsib',i:'🏛',l:'WSIB Tracking'},
+    {id:'wsib',i:'🏛',l:'WSIB Tracking',pro:true},
     {id:'hst',i:'💲',l:'HST Calculator'},
     {id:'obc',i:'📖',l:'Ontario Building Code'},
-    {id:'subcontract',i:'📃',l:'Subcontract Generator'}
+    {id:'subcontract',i:'📃',l:'Subcontract Generator',pro:true}
   ]},
   {s:'Account', items:[
-    {id:'settings',i:'⚙️',l:'Settings & Plan'}
+    {id:'settings',i:'⚙️',l:'Settings & Plan'},
+    {id:'pricing',i:'💳',l:'View Pricing Plans'}
   ]}
 ];
 
@@ -336,7 +378,7 @@ var HST_RESULT = null;
 
 // Subcontract State
 var SC_FORM = {
-  gcName:'Garfield Wizzard Construction',gcAddr:'28 Ann St, Mississauga ON L5G 0E1',gcPhone:'14077800',
+  gcName:'Your Company Name',gcAddr:'',gcPhone:'',
   subName:'',subAddr:'',subPhone:'',subWsib:'',
   projName:'',projAddr:'',projOwner:'',
   scope:'',trade:'drywall',startDate:'',endDate:'',
@@ -402,10 +444,10 @@ function gate(fn) {
 function trialBar() {
   if (!U) return '';
   if (isTrial()) {
-    return '<div class="trial-b"><div><div style="color:#4ade80;font-size:13px;font-weight:600">Free Trial Active - ' + U.trialDays + ' days remaining</div><div style="color:#86efac;font-size:11px;margin-top:2px">Upgrade before your trial ends.</div></div><button class="btn bgold bsm" onclick="MODAL=true;render()">Upgrade Now</button></div>';
+    return '<div class="trial-b"><div><div style="color:#4ade80;font-size:13px;font-weight:600">Free Trial Active - ' + U.trialDays + ' days remaining</div><div style="color:#86efac;font-size:11px;margin-top:2px">Upgrade before your trial ends to keep all features.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn bgold bsm" onclick="MODAL=true;render()">Upgrade Now</button><a href="/pricing-plans.html" target="_blank" style="background:rgba(255,255,255,.15);color:#fff;border-radius:7px;padding:5px 11px;font-size:11.5px;font-weight:700;text-decoration:none;display:flex;align-items:center">See All Plans</a></div></div>';
   }
   if (!isPro()) {
-    return '<div class="banner"><span>Upgrade to unlock all Pro features.</span><button class="btn bgold bsm" onclick="MODAL=true;render()">View Plans</button></div>';
+    return '<div class="banner"><span>Upgrade to unlock all Pro features including AI Copilot, Blueprint Takeoff, WSIB Tracking and more.</span><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn bgold bsm" onclick="MODAL=true;render()">Upgrade Now</button><a href="/pricing-plans.html" target="_blank" style="background:transparent;border:1px solid var(--abd);color:var(--amber);border-radius:7px;padding:5px 11px;font-size:11.5px;font-weight:700;text-decoration:none;display:flex;align-items:center">See All Plans</a></div></div>';
   }
   return '';
 }
@@ -607,6 +649,7 @@ function pageContent() {
   if (PAGE === 'rfi') return rfiPage();
   if (PAGE === 'clientportal') return gate(clientPortalPage);
   if (PAGE === 'settings') return settingsPage();
+  if (PAGE === 'pricing') { window.open('/pricing-plans.html','_blank'); PAGE='settings'; return settingsPage(); }
   if (PAGE === 'wsib') return wsibPage();
   if (PAGE === 'hst') return hstPage();
   if (PAGE === 'obc') return obcPage();
@@ -1323,12 +1366,12 @@ function subcontractPreview() {
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function settingsPage() {
-  var planName = U ? (U.plan === 'pro' ? 'Pro Plan' : U.plan === 'basic' ? 'Basic Plan' : isTrial() ? 'Free Trial (' + U.trialDays + ' days left)' : 'Free Plan') : '';
+  var planName = U ? (U.plan === 'pro' ? 'Pro Plan — All Features Unlocked' : U.plan === 'basic' ? 'Basic Plan' : isTrial() ? 'Free Trial (' + U.trialDays + ' days left)' : 'Free Plan') : '';
   return ph('⚙️', 'Settings & Plan', 'Manage your account and subscription') +
     '<div class="g2"><div class="card"><div class="ch">Account</div><div class="field"><label>Full Name</label><input class="inp" id="settName" value="' + (U ? U.name : '') + '"/></div><div class="field"><label>Email</label><input class="inp" value="' + (U ? U.email : '') + '" disabled style="opacity:.6"/></div><button class="btn bink" id="saveSettings">Save Changes</button></div>' +
     '<div class="card"><div class="ch">Current Plan</div><div style="padding:16px;background:var(--paper);border-radius:9px;margin-bottom:16px"><div style="font-family:var(--fh);font-size:18px;font-weight:800;margin-bottom:4px">' + planName + '</div>' + (isPro() ? '<p style="font-size:12px;color:var(--green)">All features unlocked</p>' : '') + '</div>' +
     (!isPro() ? '<div style="display:flex;flex-direction:column;gap:10px">' +
-    '<a href="' + STRIPE.starter + '" target="_blank" style="text-decoration:none"><div style="border:1px solid var(--border2);border-radius:10px;padding:14px;cursor:pointer"><div style="font-weight:700">Starter - $49/month</div><div style="font-size:11px;color:var(--muted)">Estimator, bids, invoices, save projects</div><div style="margin-top:8px;background:var(--ink);color:#fff;border-radius:6px;padding:8px;text-align:center;font-weight:700;font-size:12px">Pay with Stripe</div></div></a>' +
+    '<a href=\'\' + STRIPE.starter + \'\' target=\"_blank\" style=\"text-decoration:none\"><div style=\"border:1px solid var(--border2);border-radius:10px;padding:14px;cursor:pointer\"><div style=\"font-weight:700\">Starter - $49/month</div><div style=\"font-size:11px;color:var(--muted);margin-top:4px;line-height:1.7\">Estimator (9 trades) · Bid Tender · Invoice and Quote · Daily Logs · Schedule · Safety Checklist · Saved Projects · Material Price Tracker · Cert Expiry Alerts</div><div style=\"margin-top:8px;background:var(--ink);color:#fff;border-radius:6px;padding:8px;text-align:center;font-weight:700;font-size:12px\">Pay with Stripe</div></div></a>\' +\n    \'<a href=\' + STRIPE.basic + \'\' target=\"_blank\" style=\"text-decoration:none\"><div style=\"border:1px solid var(--border2);border-radius:10px;padding:14px;cursor:pointer\"><div style=\"font-weight:700\">Basic - $149/month</div><div style=\"font-size:11px;color:var(--muted);margin-top:4px;line-height:1.7\">Everything in Starter + RFI Management · Weather Integration · Ontario/WSIB Tracking · HST Calculator · Ontario Building Code · Digital Subcontract Generator · Client Portal · Job Costing · Change Orders · Up to 3 seats</div><div style=\"margin-top:8px;background:var(--ink);color:#fff;border-radius:6px;padding:8px;text-align:center;font-weight:700;font-size:12px\">Pay with Stripe</div></div></a>\' +\n    \'<a href=\' + STRIPE.pro + \'\' target=\"_blank\" style=\"text-decoration:none\"><div style=\"border:2px solid var(--gold2);border-radius:10px;padding:14px;background:#fffdf0;cursor:pointer\"><div style=\"font-size:10px;font-weight:800;color:var(--gold);margin-bottom:6px\">MOST POPULAR</div><div style=\"font-weight:700\">Pro - $500/month</div><div style=\"font-size:11px;color:var(--muted);margin-top:4px;line-height:1.7\">Everything in Basic + PDF Blueprint AI Takeoff · AI Copilot · GPS Time Tracking · Punch Lists · Incident Reports · Safety Training · Unlimited Seats · Priority Support</div><div style=\"margin-top:8px;background:var(--gold2);color:var(--ink);border-radius:6px;padding:8px;text-align:center;font-weight:800;font-size:12px\">Pay with Stripe</div></div></a>' +
     '<a href="' + STRIPE.basic + '" target="_blank" style="text-decoration:none"><div style="border:1px solid var(--border2);border-radius:10px;padding:14px;cursor:pointer"><div style="font-weight:700">Basic - $149/month</div><div style="font-size:11px;color:var(--muted)">Everything in Starter plus client database</div><div style="margin-top:8px;background:var(--ink);color:#fff;border-radius:6px;padding:8px;text-align:center;font-weight:700;font-size:12px">Pay with Stripe</div></div></a>' +
     '<a href="' + STRIPE.pro + '" target="_blank" style="text-decoration:none"><div style="border:2px solid var(--gold2);border-radius:10px;padding:14px;background:#fffdf0;cursor:pointer"><div style="font-size:10px;font-weight:800;color:var(--gold);margin-bottom:6px">MOST POPULAR</div><div style="font-weight:700">Pro - $500/month</div><div style="font-size:11px;color:var(--muted)">AI Copilot, GPS, AR, Blueprint Takeoff, Unlimited seats</div><div style="margin-top:8px;background:var(--gold2);color:var(--ink);border-radius:6px;padding:8px;text-align:center;font-weight:800;font-size:12px">Pay with Stripe</div></div></a>' +
     '</div>' : '<div style="padding:12px;background:var(--gbg);border-radius:8px;color:var(--green);font-size:13px;font-weight:600;text-align:center">You have full Pro access</div>') +
@@ -1378,7 +1421,7 @@ function heroPage() {
   }
 
   return '<div style="background:var(--slate);min-height:100vh">' +
-    '<nav style="background:var(--ink);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between"><div style="font-family:var(--fh);font-size:15px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px">⬡ <span class="badge">Wizzard</span></div><div style="display:flex;gap:8px"><button class="tbtn" id="navIn">Sign In</button><button class="btn bgold" style="font-size:12px" id="navUp">Start Free Trial</button></div></nav>' +
+    '<nav style="background:var(--ink);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between"><div style="font-family:var(--fh);font-size:15px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px">⬡ <span class="badge">Wizzard</span></div><div style="display:flex;gap:8px;align-items:center"><a href="/pricing-plans.html" target="_blank" style="color:#aaa;font-size:12px;font-weight:600;text-decoration:none;padding:5px 10px">Pricing</a><button class="tbtn" id="navIn">Sign In</button><button class="btn bgold" style="font-size:12px" id="navUp">Start Free Trial</button></div></nav>' +
     '<div class="hero"><div class="hero-bg"></div><div class="hero-in"><div class="hero-eye">Construction Intelligence Platform</div><h1>Build smarter.<br/><em>Bid sharper.</em><br/>Stay safe.</h1><div class="hero-trial">7-Day Free Trial - No credit card required</div><p class="hero-sub">The all-in-one platform for modern construction teams. Estimating, field management, safety, finance, and AI insights.</p><div><button class="hero-cta" id="heroStart">Start Free Trial</button></div></div></div>' +
     '<div style="max-width:1100px;margin:0 auto;padding:40px 28px 32px"><div style="text-align:center;margin-bottom:32px"><div style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:10px">Everything your team needs</div><h2 style="font-family:var(--fh);font-size:28px;font-weight:800">One platform. Every trade.</h2></div><div class="tool-grid">' + toolCards + '</div></div>' +
     '<div class="sstrip"><div style="text-align:center"><div style="font-family:var(--fh);font-size:26px;font-weight:800;color:var(--gold2)">$2.4B+</div><div style="font-size:11px;color:#666;margin-top:3px">In bids estimated</div></div><div style="text-align:center"><div style="font-family:var(--fh);font-size:26px;font-weight:800;color:var(--gold2)">12,000+</div><div style="font-size:11px;color:#666;margin-top:3px">Active contractors</div></div><div style="text-align:center"><div style="font-family:var(--fh);font-size:26px;font-weight:800;color:var(--gold2)">9 Trades</div><div style="font-size:11px;color:#666;margin-top:3px">All covered</div></div><div style="text-align:center"><div style="font-family:var(--fh);font-size:26px;font-weight:800;color:var(--gold2)">4.9 ★</div><div style="font-size:11px;color:#666;margin-top:3px">Average rating</div></div></div>' +
@@ -1389,9 +1432,9 @@ function heroPage() {
 function modalHTML() {
   return '<div class="modal-bg" id="modalBg"><div class="modal-box"><h3 style="font-family:var(--fh);font-size:19px;margin-bottom:5px">Upgrade Your Plan</h3><p style="font-size:13px;color:var(--muted);margin-bottom:20px">Secure checkout powered by Stripe - Cancel anytime</p>' +
     '<div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">' +
-    '<a href="' + STRIPE.starter + '" target="_blank" style="text-decoration:none"><div style="border:1px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">Starter Plan</div><div style="font-size:11px;color:var(--muted)">Estimator, bids, invoices, save projects</div></div><div style="font-family:var(--fh);font-size:20px;font-weight:800">$49<span style="font-size:11px;font-weight:500">/mo</span></div></div><div style="margin-top:10px;background:var(--ink);color:#fff;border-radius:7px;padding:10px;text-align:center;font-weight:700;font-size:13px">Pay with Stripe →</div></div></a>' +
-    '<a href="' + STRIPE.basic + '" target="_blank" style="text-decoration:none"><div style="border:1px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">Basic Plan</div><div style="font-size:11px;color:var(--muted)">Everything in Starter plus client database</div></div><div style="font-family:var(--fh);font-size:20px;font-weight:800">$149<span style="font-size:11px;font-weight:500">/mo</span></div></div><div style="margin-top:10px;background:var(--ink);color:#fff;border-radius:7px;padding:10px;text-align:center;font-weight:700;font-size:13px">Pay with Stripe →</div></div></a>' +
-    '<a href="' + STRIPE.pro + '" target="_blank" style="text-decoration:none"><div style="border:2px solid var(--gold2);border-radius:10px;padding:16px;background:#fffdf0;cursor:pointer"><div style="font-size:10px;font-weight:800;color:var(--gold);margin-bottom:6px">MOST POPULAR</div><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">Pro Plan</div><div style="font-size:11px;color:var(--muted)">AI Copilot, Blueprint Takeoff, GPS, AR, Unlimited seats</div></div><div style="font-family:var(--fh);font-size:20px;font-weight:800">$500<span style="font-size:11px;font-weight:500">/mo</span></div></div><div style="margin-top:10px;background:var(--gold2);color:var(--ink);border-radius:7px;padding:10px;text-align:center;font-weight:800;font-size:13px">Pay with Stripe →</div></div></a>' +
+    '<a href="' + STRIPE.starter + '" target="_blank" style="text-decoration:none"><div style="border:1px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">Starter Plan</div><div style="font-size:11px;color:var(--muted)">Estimator · Bid Tender · Invoicing · Daily Logs · Schedule · Safety Checklist · Material Price Tracker · Cert Expiry Alerts</div></div><div style="font-family:var(--fh);font-size:20px;font-weight:800">$49<span style="font-size:11px;font-weight:500">/mo</span></div></div><div style="margin-top:10px;background:var(--ink);color:#fff;border-radius:7px;padding:10px;text-align:center;font-weight:700;font-size:13px">Pay with Stripe →</div></div></a>' +
+    '<a href="' + STRIPE.basic + '" target="_blank" style="text-decoration:none"><div style="border:1px solid var(--border2);border-radius:10px;padding:16px;cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">Basic Plan</div><div style="font-size:11px;color:var(--muted)">Everything in Starter + RFI Management · Weather Integration · Ontario/WSIB Features · Digital Subcontract Generator · Client Portal · Job Costing · Change Orders</div></div><div style="font-family:var(--fh);font-size:20px;font-weight:800">$149<span style="font-size:11px;font-weight:500">/mo</span></div></div><div style="margin-top:10px;background:var(--ink);color:#fff;border-radius:7px;padding:10px;text-align:center;font-weight:700;font-size:13px">Pay with Stripe →</div></div></a>' +
+    '<a href="' + STRIPE.pro + '" target="_blank" style="text-decoration:none"><div style="border:2px solid var(--gold2);border-radius:10px;padding:16px;background:#fffdf0;cursor:pointer"><div style="font-size:10px;font-weight:800;color:var(--gold);margin-bottom:6px">MOST POPULAR</div><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">Pro Plan</div><div style="font-size:11px;color:var(--muted)">Everything in Basic + PDF Blueprint AI Takeoff · AI Copilot · GPS Time Tracking · Punch Lists · Incidents · Training · Unlimited Seats · Priority Support</div></div><div style="font-family:var(--fh);font-size:20px;font-weight:800">$500<span style="font-size:11px;font-weight:500">/mo</span></div></div><div style="margin-top:10px;background:var(--gold2);color:var(--ink);border-radius:7px;padding:10px;text-align:center;font-weight:800;font-size:13px">Pay with Stripe →</div></div></a>' +
     '</div><div style="text-align:center;font-size:11px;color:var(--faint);margin-bottom:14px">Visa - Mastercard - Amex - PayPal</div>' +
     '<button class="btn bout bfull" id="closeModal">Maybe Later</button></div></div>';
 }
@@ -1665,6 +1708,78 @@ try {
   render();
 } catch(e) {
   document.getElementById('app').innerHTML = '<div style="padding:40px;font-family:sans-serif"><h2 style="color:red">Error loading app</h2><p>' + e.message + '</p><pre style="background:#f0f0f0;padding:12px;border-radius:8px;font-size:11px;overflow:auto">' + e.stack + '</pre></div>';
+}
+</script>
+
+<!-- Mobile Bottom Navigation -->
+<div id="mob-nav">
+  <button class="mn-btn active" id="mn0" onclick="go('home');closeMob()">
+    <span class="mi">⬡</span>Home
+  </button>
+  <button class="mn-btn" id="mn1" onclick="go('estimator');closeMob()">
+    <span class="mi">📐</span>Estimate
+  </button>
+  <button class="mn-btn" id="mn2" onclick="go('bidtender');closeMob()">
+    <span class="mi">📋</span>Bids
+  </button>
+  <button class="mn-btn" id="mn3" onclick="go('safety');closeMob()">
+    <span class="mi">🦺</span>Safety
+  </button>
+  <button class="mn-btn" id="mn4" onclick="openMob()">
+    <span class="mi">☰</span>All Tools
+  </button>
+</div>
+
+<div class="mob-bg" id="mobBg" onclick="closeMob()"></div>
+<div class="mob-drawer" id="mobDrawer">
+  <div style="width:40px;height:4px;background:#444;border-radius:99px;margin:10px auto 4px"></div>
+
+  <div class="mob-sec">Estimating</div>
+  <button class="mob-item" onclick="go('invoice');closeMob()"><span class="mi2">🧾</span>Invoice & Quote</button>
+  <button class="mob-item" onclick="go('projects');closeMob()"><span class="mi2">💾</span>Saved Projects</button>
+
+  <div class="mob-sec">Field Management</div>
+  <button class="mob-item" onclick="go('dailylog');closeMob()"><span class="mi2">📓</span>Daily Logs</button>
+  <button class="mob-item" onclick="go('schedule');closeMob()"><span class="mi2">📅</span>Schedule</button>
+  <button class="mob-item" onclick="go('punchlist');closeMob()"><span class="mi2">✅</span>Punch Lists</button>
+
+  <div class="mob-sec">Safety</div>
+  <button class="mob-item" onclick="go('incidents');closeMob()"><span class="mi2">⚠️</span>Incidents</button>
+  <button class="mob-item" onclick="go('training');closeMob()"><span class="mi2">🎓</span>Training</button>
+  <button class="mob-item" onclick="go('certexpiry');closeMob()"><span class="mi2">📋</span>Cert Expiry Alerts</button>
+
+  <div class="mob-sec">Intelligence</div>
+  <button class="mob-item" onclick="go('materials');closeMob()"><span class="mi2">🏗</span>Material Prices</button>
+  <button class="mob-item" onclick="go('weather');closeMob()"><span class="mi2">🌤</span>Weather Integration</button>
+  <button class="mob-item" onclick="go('rfi');closeMob()"><span class="mi2">📝</span>RFI Management</button>
+  <button class="mob-item" onclick="go('ai');closeMob()"><span class="mi2">🤖</span>AI Copilot <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="go('blueprint');closeMob()"><span class="mi2">📄</span>Blueprint AI Takeoff <span class="mob-pro">PRO</span></button>
+
+  <div class="mob-sec">Finance</div>
+  <button class="mob-item" onclick="go('jobcost');closeMob()"><span class="mi2">💰</span>Job Costing <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="go('changes');closeMob()"><span class="mi2">🔄</span>Change Orders <span class="mob-pro">PRO</span></button>
+
+  <div class="mob-sec">Ontario / Canada</div>
+  <button class="mob-item" onclick="go('hst');closeMob()"><span class="mi2">💲</span>HST Calculator</button>
+  <button class="mob-item" onclick="go('obc');closeMob()"><span class="mi2">📖</span>Ontario Building Code</button>
+  <button class="mob-item" onclick="go('wsib');closeMob()"><span class="mi2">🏛</span>WSIB Tracking <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="go('subcontract');closeMob()"><span class="mi2">📃</span>Subcontract Generator <span class="mob-pro">PRO</span></button>
+
+  <div class="mob-sec">Clients & Account</div>
+  <button class="mob-item" onclick="go('clientportal');closeMob()"><span class="mi2">👥</span>Client Portal <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="go('settings');closeMob()"><span class="mi2">⚙️</span>Settings & Plan</button>
+  <button class="mob-item" onclick="window.open('/pricing-plans.html','_blank');closeMob()"><span class="mi2">💳</span>View Pricing Plans</button>
+  <div style="height:16px"></div>
+</div>
+
+<script>
+function openMob() {
+  document.getElementById('mobDrawer').classList.add('open');
+  document.getElementById('mobBg').classList.add('show');
+}
+function closeMob() {
+  document.getElementById('mobDrawer').classList.remove('open');
+  document.getElementById('mobBg').classList.remove('show');
 }
 </script>
 
