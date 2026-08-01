@@ -206,6 +206,14 @@ var NAV = [
     {id:'suppliers',i:'🏪',l:'Supplier Price Database'},
     {id:'rfi',i:'📝',l:'RFI Management',pro:true}
   ]},
+  {s:'AI Features', items:[
+    {id:'voiceestimate',i:'🎙️',l:'Voice Estimating',pro:true},
+    {id:'riskdetection',i:'🔍',l:'Risk Detection',pro:true},
+    {id:'budgetforecast',i:'📊',l:'Budget Forecasting',pro:true},
+    {id:'scheduleai',i:'⚡',l:'Schedule Optimization',pro:true},
+    {id:'contractreview',i:'📑',l:'Contract Review',pro:true},
+    {id:'meetingsummary',i:'🎧',l:'Meeting Summaries',pro:true}
+  ]},
   {s:'Clients & CRM', items:[
     {id:'clientportal',i:'👥',l:'Client Portal',pro:true},
     {id:'crm',i:'🤝',l:'CRM — Customers',pro:true}
@@ -467,6 +475,39 @@ var POS = [
 var SHOW_PO_FORM = false;
 var PO_FILTER = 'All';
 var NEW_PO = {supplier:'',project:'',due:'',notes:'',items:[{desc:'',qty:1,unit:'piece',cost:0}]};
+
+// AI Features State
+var VOICE_EST = {listening:false, transcript:'', result:null};
+var RISKS = [
+  {id:1,level:'High',category:'Budget',title:'Structural Steel Overrun',desc:'Cost code 3000 is at 91% of budget with 40% of work remaining. Projected overrun of $28,400.',impact:'$28,400',probability:'87%',mitigation:'Request contractor revised quote. Consider value engineering on connections.',status:'Open'},
+  {id:2,level:'High',category:'Schedule',title:'Structural Delay Cascade',desc:'5-day steel delay will push electrical, drywall and finishes by 10-14 days total. Completion at risk.',impact:'14 days',probability:'92%',mitigation:'Accelerate electrical pre-fab off-site. Overlap drywall on completed floors.',status:'Open'},
+  {id:3,level:'Medium',category:'Safety',title:'Expired Fall Protection Cert',desc:'James H. fall protection cert expired June 1. Worker cannot perform elevated work until renewed.',impact:'Operations',probability:'100%',mitigation:'Book OHSA recertification course immediately. Reassign to ground work in the interim.',status:'Action Required'},
+  {id:4,level:'Medium',category:'Weather',title:'Rain Days This Week',desc:'Wednesday and Thursday forecast 85-90% rain. Roofing and concrete pours must be rescheduled.',impact:'2 days',probability:'88%',mitigation:'Advance roofing to Monday-Tuesday. Delay concrete pour to Friday or next week.',status:'Open'},
+  {id:5,level:'Low',category:'Compliance',title:'WSIB COA Expiring',desc:'Green Mechanical Ltd. clearance certificate expires November 30. Must be renewed before payment.',impact:'Compliance',probability:'100%',mitigation:'Send renewal reminder to Green Mechanical now. Add to calendar 60 days prior.',status:'Monitoring'}
+];
+var RISK_FILTER = 'All';
+
+var BUDGET_FORECAST = {
+  months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+  actual:  [0, 0, 42000, 88000, 134000, 195000, 0, 0, 0, 0, 0, 0],
+  forecast:[0, 0, 42000, 88000, 134000, 195000, 268000, 334000, 389000, 430000, 468000, 498000],
+  budget:  [0, 0, 50000, 100000, 150000, 200000, 260000, 320000, 370000, 420000, 460000, 500000]
+};
+
+var CONTRACTS = [
+  {id:1,name:'General Contract - North Star',type:'Stipulated Price',value:1480000,parties:['Wizzard Construction','North Star Builders'],risks:['Article 6.3 termination clause - 30 day notice only','Unilateral scope change rights (Article 2.1)','Broad IP assignment without compensation'],status:'Under Review',uploaded:'2025-06-08'},
+  {id:2,name:'Subcontract - Apex Electrical',type:'Unit Price',value:93500,parties:['Wizzard Construction','Apex Electrical Inc.'],risks:['No back-charge limit defined','Insurance certificate missing COI endorsement'],status:'Flagged',uploaded:'2025-06-05'}
+];
+var CONTRACT_ACTIVE = 1;
+var CONTRACT_LOADING = false;
+var CONTRACT_ANALYZED = true;
+
+var MEETINGS = [
+  {id:1,title:'Weekly Site Meeting',date:'2025-06-10',duration:'42 min',attendees:['A. Wizzard','J. Martinez (Struct.)','P. Chen (Elec.)','R. Singh (Owner Rep)'],summary:'Structural steel delay confirmed 5 days due to supplier backlog. Owner approved acceleration plan. Electrical to begin pre-fab off-site. Next meeting June 17.',action_items:['Wizzard: Submit revised schedule by June 12','Martinez: Confirm steel delivery for June 16','Chen: Start pre-fab layout drawings','Singh: Owner to review CO-002 by June 13'],transcript:'',status:'Complete'},
+  {id:2,title:'Budget Review - Owner Meeting',date:'2025-06-07',duration:'28 min',attendees:['A. Wizzard','R. Singh (Owner)','T. Brown (PM)'],summary:'Q2 budget variance reviewed. Steel overrun acknowledged. Owner approved contingency draw of $50,000. Monthly reporting to continue.',action_items:['Wizzard: Submit cost report by June 15','Singh: Contingency approval signed','Brown: Update project tracker'],transcript:'',status:'Complete'}
+];
+var MEETING_ACTIVE = 1;
+var MEETING_LOADING = false;
 
 // Mobile App State
 var PHOTOS = [
@@ -928,6 +969,12 @@ function pageContent() {
   if (PAGE === 'proposal') return gate(proposalPage);
   if (PAGE === 'purchaseorders') return gate(purchaseOrdersPage);
   if (PAGE === 'documents') return gate(documentsPage);
+  if (PAGE === 'voiceestimate') return voiceEstimatePage();
+  if (PAGE === 'riskdetection') return riskDetectionPage();
+  if (PAGE === 'budgetforecast') return budgetForecastPage();
+  if (PAGE === 'scheduleai') return scheduleAIPage();
+  if (PAGE === 'contractreview') return contractReviewPage();
+  if (PAGE === 'meetingsummary') return meetingSummaryPage();
   if (PAGE === 'mobileapp') return mobileAppPage();
   if (PAGE === 'estimates_mobile') return mobileEstimatePage();
   if (PAGE === 'photos') return photosPage();
@@ -1622,6 +1669,180 @@ function suppliersPage() {
 
 function addToCart(supplierId) {
   toast('Item noted — create a Purchase Order to send to supplier!');
+}
+
+// ---- VOICE ESTIMATING PAGE ----
+function voiceEstimatePage() {
+  var result = VOICE_EST.result;
+  var examples = [
+    'Estimate a 2,500 sq ft house for drywall',
+    'Quote 800 sq ft of flooring for a retail space',
+    'Price out electrical work for a 3,000 sq ft office',
+    'Estimate concrete for a 1,200 sq ft basement',
+    'How much for roofing on a 2,000 sq ft bungalow'
+  ];
+  return ph('🎙️', 'Voice Estimating', 'Speak your estimate — AI calculates it instantly') +
+    '<div class="g2"><div>' +
+    '<div class="card"><div class="ch">Speak or Type Your Estimate</div>' +
+    '<div style="text-align:center;padding:28px 20px;background:var(--paper);border-radius:12px;margin-bottom:16px">' +
+    '<div id="micBtn" style="width:80px;height:80px;border-radius:50%;background:' + (VOICE_EST.listening?'var(--red)':'var(--ink)') + ';display:flex;align-items:center;justify-content:center;font-size:36px;cursor:pointer;margin:0 auto 14px;box-shadow:0 4px 20px rgba(0,0,0,.3);transition:all .2s">' + (VOICE_EST.listening?'⏹':'🎙️') + '</div>' +
+    '<div style="font-size:13px;font-weight:700;color:' + (VOICE_EST.listening?'var(--red)':'var(--muted)') + '">' + (VOICE_EST.listening?'Listening... Speak your estimate':'Tap to start speaking') + '</div>' +
+    '</div>' +
+    '<div class="field"><label>Or type your estimate request</label><textarea class="inp" id="voiceInput" style="min-height:80px" placeholder="e.g. Estimate a 2,500 sq ft house for drywall and painting...">' + (VOICE_EST.transcript||'') + '</textarea></div>' +
+    '<button class="btn bink bfull" id="processVoice">Calculate Estimate</button></div>' +
+
+    '<div class="card"><div class="ch">Quick Examples</div>' +
+    examples.map(function(e) {
+      return '<button class="btn bout" style="width:100%;text-align:left;margin-bottom:8px;padding:10px 13px;font-size:12.5px" data-ve="' + e + '" class="ve-example">' + e + ' →</button>';
+    }).join('') +
+    '</div></div>' +
+
+    '<div>' +
+    (result ?
+      '<div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div style="width:40px;height:40px;background:var(--gbg);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px">🤖</div><div><div style="font-weight:700">AI Estimate Ready</div><div style="font-size:12px;color:var(--muted)">' + result.description + '</div></div></div>' +
+      '<div style="text-align:center;padding:20px;background:var(--ink);border-radius:12px;margin-bottom:16px"><div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Total Bid</div><div style="font-family:var(--fh);font-size:48px;font-weight:800;color:var(--gold2)">' + money(result.total) + '</div><div style="font-size:12px;color:#666;margin-top:4px">' + result.trade + ' — ' + result.sqft.toLocaleString() + ' sq ft</div></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">' +
+      [['Base Labour',result.labour],['Materials',result.materials],['Overhead',result.overhead],['Profit',result.profit]].map(function(r){return '<div style="padding:11px;background:var(--paper);border-radius:8px;text-align:center"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;margin-bottom:3px">' + r[0] + '</div><div style="font-weight:700;font-size:15px">' + money(r[1]) + '</div></div>';}).join('') +
+      '</div>' +
+      '<div style="display:flex;gap:8px"><button class="btn bink" style="flex:1" onclick="EST.pn=VOICE_EST.result.description;EST.sqft=VOICE_EST.result.sqft;EST.trade=VOICE_EST.result.tradeKey;go(\'estimator\')">Load into Estimator</button><button class="btn bout" onclick="toast(String.fromCharCode(83,97,118,101,100,33))">Save</button></div></div>'
+      :
+      '<div class="card" style="text-align:center;padding:40px"><div style="font-size:56px;margin-bottom:16px">🎙️</div><div style="font-family:var(--fh);font-size:18px;font-weight:800;margin-bottom:8px">Ready to Estimate</div><div style="font-size:13px;color:var(--muted);max-width:300px;margin:0 auto">Speak or type a description like "Estimate a 2,500 sq ft house for drywall" and AI will build your estimate instantly.</div></div>'
+    ) +
+    '</div></div>';
+}
+
+// ---- RISK DETECTION PAGE ----
+function riskDetectionPage() {
+  var filters = ['All','High','Medium','Low'];
+  var filtered = RISKS.filter(function(r){ return RISK_FILTER==='All'||r.level===RISK_FILTER; });
+  var high = RISKS.filter(function(r){return r.level==='High';}).length;
+  var med = RISKS.filter(function(r){return r.level==='Medium';}).length;
+  var low = RISKS.filter(function(r){return r.level==='Low';}).length;
+  var filterBtns = filters.map(function(f){
+    var col = f==='High'?'var(--red)':f==='Medium'?'var(--amber)':f==='Low'?'var(--green)':'var(--ink)';
+    var active = RISK_FILTER===f;
+    return '<button data-rf="' + f + '" class="risk-fb" style="padding:6px 16px;border-radius:7px;border:1.5px solid ' + (active?col:'var(--border2)') + ';background:' + (active?col:'transparent') + ';color:' + (active?'#fff':'var(--muted)') + ';font-size:12px;font-weight:700;cursor:pointer">' + f + '</button>';
+  }).join('');
+  var riskCards = filtered.map(function(r){
+    var lc = r.level==='High'?'var(--red)':r.level==='Medium'?'var(--amber)':'var(--green)';
+    var bg = r.level==='High'?'var(--rbg)':r.level==='Medium'?'var(--abg)':'var(--gbg)';
+    return '<div class="card" style="border-left:4px solid ' + lc + '"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div><div style="display:flex;gap:8px;margin-bottom:5px"><span style="background:' + bg + ';color:' + lc + ';font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px">' + r.level + ' RISK</span><span class="pill pgr">' + r.category + '</span></div><div style="font-family:var(--fh);font-size:15px;font-weight:800">' + r.title + '</div></div><span class="pill ' + (r.status==='Open'?'pa':r.status==='Action Required'?'pr':'pgr') + '">' + r.status + '</span></div><p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">' + r.desc + '</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px"><div style="padding:9px;background:var(--paper);border-radius:8px"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;margin-bottom:2px">Potential Impact</div><div style="font-weight:700;color:' + lc + '">' + r.impact + '</div></div><div style="padding:9px;background:var(--paper);border-radius:8px"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;margin-bottom:2px">Probability</div><div style="font-weight:700;color:' + lc + '">' + r.probability + '</div></div></div><div style="background:var(--gbg);border-radius:8px;padding:10px 13px"><div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;margin-bottom:4px">AI Recommended Mitigation</div><div style="font-size:12.5px;color:var(--green)">' + r.mitigation + '</div></div></div>';
+  }).join('');
+  return ph('🔍', 'AI Risk Detection', 'Proactive risk identification across budget, schedule, safety and compliance') +
+    '<div class="g4" style="margin-bottom:16px"><div class="sc"><div class="sv">' + RISKS.length + '</div><div class="sl">Risks Detected</div></div><div class="sc" style="background:var(--rbg)"><div class="sv" style="color:var(--red)">' + high + '</div><div class="sl">High Risk</div></div><div class="sc" style="background:var(--abg)"><div class="sv" style="color:var(--amber)">' + med + '</div><div class="sl">Medium Risk</div></div><div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">' + low + '</div><div class="sl">Low Risk</div></div></div>' +
+    '<div style="background:linear-gradient(135deg,#0c0c0c,#1a1a2a);border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:center"><div style="font-size:28px">🤖</div><div><div style="color:var(--gold2);font-weight:700;margin-bottom:2px">AI scanned your project</div><div style="font-size:12px;color:#888">Budget, schedule, safety certs, weather, WSIB and contract data analyzed. ' + RISKS.length + ' risks identified.</div></div><button class="btn bgold bsm" style="margin-left:auto;white-space:nowrap" onclick="toast(String.fromCharCode(82,101,115,99,97,110,110,105,110,103,46,46,46))">Re-scan</button></div>' +
+    '<div style="display:flex;gap:6px;margin-bottom:14px">' + filterBtns + '</div>' +
+    riskCards;
+}
+
+// ---- BUDGET FORECASTING PAGE ----
+function budgetForecastPage() {
+  var bf = BUDGET_FORECAST;
+  var lastActual = 195000;
+  var projectedFinal = 528000;
+  var budgetTotal = 500000;
+  var overrun = projectedFinal - budgetTotal;
+  var pct = Math.round(lastActual/budgetTotal*100);
+
+  var bars = bf.months.map(function(m,i){
+    var act = bf.actual[i];
+    var fore = bf.forecast[i];
+    var bud = bf.budget[i];
+    var maxVal = 520000;
+    var isActual = act > 0;
+    return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><div style="width:100%;display:flex;gap:2px;align-items:flex-end;height:120px"><div style="flex:1;background:' + (isActual?'var(--blue)':'#eae7e0') + ';border-radius:3px 3px 0 0;height:' + Math.round((fore/maxVal)*100) + '%" title="Forecast"></div><div style="flex:1;background:' + (isActual?'var(--ink)':'var(--border)') + ';border-radius:3px 3px 0 0;height:' + Math.round((bud/maxVal)*100) + '%" title="Budget"></div></div><div style="font-size:9px;color:var(--faint)">' + m + '</div></div>';
+  }).join('');
+
+  var scenarios = [
+    {label:'Best Case',total:508000,notes:'Steel delay resolved, no further issues',color:'var(--green)',overrun:8000},
+    {label:'Most Likely',total:528000,notes:'Current trajectory maintained',color:'var(--amber)',overrun:28000},
+    {label:'Worst Case',total:567000,notes:'Additional delays and one more CO',color:'var(--red)',overrun:67000}
+  ];
+
+  return ph('📊', 'AI Budget Forecasting', 'Predict final costs and cash flow before problems hit') +
+    '<div class="g4" style="margin-bottom:16px"><div class="sc"><div class="sv">$500k</div><div class="sl">Original Budget</div></div><div class="sc" style="background:var(--abg)"><div class="sv" style="color:var(--amber)">$195k</div><div class="sl">Spent to Date</div></div><div class="sc" style="background:var(--rbg)"><div class="sv" style="color:var(--red)">$528k</div><div class="sl">AI Forecast</div></div><div class="sc" style="background:var(--rbg)"><div class="sv" style="color:var(--red)">+$28k</div><div class="sl">Projected Overrun</div></div></div>' +
+    '<div class="g2"><div class="card"><div class="ch">Spend vs Budget — 12 Month View</div>' +
+    '<div style="display:flex;gap:12px;margin-bottom:8px"><div style="display:flex;align-items:center;gap:5px;font-size:11px"><div style="width:12px;height:12px;background:var(--blue);border-radius:2px"></div>Forecast</div><div style="display:flex;align-items:center;gap:5px;font-size:11px"><div style="width:12px;height:12px;background:var(--ink);border-radius:2px"></div>Budget</div></div>' +
+    '<div style="display:flex;gap:4px;align-items:flex-end;padding-bottom:8px">' + bars + '</div>' +
+    '<div style="padding:12px;background:var(--rbg);border-radius:8px;margin-top:12px"><div style="font-weight:700;color:var(--red);margin-bottom:4px">Overrun Alert</div><div style="font-size:12px;color:var(--red)">AI forecasts $28,000 overrun driven by structural steel cost code. Recommend contingency review with owner.</div></div></div>' +
+    '<div><div class="card"><div class="ch">Completion Scenarios</div>' +
+    scenarios.map(function(s){return '<div style="padding:14px;border-radius:10px;border:1px solid var(--border);margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-weight:700">' + s.label + '</div><div style="font-family:var(--fh);font-size:18px;font-weight:800;color:' + s.color + '">$' + (s.total/1000).toFixed(0) + 'k</div></div><div style="font-size:12px;color:var(--muted);margin-bottom:6px">' + s.notes + '</div><div style="font-size:11px;font-weight:700;color:' + s.color + '">Overrun: +$' + (s.overrun/1000).toFixed(0) + 'k</div></div>';}).join('') +
+    '</div><div class="card"><div class="ch">Cash Flow Forecast</div>' +
+    [['June 2025','$65,000','$195,000'],['July 2025','$73,000','$268,000'],['August 2025','$66,000','$334,000'],['September 2025','$55,000','$389,000'],['October 2025','$41,000','$430,000'],['November 2025','$68,000','$498,000']].map(function(r){return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:.5px solid var(--border);font-size:12.5px"><span style="color:var(--muted)">' + r[0] + '</span><span><strong>' + r[1] + '</strong> <span style="color:var(--faint)">/ ' + r[2] + ' total</span></span></div>';}).join('') +
+    '</div></div></div>';
+}
+
+// ---- SCHEDULE OPTIMIZATION PAGE ----
+function scheduleAIPage() {
+  var suggestions = [
+    {title:'Overlap Electrical with Steel Completion',impact:'Save 5 days',effort:'Low',desc:'Begin electrical pre-fab and conduit rough-in on floors 1-2 while steel is completed on floors 3-4. No conflict with structural work.',saving:'5 days'},
+    {title:'Move Roofing to End of Week',impact:'Avoid rain delay',effort:'Low',desc:'Wednesday-Thursday forecast 85-90% rain. Move roofing crew to interior framing. Schedule roofing for Friday-Saturday when clearing.',saving:'2 days'},
+    {title:'Accelerate Drywall on FL1',impact:'Create buffer',effort:'Medium',desc:'Floor 1 structural is 100% complete. Starting drywall immediately creates a 3-day buffer against downstream delays.',saving:'3 days'},
+    {title:'Concurrent Plumbing and HVAC Rough-in',impact:'Save 8 days',effort:'High',desc:'Coordinate trades to run simultaneously instead of sequential. Requires detailed scheduling and daily foreman coordination.',saving:'8 days'}
+  ];
+  var critPath = [
+    {n:'Foundation',done:true,days:0},
+    {n:'Structural Steel',done:false,days:5,delay:true},
+    {n:'Electrical Rough-in',done:false,days:12},
+    {n:'Drywall & Framing',done:false,days:16},
+    {n:'Finishes',done:false,days:14}
+  ];
+  return ph('⚡', 'AI Schedule Optimization', 'Find hidden time savings and prevent delays before they happen') +
+    '<div class="g4" style="margin-bottom:16px"><div class="sc"><div class="sv" style="color:var(--amber)">14 days</div><div class="sl">Current Delay Risk</div></div><div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">18 days</div><div class="sl">Potential Savings</div></div><div class="sc"><div class="sv">4</div><div class="sl">Optimizations Found</div></div><div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">On Time</div><div class="sl">If Applied</div></div></div>' +
+    '<div class="g2"><div><div class="card"><div class="ch">AI Optimization Suggestions</div>' +
+    suggestions.map(function(s,i){return '<div style="padding:14px;background:var(--paper);border-radius:10px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="font-weight:700;font-size:13.5px">' + s.title + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">' + s.desc + '</div></div><span class="pill pg">' + s.saving + '</span></div><div style="display:flex;gap:8px;align-items:center"><span class="pill ' + (s.effort==='Low'?'pg':s.effort==='Medium'?'pa':'pr') + '">' + s.effort + ' effort</span><button class="btn bink bsm" style="margin-left:auto" onclick="toast(String.fromCharCode(65,112,112,108,105,101,100,33))">Apply</button></div></div>';}).join('') +
+    '</div></div>' +
+    '<div><div class="card"><div class="ch">Critical Path</div>' +
+    critPath.map(function(t){return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--border)"><div style="width:18px;height:18px;border-radius:50%;background:' + (t.done?'var(--green)':t.delay?'var(--red)':'var(--border2)') + ';flex-shrink:0"></div><div style="flex:1;font-size:13px;font-weight:' + (t.delay?'700':'500') + ';color:' + (t.delay?'var(--red)':'var(--ink)') + '">' + t.n + (t.delay?' — '+t.days+' day delay':'') + '</div></div>';}).join('') +
+    '</div><div class="card"><div class="ch">Resource Conflicts</div>' +
+    [['June 18','Drywall + Electrical same zone FL2','Medium'],['June 22','2 crane bookings overlap','High'],['June 25','Concrete pour during roofing','Low']].map(function(c){return '<div style="padding:9px 0;border-bottom:.5px solid var(--border);font-size:12.5px"><div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">' + c[0] + '</span>' + pill(c[2]) + '</div><div style="margin-top:3px">' + c[1] + '</div></div>';}).join('') +
+    '</div></div></div>';
+}
+
+// ---- CONTRACT REVIEW PAGE ----
+function contractReviewPage() {
+  var active = null;
+  for(var i=0;i<CONTRACTS.length;i++) if(CONTRACTS[i].id===CONTRACT_ACTIVE){active=CONTRACTS[i];break;}
+  if(!active) active=CONTRACTS[0];
+  var tabs = CONTRACTS.map(function(c){
+    var isSel = c.id===CONTRACT_ACTIVE;
+    return '<button data-cid="' + c.id + '" class="con-tab" style="padding:9px 14px;border-radius:8px;border:1px solid ' + (isSel?'var(--ink)':'var(--border2)') + ';background:' + (isSel?'var(--ink)':'transparent') + ';color:' + (isSel?'#fff':'var(--muted)') + ';font-size:12px;font-weight:600;cursor:pointer;text-align:left"><div>' + c.name + '</div><div style="font-size:10px;color:' + (isSel?'#888':'var(--faint)') + ';margin-top:2px">' + c.type + ' — ' + money(c.value) + '</div></button>';
+  }).join('');
+  return ph('📑', 'AI Contract Review', 'Identify risks, missing clauses and unfair terms before you sign') +
+    '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">' + tabs + '<button class="btn bink bsm" id="uploadContractBtn" style="margin-left:auto">+ Upload Contract</button></div>' +
+    '<div class="g2"><div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px"><div><div style="font-family:var(--fh);font-size:17px;font-weight:800">' + active.name + '</div><div style="font-size:12px;color:var(--muted);margin-top:3px">' + active.type + ' Contract — ' + money(active.value) + '</div><div style="font-size:11px;color:var(--faint);margin-top:2px">Uploaded ' + active.uploaded + '</div></div>' + pill(active.status) + '</div>' +
+    '<div style="padding:13px;background:var(--rbg);border:1px solid var(--rbd);border-radius:10px;margin-bottom:16px"><div style="font-weight:700;color:var(--red);margin-bottom:8px">⚠️ ' + active.risks.length + ' Risk(s) Identified by AI</div>' +
+    active.risks.map(function(r,i){return '<div style="display:flex;gap:8px;padding:7px 0;border-bottom:.5px solid var(--rbd);font-size:12.5px;color:var(--red)"><strong>' + (i+1) + '.</strong>' + r + '</div>';}).join('') +
+    '</div>' +
+    '<div style="padding:13px;background:var(--gbg);border:1px solid var(--gbd);border-radius:10px;margin-bottom:16px"><div style="font-weight:700;color:var(--green);margin-bottom:6px">AI Recommendations</div>' +
+    ['Negotiate Article 6.3 — extend termination notice to 90 days minimum and require cause','Request definition of allowable scope changes with cost thresholds requiring written approval','Add insurance certificate requirement before commencement of any work'].map(function(r){return '<div style="font-size:12.5px;color:var(--green);padding:5px 0;border-bottom:.5px solid var(--gbd)">✓ ' + r + '</div>';}).join('') +
+    '</div>' +
+    '<div style="display:flex;gap:8px"><button class="btn bink" onclick="toast(String.fromCharCode(82,101,112,111,114,116,32,100,111,119,110,108,111,97,100,101,100,33))">Download Full Report</button><button class="btn bred bsm" onclick="toast(String.fromCharCode(83,104,97,114,101,100,32,119,105,116,104,32,108,97,119,121,101,114,33))">Share with Lawyer</button></div></div>' +
+    '<div><div class="card"><div class="ch">Contract Checklist</div>' +
+    [['Parties clearly identified','ok'],['Scope of work defined','ok'],['Payment terms specified','ok'],['HST clause included','ok'],['10% holdback clause','ok'],['Termination notice adequate','warn'],['Dispute resolution defined','ok'],['Insurance requirements','warn'],['Warranty period specified','ok'],['Lien waiver on final payment','ok'],['IP ownership clauses','warn'],['Change order process defined','warn']].map(function(c){return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:.5px solid var(--border);font-size:12.5px"><span>' + c[0] + '</span><span>' + (c[1]==='ok'?'<span style="color:var(--green)">✓</span>':'<span style="color:var(--amber)">⚠ Review</span>') + '</span></div>';}).join('') +
+    '</div></div></div>';
+}
+
+// ---- MEETING SUMMARIES PAGE ----
+function meetingSummaryPage() {
+  var active = null;
+  for(var i=0;i<MEETINGS.length;i++) if(MEETINGS[i].id===MEETING_ACTIVE){active=MEETINGS[i];break;}
+  var meetingTabs = MEETINGS.map(function(m){
+    var isSel=m.id===MEETING_ACTIVE;
+    return '<button data-mid="' + m.id + '" class="mtg-tab" style="padding:9px 14px;border-radius:8px;border:1px solid ' + (isSel?'var(--ink)':'var(--border2)') + ';background:' + (isSel?'var(--ink)':'transparent') + ';color:' + (isSel?'#fff':'var(--muted)') + ';font-size:12px;font-weight:600;cursor:pointer;text-align:left;max-width:200px"><div>' + m.title + '</div><div style="font-size:10px;color:' + (isSel?'#888':'var(--faint)') + ';margin-top:2px">' + m.date + ' — ' + m.duration + '</div></button>';
+  }).join('');
+  return ph('🎧', 'AI Meeting Summaries', 'Record or upload audio — AI summarizes and assigns action items') +
+    '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">' + meetingTabs + '<button class="btn bink bsm" id="recordMeetingBtn" style="margin-left:auto">+ Record Meeting</button></div>' +
+    '<div class="g2"><div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px"><div><div style="font-family:var(--fh);font-size:17px;font-weight:800">' + active.title + '</div><div style="font-size:12px;color:var(--muted);margin-top:3px">' + active.date + ' — ' + active.duration + '</div></div>' + pill(active.status) + '</div>' +
+    '<div style="margin-bottom:6px;font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em">Attendees</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">' + active.attendees.map(function(a){return '<span class="pill pgr">' + a + '</span>';}).join('') + '</div>' +
+    '<div style="margin-bottom:6px;font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em">AI Summary</div>' +
+    '<div style="padding:14px;background:var(--paper);border-radius:10px;margin-bottom:16px;font-size:13px;line-height:1.7;color:var(--text)">' + active.summary + '</div>' +
+    '<div style="margin-bottom:6px;font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em">Action Items</div>' +
+    active.action_items.map(function(a){return '<div style="display:flex;gap:10px;padding:9px 0;border-bottom:.5px solid var(--border);font-size:12.5px;align-items:flex-start"><div style="width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;margin-top:1px"></div>' + a + '</div>';}).join('') +
+    '<div style="display:flex;gap:8px;margin-top:14px"><button class="btn bink" onclick="toast(String.fromCharCode(69,109,97,105,108,101,100,33))">Email to Team</button><button class="btn bout bsm" onclick="toast(String.fromCharCode(67,111,112,105,101,100,33))">Copy Summary</button></div></div>' +
+    '<div><div class="card"><div class="ch">Record New Meeting</div><div style="padding:24px;background:var(--ink);border-radius:12px;text-align:center;margin-bottom:14px"><div style="font-size:48px;margin-bottom:10px">🎙️</div><div style="color:#fff;font-weight:700;margin-bottom:6px">Ready to Record</div><div style="color:#888;font-size:12px;margin-bottom:16px">AI transcribes your meeting in real time and generates a summary with action items automatically.</div><button class="btn bgold" id="startRecordBtn">Start Recording</button></div>' +
+    '<div class="card"><div class="ch">Or Upload Audio File</div><div style="border:2px dashed var(--border2);border-radius:10px;padding:24px;text-align:center"><div style="font-size:28px;margin-bottom:8px">📁</div><div style="font-size:13px;font-weight:600;margin-bottom:4px">Drop audio file here</div><div style="font-size:11px;color:var(--muted);margin-bottom:12px">MP3, M4A, WAV, MP4 supported</div><button class="btn bout bsm" id="uploadAudioBtn">Browse Files</button><input type="file" id="audioFile" accept="audio/*,video/*" style="display:none"/></div></div></div></div>';
 }
 
 // ---- MOBILE APP OVERVIEW PAGE ----
@@ -2406,6 +2627,45 @@ function bindAll() {
   el = gid('matSearch'); if (el) el.oninput = function() { MAT_SEARCH = this.value; render(); };
 
   // RFI
+  // AI Features bind events
+  // Voice estimating
+  el = gid('micBtn'); if(el) el.onclick = function(){
+    VOICE_EST.listening = !VOICE_EST.listening;
+    if(VOICE_EST.listening && window.SpeechRecognition || window.webkitSpeechRecognition){
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      var sr = new SR();
+      sr.onresult = function(e){ VOICE_EST.transcript = e.results[0][0].transcript; VOICE_EST.listening=false; processVoiceEstimate(); };
+      sr.onerror = function(){ VOICE_EST.listening=false; render(); };
+      sr.start();
+    } else { VOICE_EST.listening=false; toast(String.fromCharCode(77,105,99,32,110,111,116,32,97,118,97,105,108,97,98,108,101,32,45,32,116,121,112,101,32,121,111,117,114,32,101,115,116,105,109,97,116,101),'err'); }
+    render();
+  };
+  el = gid('processVoice'); if(el) el.onclick = function(){
+    var inp = gid('voiceInput');
+    if(inp) VOICE_EST.transcript = inp.value;
+    processVoiceEstimate();
+  };
+  document.querySelectorAll('[data-ve]').forEach(function(btn){
+    btn.onclick = function(){ var inp=gid('voiceInput'); if(inp) inp.value=this.dataset.ve; VOICE_EST.transcript=this.dataset.ve; processVoiceEstimate(); };
+  });
+  // Risk filter
+  document.querySelectorAll('.risk-fb').forEach(function(btn){
+    btn.onclick = function(){ RISK_FILTER=this.dataset.rf; render(); };
+  });
+  // Contract tabs
+  document.querySelectorAll('.con-tab').forEach(function(btn){
+    btn.onclick = function(){ CONTRACT_ACTIVE=parseInt(this.dataset.cid); render(); };
+  });
+  el = gid('uploadContractBtn'); if(el) el.onclick = function(){ toast(String.fromCharCode(85,112,108,111,97,100,32,99,111,109,105,110,103,32,115,111,111,110,33)); };
+  // Meeting tabs
+  document.querySelectorAll('.mtg-tab').forEach(function(btn){
+    btn.onclick = function(){ MEETING_ACTIVE=parseInt(this.dataset.mid); render(); };
+  });
+  el = gid('recordMeetingBtn'); if(el) el.onclick = function(){ toast(String.fromCharCode(82,101,99,111,114,100,105,110,103,32,115,116,97,114,116,101,100,33)); };
+  el = gid('startRecordBtn'); if(el) el.onclick = function(){ toast(String.fromCharCode(82,101,99,111,114,100,105,110,103,46,46,46)); };
+  el = gid('uploadAudioBtn'); if(el) el.onclick = function(){ var f=gid('audioFile'); if(f) f.click(); };
+  el = gid('audioFile'); if(el) el.onchange = function(e){ if(e.target.files[0]){ setTimeout(function(){ toast(String.fromCharCode(77,101,101,116,105,110,103,32,115,117,109,109,97,114,105,122,101,100,33)); },2000); toast(String.fromCharCode(65,110,97,108,121,122,105,110,103,32,97,117,100,105,111,46,46,46)); } };
+
   // Mobile App bind events
   el = gid('syncNowBtn'); if(el) el.onclick = function(){ OFFLINE_QUEUE=[]; PHOTOS.forEach(function(p){p.synced=true;}); RECEIPTS.forEach(function(r){r.synced=true;}); toast('All data synced!'); render(); };
   el = gid('syncPhotosBtn'); if(el) el.onclick = function(){ PHOTOS.forEach(function(p){p.synced=true;}); toast('Photos synced!'); render(); };
@@ -2813,6 +3073,13 @@ try {
   <button class="mob-item" onclick="go('suppliers');closeMob()"><span class="mi2">🏪</span>Supplier Price Database</button>
   <button class="mob-item" onclick="go('weather');closeMob()"><span class="mi2">🌤</span>Weather Integration</button>
   <button class="mob-item" onclick="go('rfi');closeMob()"><span class="mi2">📝</span>RFI Management</button>
+  <div class="mob-sec">AI Features</div>
+  <button class="mob-item" onclick="go('voiceestimate');closeMob()"><span class="mi2">🎙️</span>Voice Estimating <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="go('riskdetection');closeMob()"><span class="mi2">🔍</span>Risk Detection <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="go('budgetforecast');closeMob()"><span class="mi2">📊</span>Budget Forecasting <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="go('scheduleai');closeMob()"><span class="mi2">⚡</span>Schedule Optimization <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="go('contractreview');closeMob()"><span class="mi2">📑</span>Contract Review <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="go('meetingsummary');closeMob()"><span class="mi2">🎧</span>Meeting Summaries <span class="mob-pro">PRO</span></button>
   <button class="mob-item" onclick="go('ai');closeMob()"><span class="mi2">🤖</span>AI Copilot <span class="mob-pro">PRO</span></button>
   <button class="mob-item" onclick="go('blueprint');closeMob()"><span class="mi2">📄</span>Blueprint AI Takeoff <span class="mob-pro">PRO</span></button>
 
@@ -2845,6 +3112,34 @@ try {
 </div>
 
 <script>
+function processVoiceEstimate() {
+  var text = VOICE_EST.transcript.toLowerCase();
+  var sqft = 2500;
+  var match = text.match(/(\d[\d,]*)\s*(?:sq\.?\s*ft|square\s*feet|sqft)/i);
+  if(match) sqft = parseInt(match[1].replace(/,/g,''));
+  var tradeKey = 'drywall';
+  var tradeName = 'Drywall';
+  if(text.indexOf('floor')>=0||text.indexOf('flooring')>=0){tradeKey='flooring';tradeName='Flooring';}
+  else if(text.indexOf('electric')>=0){tradeKey='electrical';tradeName='Electrical';}
+  else if(text.indexOf('paint')>=0){tradeKey='painting';tradeName='Painting';}
+  else if(text.indexOf('plumb')>=0){tradeKey='plumbing';tradeName='Plumbing';}
+  else if(text.indexOf('hvac')>=0||text.indexOf('heat')>=0||text.indexOf('vent')>=0){tradeKey='hvac';tradeName='HVAC';}
+  else if(text.indexOf('roof')>=0){tradeKey='roofing';tradeName='Roofing';}
+  else if(text.indexOf('concrete')>=0){tradeKey='concrete';tradeName='Concrete';}
+  else if(text.indexOf('asphalt')>=0||text.indexOf('pav')>=0){tradeKey='asphalt';tradeName='Asphalt';}
+  var rate = TRADES[tradeKey]?TRADES[tradeKey].c:2.5;
+  var base = sqft * rate;
+  var mat = Math.round(sqft * rate * 0.4);
+  var lab = Math.round(sqft * rate * 0.6);
+  var oh = Math.round((base+mat+lab)*0.1);
+  var profit = Math.round((base+mat+lab+oh)*0.15);
+  var total = base+mat+lab+oh+profit;
+  VOICE_EST.result = {description:text,sqft:sqft,trade:tradeName,tradeKey:tradeKey,labour:lab,materials:mat,overhead:oh,profit:profit,total:total};
+  VOICE_EST.listening = false;
+  render();
+  toast(String.fromCharCode(69,115,116,105,109,97,116,101,32,114,101,97,100,121,33));
+}
+
 function saveSig(id) {
   for(var i=0;i<SIGNATURES.length;i++){
     if(SIGNATURES[i].id===id){ SIGNATURES[i].signed=true; break; }
