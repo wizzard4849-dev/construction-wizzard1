@@ -216,6 +216,14 @@ var NAV = [
     {id:'obc',i:'📖',l:'Ontario Building Code'},
     {id:'subcontract',i:'📃',l:'Subcontract Generator',pro:true}
   ]},
+  {s:'Mobile App', items:[
+    {id:'mobileapp',i:'📱',l:'Mobile Companion'},
+    {id:'estimates_mobile',i:'📐',l:'Quick Estimate'},
+    {id:'photos',i:'📷',l:'Photo Uploads'},
+    {id:'signatures',i:'✍️',l:'Customer Signatures'},
+    {id:'receipts',i:'🧾',l:'Scan Receipts'},
+    {id:'offline',i:'📡',l:'Offline Sync'}
+  ]},
   {s:'Account', items:[
     {id:'settings',i:'⚙️',l:'Settings & Plan'},
     {id:'pricing',i:'💳',l:'View Pricing Plans'}
@@ -459,6 +467,36 @@ var POS = [
 var SHOW_PO_FORM = false;
 var PO_FILTER = 'All';
 var NEW_PO = {supplier:'',project:'',due:'',notes:'',items:[{desc:'',qty:1,unit:'piece',cost:0}]};
+
+// Mobile App State
+var PHOTOS = [
+  {id:1,name:'Site Progress - FL3',date:'2025-06-10',size:'2.4 MB',tag:'Progress',thumb:'📷',synced:true},
+  {id:2,name:'Deficiency - Lobby Wall',date:'2025-06-09',size:'1.8 MB',tag:'Deficiency',thumb:'📷',synced:true},
+  {id:3,name:'Material Delivery - Lumber',date:'2025-06-08',size:'3.1 MB',tag:'Delivery',thumb:'📷',synced:false},
+  {id:4,name:'Safety Hazard - Excavation',date:'2025-06-08',size:'2.2 MB',tag:'Safety',thumb:'⚠️',synced:false}
+];
+var PHOTO_TAG = 'All';
+
+var SIGNATURES = [
+  {id:1,client:'North Star Builders',contact:'James Wilson',doc:'Change Order CO-001',date:'2025-06-08',amount:8400,signed:true},
+  {id:2,client:'Apex Construction',contact:'Maria Chen',doc:'Substantial Completion',date:'2025-06-05',amount:93500,signed:true},
+  {id:3,client:'Prime Contractors',contact:'Derek Smith',doc:'Daily Log Approval',date:'2025-06-10',amount:0,signed:false}
+];
+var SIG_CANVAS_ACTIVE = false;
+
+var RECEIPTS = [
+  {id:1,vendor:'Home Depot Pro',amount:1842.50,date:'2025-06-10',category:'Materials',items:'Lumber 2x4x8 x200, OSB sheets x20',project:'Downtown Office Reno',synced:true},
+  {id:2,vendor:'GTA Electrical Supply',amount:487.00,date:'2025-06-09',category:'Electrical',items:'14/2 Wire x3 rolls, Breakers x5',project:'Warehouse Electrical',synced:true},
+  {id:3,vendor:'Tim Hortons',amount:42.75,date:'2025-06-10',category:'Meals',items:'Crew coffee run x8',project:'General',synced:false}
+];
+
+var OFFLINE_QUEUE = [
+  {type:'Daily Log',desc:'June 10 - Structural steel progress',size:'0.8 MB',pending:true},
+  {type:'Photo',desc:'4 site photos from today',size:'9.5 MB',pending:true},
+  {type:'Safety Check',desc:'Morning safety inspection',size:'0.2 MB',pending:true}
+];
+
+var MOBILE_EST = {trade:'drywall',sqft:1000,mat:800,lab:1200,oh:10,pr:15,total:0};
 
 // WSIB State
 var WSIB_WORKERS = [
@@ -890,6 +928,12 @@ function pageContent() {
   if (PAGE === 'proposal') return gate(proposalPage);
   if (PAGE === 'purchaseorders') return gate(purchaseOrdersPage);
   if (PAGE === 'documents') return gate(documentsPage);
+  if (PAGE === 'mobileapp') return mobileAppPage();
+  if (PAGE === 'estimates_mobile') return mobileEstimatePage();
+  if (PAGE === 'photos') return photosPage();
+  if (PAGE === 'signatures') return signaturesPage();
+  if (PAGE === 'receipts') return receiptsPage();
+  if (PAGE === 'offline') return offlineSyncPage();
   if (PAGE === 'pricing') { window.open('/pricing-plans.html','_blank'); PAGE='settings'; return settingsPage(); }
   if (PAGE === 'wsib') return wsibPage();
   if (PAGE === 'hst') return hstPage();
@@ -1580,6 +1624,190 @@ function addToCart(supplierId) {
   toast('Item noted — create a Purchase Order to send to supplier!');
 }
 
+// ---- MOBILE APP OVERVIEW PAGE ----
+function mobileAppPage() {
+  var totalPhotos = PHOTOS.length;
+  var unsynced = PHOTOS.filter(function(p){return !p.synced;}).length + RECEIPTS.filter(function(r){return !r.synced;}).length + OFFLINE_QUEUE.length;
+  var sigs = SIGNATURES.filter(function(s){return s.signed;}).length;
+
+  var features = [
+    {id:'estimates_mobile',ico:'📐',title:'Quick Estimate',desc:'Create estimates on the go for all 9 trades. Works offline.'},
+    {id:'dailylog',ico:'📓',title:'Daily Logs',desc:'Fill out and submit daily progress logs from site.'},
+    {id:'safety',ico:'🦺',title:'Safety Inspections',desc:'Complete safety checklists and report incidents from site.'},
+    {id:'photos',ico:'📷',title:'Photo Uploads',desc:'Capture and tag site photos. Auto-syncs when online.'},
+    {id:'signatures',ico:'✍️',title:'Customer Signatures',desc:'Get digital signatures on change orders and documents.'},
+    {id:'receipts',ico:'🧾',title:'Scan Receipts',desc:'Photograph and categorize receipts for job costing.'},
+    {id:'offline',ico:'📡',title:'Offline Sync',desc:'Work without internet. All data syncs automatically when back online.'}
+  ];
+
+  var featureCards = features.map(function(f) {
+    return '<div class="card" style="cursor:pointer;padding:16px" onclick="go(\'' + f.id + '\')"><div style="display:flex;align-items:center;gap:14px"><div style="width:48px;height:48px;background:var(--paper);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">' + f.ico + '</div><div><div style="font-weight:700;font-size:14px">' + f.title + '</div><div style="font-size:12px;color:var(--muted);margin-top:2px">' + f.desc + '</div></div><div style="margin-left:auto;color:var(--faint);font-size:18px">›</div></div></div>';
+  }).join('');
+
+  return ph('📱', 'Mobile Companion', 'Field tools that work on any phone or tablet') +
+    trialBar() +
+    '<div class="g4" style="margin-bottom:16px">' +
+    '<div class="sc" style="background:var(--bbg)"><div class="sv" style="color:var(--blue)">' + totalPhotos + '</div><div class="sl">Photos Captured</div></div>' +
+    '<div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">' + sigs + '</div><div class="sl">Signatures Collected</div></div>' +
+    '<div class="sc" style="background:var(--abg)"><div class="sv" style="color:var(--amber)">' + RECEIPTS.length + '</div><div class="sl">Receipts Scanned</div></div>' +
+    '<div class="sc" style="background:' + (unsynced>0?'var(--rbg)':'var(--gbg)') + '"><div class="sv" style="color:' + (unsynced>0?'var(--red)':'var(--green)') + '">' + unsynced + '</div><div class="sl">Pending Sync</div></div></div>' +
+
+    (unsynced > 0 ? '<div style="background:var(--abg);border:1px solid var(--abd);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700;color:var(--amber);font-size:13px">Sync Required</div><div style="font-size:12px;color:var(--amber);margin-top:2px">' + unsynced + ' items waiting to sync when online</div></div><button class="btn bgold bsm" id="syncNowBtn">Sync Now</button></div>' : '') +
+
+    '<div style="display:flex;flex-direction:column;gap:10px">' + featureCards + '</div>';
+}
+
+// ---- MOBILE ESTIMATE PAGE ----
+function mobileEstimatePage() {
+  var trOpts = Object.keys(TRADES).map(function(k) {
+    return '<option value="' + k + '"' + (MOBILE_EST.trade===k?' selected':'') + '>' + TRADES[k].l + '</option>';
+  }).join('');
+  var b = MOBILE_EST.sqft * (TRADES[MOBILE_EST.trade]?TRADES[MOBILE_EST.trade].c:2.5);
+  var d = b + MOBILE_EST.mat + MOBILE_EST.lab;
+  var o = d * MOBILE_EST.oh / 100;
+  var p2 = (d+o) * MOBILE_EST.pr / 100;
+  MOBILE_EST.total = d + o + p2;
+
+  return ph('📐', 'Quick Estimate', 'Fast estimates from any job site') +
+    '<div class="card"><div class="ch">Estimate Details</div>' +
+    '<div class="field"><label>Trade</label><select class="inp" id="meTrade">' + trOpts + '</select></div>' +
+    '<div class="r2"><div class="field"><label>Square Feet</label><input class="inp" type="number" id="meSqft" value="' + MOBILE_EST.sqft + '" placeholder="1000"/></div><div class="field"><label>Materials ($)</label><input class="inp" type="number" id="meMat" value="' + MOBILE_EST.mat + '"/></div></div>' +
+    '<div class="r2"><div class="field"><label>Labour ($)</label><input class="inp" type="number" id="meLab" value="' + MOBILE_EST.lab + '"/></div><div class="field"><label>Profit %</label><input class="inp" type="number" id="mePr" value="' + MOBILE_EST.pr + '"/></div></div>' +
+    '<button class="btn bink bfull" id="calcMobile" style="margin-top:6px">Calculate</button></div>' +
+    '<div class="card"><div class="ch">Result</div>' +
+    '<div style="text-align:center;padding:20px 0">' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:6px">Total Bid</div>' +
+    '<div style="font-family:var(--fh);font-size:44px;font-weight:800;color:var(--green)">' + money(MOBILE_EST.total) + '</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:6px">' + (TRADES[MOBILE_EST.trade]?TRADES[MOBILE_EST.trade].l:'') + ' — ' + MOBILE_EST.sqft.toLocaleString() + ' sq ft</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">' +
+    '<div style="padding:10px;background:var(--paper);border-radius:8px;text-align:center"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Materials</div><div style="font-weight:700">' + money(MOBILE_EST.mat) + '</div></div>' +
+    '<div style="padding:10px;background:var(--paper);border-radius:8px;text-align:center"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Labour</div><div style="font-weight:700">' + money(MOBILE_EST.lab) + '</div></div>' +
+    '<div style="padding:10px;background:var(--paper);border-radius:8px;text-align:center"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Overhead</div><div style="font-weight:700">' + money(o) + '</div></div>' +
+    '<div style="padding:10px;background:var(--paper);border-radius:8px;text-align:center"><div style="font-size:10px;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Profit</div><div style="font-weight:700;color:var(--green)">' + money(p2) + '</div></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px"><button class="btn bink bfull" onclick="toast(String.fromCharCode(69,115,116,105,109,97,116,101,32,115,97,118,101,100,33))">Save Estimate</button><button class="btn bout" onclick="toast(String.fromCharCode(83,104,97,114,101,100,33))">Share</button></div>' +
+    '</div>';
+}
+
+// ---- PHOTOS PAGE ----
+function photosPage() {
+  var tags = ['All','Progress','Deficiency','Safety','Delivery'];
+  var filtered = PHOTOS.filter(function(p){ return PHOTO_TAG==='All'||p.tag===PHOTO_TAG; });
+  var unsynced = PHOTOS.filter(function(p){return !p.synced;}).length;
+
+  var tagBtns = tags.map(function(t) {
+    return '<button data-ptag="' + t + '" class="ptag-btn" style="padding:6px 14px;border-radius:7px;border:1px solid ' + (PHOTO_TAG===t?'var(--ink)':'var(--border2)') + ';background:' + (PHOTO_TAG===t?'var(--ink)':'transparent') + ';color:' + (PHOTO_TAG===t?'#fff':'var(--muted)') + ';font-size:12px;font-weight:600;cursor:pointer">' + t + '</button>';
+  }).join('');
+
+  var photoCards = filtered.map(function(p) {
+    return '<div class="card" style="padding:14px"><div style="height:140px;background:linear-gradient(135deg,#1c1c1c,#2a2a2a);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:12px">' + p.thumb + '</div><div style="font-size:13px;font-weight:600;margin-bottom:4px">' + p.name + '</div><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:11px;color:var(--muted)">' + p.date + ' &nbsp;·&nbsp; ' + p.size + '</div><span class="pill ' + (p.tag==='Safety'?'pr':p.tag==='Deficiency'?'pa':'pgr') + '">' + p.tag + '</span></div><div style="margin-top:8px;display:flex;gap:6px"><span class="pill ' + (p.synced?'pg':'pa') + '">' + (p.synced?'Synced':'Pending Sync') + '</span></div></div>';
+  }).join('');
+
+  return ph('📷', 'Photo Uploads', 'Site photos auto-tagged and synced', '<button class="btn bink bsm" id="takePhotoBtn">+ Add Photo</button>') +
+
+    (unsynced>0?'<div class="banner"><span>' + unsynced + ' photos pending sync — connect to WiFi to upload.</span><button class="btn bgold bsm" id="syncPhotosBtn">Sync Now</button></div>':'') +
+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">' + tagBtns + '</div>' +
+
+    '<div style="margin-bottom:16px;padding:14px;background:var(--ink);border-radius:12px;display:flex;gap:14px;align-items:center">' +
+    '<div style="font-size:32px">📷</div>' +
+    '<div><div style="color:#fff;font-weight:700;margin-bottom:4px">Camera Access</div><div style="color:#888;font-size:12px">Tap below to capture a new site photo. Photos are automatically compressed and tagged.</div></div></div>' +
+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">' + photoCards + '</div>';
+}
+
+// ---- SIGNATURES PAGE ----
+function signaturesPage() {
+  var pending = SIGNATURES.filter(function(s){return !s.signed;});
+  var signed = SIGNATURES.filter(function(s){return s.signed;});
+
+  var sigCards = SIGNATURES.map(function(s) {
+    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div><div style="font-weight:700;font-size:14px">' + s.client + '</div><div style="font-size:12px;color:var(--muted);margin-top:2px">' + s.doc + '</div><div style="font-size:11px;color:var(--faint);margin-top:2px">Contact: ' + s.contact + ' — ' + s.date + '</div></div>' + (s.amount>0?'<div style="font-family:var(--fh);font-size:16px;font-weight:800;color:var(--green)">' + money(s.amount) + '</div>':'') + '</div>' +
+      (s.signed ?
+        '<div style="padding:12px;background:var(--gbg);border:1px solid var(--gbd);border-radius:9px;text-align:center"><div style="font-size:28px;margin-bottom:4px">✅</div><div style="font-size:12px;color:var(--green);font-weight:700">Document Signed</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Signature captured ' + s.date + '</div></div>' :
+        '<div style="padding:16px;background:var(--paper);border:1px dashed var(--border2);border-radius:9px"><div style="font-size:11px;color:var(--faint);text-align:center;margin-bottom:10px">Sign below</div><canvas id="sigCanvas_' + s.id + '" width="400" height="120" style="width:100%;height:90px;border:1px solid var(--border2);border-radius:6px;background:#fff;cursor:crosshair;touch-action:none"></canvas><div style="display:flex;gap:8px;margin-top:8px"><button class="btn bink" style="flex:1" onclick="saveSig(' + s.id + ')">Confirm Signature</button><button class="btn bout bsm" onclick="clearSig(' + s.id + ')">Clear</button></div></div>'
+      ) + '</div>';
+  }).join('');
+
+  return ph('✍️', 'Customer Signatures', 'Collect digital signatures on any document', '<button class="btn bink bsm" id="newSigDoc">+ New Document</button>') +
+    '<div class="g4" style="margin-bottom:16px">' +
+    '<div class="sc"><div class="sv">' + SIGNATURES.length + '</div><div class="sl">Documents</div></div>' +
+    '<div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">' + signed.length + '</div><div class="sl">Signed</div></div>' +
+    '<div class="sc" style="background:var(--abg)"><div class="sv" style="color:var(--amber)">' + pending.length + '</div><div class="sl">Pending</div></div>' +
+    '<div class="sc"><div class="sv">' + money(signed.reduce(function(a,s){return a+s.amount;},0)) + '</div><div class="sl">Signed Value</div></div></div>' +
+    '<div style="display:flex;flex-direction:column;gap:14px">' + sigCards + '</div>';
+}
+
+// ---- RECEIPTS PAGE ----
+function receiptsPage() {
+  var total = RECEIPTS.reduce(function(a,r){return a+r.amount;},0);
+  var cats = {};
+  RECEIPTS.forEach(function(r){ cats[r.category]=(cats[r.category]||0)+r.amount; });
+  var unsynced = RECEIPTS.filter(function(r){return !r.synced;}).length;
+
+  var receiptCards = RECEIPTS.map(function(r) {
+    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div><div style="font-weight:700">' + r.vendor + '</div><div style="font-size:12px;color:var(--muted);margin-top:2px">' + r.date + ' — ' + r.project + '</div><div style="font-size:11px;color:var(--faint);margin-top:3px">' + r.items + '</div></div><div style="text-align:right"><div style="font-family:var(--fh);font-size:18px;font-weight:800;color:var(--ink)">$' + r.amount.toFixed(2) + '</div><div style="margin-top:4px">' + pill(r.category) + '</div></div></div><div style="display:flex;gap:6px"><span class="pill ' + (r.synced?'pg':'pa') + '">' + (r.synced?'Synced':'Pending Sync') + '</span></div></div>';
+  }).join('');
+
+  var catBreakdown = Object.keys(cats).map(function(cat) {
+    return srow(cat, money(cats[cat]));
+  }).join('');
+
+  return ph('🧾', 'Scan Receipts', 'Photograph and categorize job receipts', '<button class="btn bink bsm" id="scanReceiptBtn">+ Scan Receipt</button>') +
+    (unsynced>0?'<div class="banner"><span>' + unsynced + ' receipts pending sync.</span></div>':'') +
+    '<div class="g2"><div>' + receiptCards + '</div>' +
+    '<div><div class="card"><div class="ch">Spend by Category</div>' + catBreakdown + '<hr class="divider"/>' + srow('Total Receipts', money(total)) + '</div>' +
+    '<div class="card"><div class="ch">Scan a Receipt</div>' +
+    '<div style="border:2px dashed var(--border2);border-radius:12px;padding:32px;text-align:center;cursor:pointer;background:var(--paper)" id="receiptDropZone"><div style="font-size:40px;margin-bottom:10px">📸</div><div style="font-weight:700;margin-bottom:6px">Take a Photo</div><div style="font-size:12px;color:var(--muted);margin-bottom:14px">Point camera at receipt — AI extracts vendor, amount and items automatically</div><button class="btn bink" id="cameraBtn">Open Camera</button><input type="file" id="receiptFile" accept="image/*" capture="environment" style="display:none"/></div></div></div></div>';
+}
+
+// ---- OFFLINE SYNC PAGE ----
+function offlineSyncPage() {
+  var totalPending = OFFLINE_QUEUE.length + PHOTOS.filter(function(p){return !p.synced;}).length + RECEIPTS.filter(function(r){return !r.synced;}).length;
+  var isOnline = navigator.onLine;
+  var totalSize = '10.5 MB';
+
+  var queueRows = OFFLINE_QUEUE.map(function(item) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:.5px solid var(--border)"><div><div style="font-size:13px;font-weight:600">' + item.desc + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">' + item.type + ' — ' + item.size + '</div></div><span class="pill pa">Pending</span></div>';
+  }).join('');
+
+  PHOTOS.filter(function(p){return !p.synced;}).forEach(function(p) {
+    queueRows += '<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:.5px solid var(--border)"><div><div style="font-size:13px;font-weight:600">' + p.name + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Photo — ' + p.size + '</div></div><span class="pill pa">Pending</span></div>';
+  });
+
+  RECEIPTS.filter(function(r){return !r.synced;}).forEach(function(r) {
+    queueRows += '<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:.5px solid var(--border)"><div><div style="font-size:13px;font-weight:600">' + r.vendor + ' receipt</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Receipt — $' + r.amount.toFixed(2) + '</div></div><span class="pill pa">Pending</span></div>';
+  });
+
+  return ph('📡', 'Offline Sync', 'Work without internet — data syncs automatically when back online') +
+
+    '<div class="g2"><div>' +
+    '<div class="card" style="background:' + (isOnline?'var(--gbg)':'var(--rbg)') + ';border-color:' + (isOnline?'var(--gbd)':'var(--rbd)') + '"><div style="display:flex;align-items:center;gap:14px"><div style="font-size:40px">' + (isOnline?'🟢':'🔴') + '</div><div><div style="font-family:var(--fh);font-size:20px;font-weight:800;color:' + (isOnline?'var(--green)':'var(--red)') + '">' + (isOnline?'Online':'Offline') + '</div><div style="font-size:12px;color:' + (isOnline?'var(--green)':'var(--red)') + ';margin-top:3px">' + (isOnline?'All features available. Data syncing.':'Working in offline mode. Data will sync when reconnected.') + '</div></div></div></div>' +
+
+    '<div class="card"><div class="ch">Pending Sync Queue (' + totalPending + ' items)</div>' +
+    (totalPending===0?'<div style="padding:20px;text-align:center;color:var(--green);font-weight:700">Everything synced!</div>' : queueRows) +
+    (totalPending>0?'<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px"><button class="btn bink" id="syncAllBtn" style="flex:1">' + (isOnline?'Sync All Now':'Connect to Sync') + '</button><div style="font-size:11px;color:var(--muted);padding:9px 0">' + totalSize + ' total</div></div>':'') +
+    '</div></div>' +
+
+    '<div><div class="card"><div class="ch">Offline Capabilities</div>' +
+    [
+      ['📐','Create Estimates','Full estimator with all 9 trades — no internet needed'],
+      ['📓','Daily Logs','Fill out and save logs. Auto-submits when online.'],
+      ['🦺','Safety Checklists','Complete safety inspections completely offline'],
+      ['📷','Photo Capture','Photos saved locally, synced when connected to WiFi'],
+      ['✍️','Capture Signatures','Signatures stored securely until synced'],
+      ['🧾','Scan Receipts','Camera works offline. Data extracted when synced.']
+    ].map(function(f){ return '<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:.5px solid var(--border)"><div style="font-size:20px;flex-shrink:0">' + f[0] + '</div><div><div style="font-size:13px;font-weight:600">' + f[1] + '</div><div style="font-size:12px;color:var(--muted);margin-top:2px">' + f[2] + '</div></div></div>'; }).join('') +
+    '</div>' +
+    '<div class="card"><div class="ch">Sync Settings</div>' +
+    '<div style="padding:10px 0;border-bottom:.5px solid var(--border);display:flex;justify-content:space-between;font-size:13px"><span>Auto-sync on WiFi</span><strong style="color:var(--green)">Enabled</strong></div>' +
+    '<div style="padding:10px 0;border-bottom:.5px solid var(--border);display:flex;justify-content:space-between;font-size:13px"><span>Compress photos before sync</span><strong style="color:var(--green)">Enabled</strong></div>' +
+    '<div style="padding:10px 0;border-bottom:.5px solid var(--border);display:flex;justify-content:space-between;font-size:13px"><span>Sync on cellular data</span><strong style="color:var(--amber)">WiFi Only</strong></div>' +
+    '<div style="padding:10px 0;display:flex;justify-content:space-between;font-size:13px"><span>Last successful sync</span><strong>Today 9:14 AM</strong></div>' +
+    '</div></div></div>';
+}
+
 function showToast() { toast('COA request sent!'); }
 function wsibPage() {
   var compliant = 0, missing = 0, expiring = 0;
@@ -2178,6 +2406,63 @@ function bindAll() {
   el = gid('matSearch'); if (el) el.oninput = function() { MAT_SEARCH = this.value; render(); };
 
   // RFI
+  // Mobile App bind events
+  el = gid('syncNowBtn'); if(el) el.onclick = function(){ OFFLINE_QUEUE=[]; PHOTOS.forEach(function(p){p.synced=true;}); RECEIPTS.forEach(function(r){r.synced=true;}); toast('All data synced!'); render(); };
+  el = gid('syncPhotosBtn'); if(el) el.onclick = function(){ PHOTOS.forEach(function(p){p.synced=true;}); toast('Photos synced!'); render(); };
+  el = gid('syncAllBtn'); if(el) el.onclick = function(){ OFFLINE_QUEUE=[]; PHOTOS.forEach(function(p){p.synced=true;}); RECEIPTS.forEach(function(r){r.synced=true;}); toast('Sync complete!'); render(); };
+  el = gid('calcMobile'); if(el) el.onclick = function(){
+    var t=gid('meTrade'),s=gid('meSqft'),m=gid('meMat'),l=gid('meLab'),pr=gid('mePr');
+    if(t) MOBILE_EST.trade=t.value;
+    if(s) MOBILE_EST.sqft=parseFloat(s.value)||0;
+    if(m) MOBILE_EST.mat=parseFloat(m.value)||0;
+    if(l) MOBILE_EST.lab=parseFloat(l.value)||0;
+    if(pr) MOBILE_EST.pr=parseFloat(pr.value)||0;
+    render();
+  };
+  el = gid('takePhotoBtn'); if(el) el.onclick = function(){
+    var inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.capture='environment';
+    inp.onchange=function(e){ if(e.target.files[0]){ PHOTOS.unshift({id:Date.now(),name:'Site Photo '+new Date().toLocaleDateString(),date:new Date().toLocaleDateString(),size:'2.1 MB',tag:'Progress',thumb:'📷',synced:false}); render(); toast('Photo added!'); } };
+    inp.click();
+  };
+  el = gid('newSigDoc'); if(el) el.onclick = function(){
+    var client=prompt('Client name:'); var doc=prompt('Document name:');
+    if(client&&doc){ SIGNATURES.unshift({id:Date.now(),client:client,contact:'',doc:doc,date:new Date().toLocaleDateString(),amount:0,signed:false}); render(); toast('Signature request created!'); }
+  };
+  el = gid('scanReceiptBtn'); if(el) el.onclick = function(){ var f=gid('receiptFile'); if(f) f.click(); };
+  el = gid('cameraBtn'); if(el) el.onclick = function(){ var f=gid('receiptFile'); if(f) f.click(); };
+  el = gid('receiptFile'); if(el) el.onchange = function(e){
+    if(e.target.files[0]){
+      var vendor=prompt('Vendor name:')||'Unknown Vendor';
+      var amount=parseFloat(prompt('Amount ($):')||'0')||0;
+      var proj=prompt('Project:')||'General';
+      RECEIPTS.unshift({id:Date.now(),vendor:vendor,amount:amount,date:new Date().toLocaleDateString(),category:'Materials',items:'Scanned receipt',project:proj,synced:false});
+      render(); toast('Receipt scanned!');
+    }
+  };
+  // Photo filter buttons
+  document.querySelectorAll('.ptag-btn').forEach(function(btn){ btn.onclick=function(){ PHOTO_TAG=this.dataset.ptag; render(); }; });
+  // Signature canvas
+  (function() {
+    var canvases = document.querySelectorAll('[id^="sigCanvas_"]');
+    canvases.forEach(function(canvas) {
+      var drawing = false;
+      var ctx = canvas.getContext('2d');
+      ctx.strokeStyle = '#0c0c0c'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      function getPos(e) {
+        var rect = canvas.getBoundingClientRect();
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: (clientX-rect.left)*(canvas.width/rect.width), y: (clientY-rect.top)*(canvas.height/rect.height) };
+      }
+      canvas.addEventListener('mousedown', function(e){ drawing=true; var p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); });
+      canvas.addEventListener('mousemove', function(e){ if(!drawing) return; var p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); });
+      canvas.addEventListener('mouseup', function(){ drawing=false; });
+      canvas.addEventListener('touchstart', function(e){ e.preventDefault(); drawing=true; var p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); });
+      canvas.addEventListener('touchmove', function(e){ e.preventDefault(); if(!drawing) return; var p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); });
+      canvas.addEventListener('touchend', function(){ drawing=false; });
+    });
+  })();
+
   // Supplier page events
   el = gid('goToPO'); if(el) el.onclick = function(){ go('purchaseorders'); };
   el = gid('clearCompare'); if(el) el.onclick = function(){ SUP_COMPARE_ITEM=''; render(); };
@@ -2547,12 +2832,29 @@ try {
   <button class="mob-item" onclick="goProposal();closeMob()"><span class="mi2">📑</span>Proposal Generator <span class="mob-pro">PRO</span></button>
   <button class="mob-item" onclick="go(String.fromCharCode(112,117,114,99,104,97,115,101,111,114,100,101,114,115));closeMob()"><span class="mi2">🛒</span>Purchase Orders <span class="mob-pro">PRO</span></button>
   <button class="mob-item" onclick="go('documents');closeMob()"><span class="mi2">📁</span>Document Management <span class="mob-pro">PRO</span></button>
+  <div class="mob-sec">Mobile App</div>
+  <button class="mob-item" onclick="go('mobileapp');closeMob()"><span class="mi2">📱</span>Mobile Companion</button>
+  <button class="mob-item" onclick="go('estimates_mobile');closeMob()"><span class="mi2">📐</span>Quick Estimate</button>
+  <button class="mob-item" onclick="go('photos');closeMob()"><span class="mi2">📷</span>Photo Uploads</button>
+  <button class="mob-item" onclick="go('signatures');closeMob()"><span class="mi2">✍️</span>Customer Signatures</button>
+  <button class="mob-item" onclick="go('receipts');closeMob()"><span class="mi2">🧾</span>Scan Receipts</button>
+  <button class="mob-item" onclick="go('offline');closeMob()"><span class="mi2">📡</span>Offline Sync</button>
   <button class="mob-item" onclick="go('settings');closeMob()"><span class="mi2">⚙️</span>Settings & Plan</button>
   <button class="mob-item" onclick="window.open('/pricing-plans.html','_blank');closeMob()"><span class="mi2">💳</span>View Pricing Plans</button>
   <div style="height:16px"></div>
 </div>
 
 <script>
+function saveSig(id) {
+  for(var i=0;i<SIGNATURES.length;i++){
+    if(SIGNATURES[i].id===id){ SIGNATURES[i].signed=true; break; }
+  }
+  toast('Signature saved!'); render();
+}
+function clearSig(id) {
+  var canvas=document.getElementById('sigCanvas_'+id);
+  if(canvas){ var ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+}
 function openMob() {
   document.getElementById('mobDrawer').classList.add('open');
   document.getElementById('mobBg').classList.add('show');
