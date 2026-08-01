@@ -232,6 +232,15 @@ var NAV = [
     {id:'receipts',i:'🧾',l:'Scan Receipts'},
     {id:'offline',i:'📡',l:'Offline Sync'}
   ]},
+  {s:'Marketplace', items:[
+    {id:'marketplace',i:'🏪',l:'Wizzard Marketplace'},
+    {id:'templates',i:'📋',l:'Estimating Templates'},
+    {id:'subcontractors',i:'👷',l:'Subcontractor Network'},
+    {id:'jobboard',i:'💼',l:'Job Board'},
+    {id:'equipment',i:'🚧',l:'Equipment Rentals'},
+    {id:'courses',i:'🎓',l:'Training Courses'},
+    {id:'partners',i:'🤝',l:'Insurance & Financing'}
+  ]},
   {s:'Account', items:[
     {id:'settings',i:'⚙️',l:'Settings & Plan'},
     {id:'pricing',i:'💳',l:'View Pricing Plans'}
@@ -475,6 +484,73 @@ var POS = [
 var SHOW_PO_FORM = false;
 var PO_FILTER = 'All';
 var NEW_PO = {supplier:'',project:'',due:'',notes:'',items:[{desc:'',qty:1,unit:'piece',cost:0}]};
+
+// Marketplace State
+var MKT_TEMPLATES = [
+  {id:1,name:'Luxury Home Renovation Package',trades:['Drywall','Electrical','Plumbing','HVAC','Flooring'],items:42,price:49,rating:4.9,reviews:127,sold:834,category:'Residential',preview:'Includes all CSI divisions for high-end residential reno. Pre-loaded with GTA 2025 labour rates.'},
+  {id:2,name:'Commercial Office Buildout',trades:['Electrical','HVAC','Drywall','Flooring','Plumbing'],items:78,price:79,rating:4.8,reviews:89,sold:412,category:'Commercial',preview:'Complete office buildout template. Includes T-bar ceiling, VAV HVAC, electrical panels and finishes.'},
+  {id:3,name:'Industrial Warehouse Shell',trades:['Concrete','Structural Steel','Roofing','Electrical'],items:35,price:59,rating:4.7,reviews:64,sold:298,category:'Industrial',preview:'Shell building template for warehouse and distribution. ICI labour rates included.'},
+  {id:4,name:'Multi-Unit Residential (Per Suite)',trades:['Drywall','Electrical','Plumbing','Flooring','Painting'],items:56,price:69,rating:4.9,reviews:203,sold:1204,category:'Residential',preview:'Per-suite estimating for condos and apartments. Multiply by unit count for full project.'},
+  {id:5,name:'Parking Lot & Site Work',trades:['Asphalt','Concrete','Electrical'],items:28,price:39,rating:4.6,reviews:41,sold:187,category:'Civil',preview:'Full site work package: asphalt, curbs, catch basins, lighting and markings.'},
+  {id:6,name:'Restaurant & Food Service',trades:['Electrical','Plumbing','HVAC','Drywall','Flooring'],items:65,price:89,rating:4.8,reviews:72,sold:334,category:'Commercial',preview:'Restaurant-specific template with kitchen exhaust, grease trap, commercial electrical and finishes.'}
+];
+
+var AI_CREDITS = {balance:150, history:[
+  {date:'2025-06-10',action:'Blueprint Analysis',used:25,balance:175},
+  {date:'2025-06-08',action:'Contract Review',used:15,balance:200},
+  {date:'2025-06-05',action:'Risk Scan',used:10,balance:215}
+]};
+
+var SUBCONTRACTORS = [
+  {id:1,name:'Apex Electrical Inc.',trade:'Electrical',rating:4.9,jobs:187,location:'Mississauga, ON',wsib:'Verified',insurance:'$5M',bid_response:'Same day',rate:'$44-52/hr',available:true,verified:true},
+  {id:2,name:'GreenBuild Mechanical',trade:'HVAC',rating:4.8,jobs:134,location:'Brampton, ON',wsib:'Verified',insurance:'$2M',bid_response:'24 hrs',rate:'$48-58/hr',available:true,verified:true},
+  {id:3,name:'FastFrame Carpentry',trade:'Framing',rating:4.7,jobs:89,location:'Toronto, ON',wsib:'Verified',insurance:'$2M',bid_response:'48 hrs',rate:'$36-44/hr',available:false,verified:true},
+  {id:4,name:'ProPave Asphalt Ltd.',trade:'Asphalt',rating:4.9,jobs:211,location:'Oakville, ON',wsib:'Verified',insurance:'$5M',bid_response:'Same day',rate:'$85-110/hr',available:true,verified:true},
+  {id:5,name:'Precision Drywall Co.',trade:'Drywall',rating:4.6,jobs:156,location:'Mississauga, ON',wsib:'Verified',insurance:'$2M',bid_response:'24 hrs',rate:'$34-42/hr',available:true,verified:false},
+  {id:6,name:'Elite Plumbing Services',trade:'Plumbing',rating:4.8,jobs:98,location:'Hamilton, ON',wsib:'Verified',insurance:'$5M',bid_response:'48 hrs',rate:'$46-56/hr',available:true,verified:true}
+];
+var SUB_TRADE_FILTER = 'All';
+var SUB_SEARCH = '';
+
+var JOB_POSTS = [
+  {id:1,title:'Framing Foreman',company:'Wizzard Construction',location:'Mississauga, ON',type:'Full-time',trade:'Framing',pay:'$38-46/hr',posted:'2 days ago',applicants:14,urgent:true,desc:'Lead framing crew of 6 on downtown condo project. 18-month contract. OHSA required.'},
+  {id:2,title:'Journeyman Electrician',company:'Apex Electrical Inc.',location:'Toronto, ON',type:'Contract',trade:'Electrical',pay:'$44-52/hr',posted:'1 day ago',applicants:8,urgent:false,desc:'Commercial office buildout. IBEW preferred. 4-month project starting July 1.'},
+  {id:3,title:'Site Superintendent',company:'North Star Builders',location:'Brampton, ON',type:'Full-time',trade:'General',pay:'$85-110k/yr',posted:'3 days ago',applicants:22,urgent:false,desc:'ICI superintendent for 80,000 sq ft warehouse. 5+ years experience required.'},
+  {id:4,title:'Estimator',company:'GreenBuild Mechanical',location:'Remote / GTA',type:'Full-time',trade:'HVAC',pay:'$70-90k/yr',posted:'Today',applicants:3,urgent:true,desc:'HVAC estimator for commercial and industrial projects. Experience with mechanical takeoffs required.'},
+  {id:5,title:'Drywall Finisher',company:'Precision Drywall Co.',location:'Oakville, ON',type:'Contract',trade:'Drywall',pay:'$32-40/hr',posted:'5 days ago',applicants:6,urgent:false,desc:'Finishing and taping for luxury condo project. Level 5 finish experience required.'}
+];
+var JOB_TYPE_FILTER = 'All';
+var MY_POSTS = false;
+
+var EQUIPMENT = [
+  {id:1,name:'120-Ton Grove Crane',category:'Crane',daily:1800,weekly:7200,monthly:22000,location:'Mississauga',available:true,owner:'GTA Crane Rentals',img:'🏗',specs:'120T capacity, 60m boom, certified operator available'},
+  {id:2,name:'Cat 320 Excavator',category:'Excavator',daily:1200,weekly:4800,monthly:14400,location:'Brampton',available:true,owner:'Miller Equipment',img:'🚧',specs:'20T class, hydraulic thumb, GPS grade control'},
+  {id:3,name:'Skid Steer Loader',category:'Skid Steer',daily:450,weekly:1800,monthly:5400,location:'Toronto',available:true,owner:'Access Equipment',img:'🚜',specs:'Bobcat S650, 2,690 lb capacity, multiple attachments'},
+  {id:4,name:'Scissor Lift 26ft',category:'Aerial Lift',daily:275,weekly:1100,monthly:3300,location:'Mississauga',available:false,owner:'Zoom Lift Rentals',img:'🪜',specs:'26ft platform height, 800 lb capacity, indoor/outdoor'},
+  {id:5,name:'Concrete Pump Boom',category:'Concrete',daily:900,weekly:3600,monthly:10800,location:'Hamilton',available:true,owner:'Premier Concrete',img:'🧱',specs:'32m boom, 100m3/hr output, pump operator included'},
+  {id:6,name:'Tower Crane Liebherr 200',category:'Crane',daily:2400,weekly:9600,monthly:28800,location:'Toronto',available:true,owner:'SkyHigh Cranes',img:'🏗',specs:'200T capacity, freestanding 60m, full installation'}
+];
+var EQUIP_CAT = 'All';
+
+var COURSES = [
+  {id:1,name:'WHMIS 2026 Certification',provider:'Construction Wizzard Academy',duration:'4 hours',price:49,ceu:4,format:'Online',cert:'WHMIS 2026',rating:4.9,enrolled:2847,category:'Safety',desc:'Updated 2026 WHMIS training covering all GHS changes. Instantly shareable certificate upon completion.'},
+  {id:2,name:'Working at Heights - Ontario',provider:'OHSA Accredited',duration:'1 day',price:149,ceu:8,format:'In-Person',cert:'WAH Ontario',rating:4.8,enrolled:1204,category:'Safety',desc:'Ministry of Labour approved WAH training. Valid 3 years. Multiple GTA locations available.'},
+  {id:3,name:'Construction Estimating Masterclass',provider:'Construction Wizzard Academy',duration:'12 hours',price:199,ceu:12,format:'Online',cert:'CW Estimating',rating:4.9,enrolled:892,category:'Business',desc:'Complete estimating course covering all 9 trades, markup strategy, winning bids and using Construction Wizzard.'},
+  {id:4,name:'Ontario Lien Act & Contracts',provider:'OGCA Education',duration:'6 hours',price:299,ceu:6,format:'Online',cert:'OGCA Legal',rating:4.7,enrolled:431,category:'Legal',desc:'Understand your rights under the Ontario Construction Act. Holdback, liens, trusts and contract essentials.'},
+  {id:5,name:'First Aid Level C + AED',provider:'Red Cross Canada',duration:'2 days',price:179,ceu:16,format:'In-Person',cert:'First Aid C',rating:4.8,enrolled:3201,category:'Safety',desc:'Mandatory for many Ontario construction sites. Recognized nationally. Includes CPR and AED training.'},
+  {id:6,name:'Project Management for Contractors',provider:'Construction Wizzard Academy',duration:'8 hours',price:149,ceu:8,format:'Online',cert:'CW PM',rating:4.8,enrolled:674,category:'Business',desc:'Scheduling, cost control, subcontractor management and client communication for growing contractors.'}
+];
+var COURSE_CAT = 'All';
+
+var PARTNERS = [
+  {id:1,type:'Insurance',name:'Intact Commercial Insurance',logo:'🛡️',desc:'Tailored contractor liability insurance. $2M-$10M CGL policies. Trade accounts get priority underwriting and same-day COIs.',feature:'Starting at $1,200/yr',cta:'Get Quote',color:'#1848a8'},
+  {id:2,type:'Insurance',name:'Aviva Builders Risk',logo:'🏗',desc:'Project-specific builders risk coverage. Covers materials, equipment and liability during construction. No volume minimums.',feature:'Per-project pricing',cta:'Get Quote',color:'#1848a8'},
+  {id:3,type:'Financing',name:'BDC Construction Line',logo:'🏦',desc:'Business Development Bank of Canada. Construction-specific credit lines up to $500,000. No penalty for seasonal fluctuations.',feature:'Up to $500k',cta:'Apply Now',color:'#1a7040'},
+  {id:4,type:'Financing',name:'PayAssist Trade Finance',logo:'💳',desc:'Material purchase financing for contractors. Buy materials now, pay in 60-90 days. Approved suppliers include Home Depot, Rona, and 200+ others.',feature:'60-90 day terms',cta:'Apply Now',color:'#1a7040'},
+  {id:5,type:'Financing',name:'TD Construction Mortgage',logo:'🏠',desc:'Residential construction mortgages for builders. Draw schedules aligned with project milestones. Experienced construction lending team.',feature:'From 6.2% rate',cta:'Speak to Advisor',color:'#1a7040'},
+  {id:6,type:'Legal',name:'Gowling WLG Construction Law',logo:'⚖️',desc:'Construction law specialists. Contract review, lien proceedings, dispute resolution and bond claims. Ontario and national coverage.',feature:'Free 30-min consult',cta:'Book Consultation',color:'#6030a0'}
+];
+var PARTNER_TYPE = 'All';
 
 // AI Features State
 var VOICE_EST = {listening:false, transcript:'', result:null};
@@ -969,6 +1045,13 @@ function pageContent() {
   if (PAGE === 'proposal') return gate(proposalPage);
   if (PAGE === 'purchaseorders') return gate(purchaseOrdersPage);
   if (PAGE === 'documents') return gate(documentsPage);
+  if (PAGE === 'marketplace') return marketplacePage();
+  if (PAGE === 'templates') return templatesPage();
+  if (PAGE === 'subcontractors') return subcontractorsPage();
+  if (PAGE === 'jobboard') return jobBoardPage();
+  if (PAGE === 'equipment') return equipmentPage();
+  if (PAGE === 'courses') return coursesPage();
+  if (PAGE === 'partners') return partnersPage();
   if (PAGE === 'voiceestimate') return voiceEstimatePage();
   if (PAGE === 'riskdetection') return riskDetectionPage();
   if (PAGE === 'budgetforecast') return budgetForecastPage();
@@ -1669,6 +1752,161 @@ function suppliersPage() {
 
 function addToCart(supplierId) {
   toast('Item noted — create a Purchase Order to send to supplier!');
+}
+
+// ---- MARKETPLACE OVERVIEW ----
+function marketplacePage() {
+  var sections = [
+    {id:'templates',ico:'📋',title:'Estimating Templates',sub:'Premium pre-built templates',desc:'Save hours on every estimate with professional templates for residential, commercial and industrial projects.',badge:'From $39',color:'var(--blue)',items:MKT_TEMPLATES.length+' templates'},
+    {id:'subcontractors',ico:'👷',title:'Subcontractor Network',sub:'Verified trade contractors',desc:'Find WSIB-verified subcontractors for any trade. Compare rates, reviews and availability in the GTA.',badge:'Free to browse',color:'var(--green)',items:SUBCONTRACTORS.length+' available'},
+    {id:'jobboard',ico:'💼',title:'Job Board',sub:'Post and find construction jobs',desc:'Post positions or find your next opportunity. Full-time, contract and sub positions across all trades.',badge:'Free posting',color:'var(--amber)',items:JOB_POSTS.length+' open jobs'},
+    {id:'equipment',ico:'🚧',title:'Equipment Rentals',sub:'Cranes, excavators, lifts and more',desc:'Rent from verified equipment suppliers in the GTA. Daily, weekly and monthly rates. Delivery available.',badge:'Daily rates from $275',color:'var(--red)',items:EQUIPMENT.length+' listings'},
+    {id:'courses',ico:'🎓',title:'Training Courses',sub:'Safety certs, estimating and more',desc:'WHMIS 2026, Working at Heights, First Aid and business courses. Earn CEUs and shareable certificates.',badge:'From $49',color:'var(--blue)',items:COURSES.length+' courses'},
+    {id:'partners',ico:'🤝',title:'Insurance & Financing',sub:'Partners built for contractors',desc:'Trade account insurance, construction credit lines and project financing from vetted Canadian partners.',badge:'Exclusive rates',color:'var(--green)',items:PARTNERS.length+' partners'}
+  ];
+  var totalRevenue = 0;
+  MKT_TEMPLATES.forEach(function(t){ totalRevenue += t.price * t.sold; });
+
+  var cards = sections.map(function(s) {
+    return '<div class="card" style="cursor:pointer;border-top:3px solid ' + s.color + '" onclick="go(\'' + s.id + '\')"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div style="font-size:28px">' + s.ico + '</div><span style="background:var(--paper);color:var(--muted);font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px">' + s.badge + '</span></div><div style="font-family:var(--fh);font-size:15px;font-weight:800;margin-bottom:3px">' + s.title + '</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">' + s.sub + '</div><p style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">' + s.desc + '</p><div style="font-size:11px;font-weight:700;color:' + s.color + '">' + s.items + ' →</div></div>';
+  }).join('');
+
+  return ph('🏪', 'Wizzard Marketplace', 'Tools, talent and resources for construction professionals') +
+    '<div class="g4" style="margin-bottom:18px"><div class="sc"><div class="sv">6</div><div class="sl">Revenue Streams</div></div><div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">$' + (totalRevenue/1000).toFixed(0) + 'k</div><div class="sl">Template Revenue</div></div><div class="sc"><div class="sv">' + (SUBCONTRACTORS.length + JOB_POSTS.length + EQUIPMENT.length) + '</div><div class="sl">Active Listings</div></div><div class="sc" style="background:var(--bbg)"><div class="sv" style="color:var(--blue)">' + COURSES.length + '</div><div class="sl">Courses Available</div></div></div>' +
+    '<div style="background:linear-gradient(135deg,#0c0c0c,#1a1200);border-radius:14px;padding:20px 24px;margin-bottom:20px;display:flex;gap:16px;align-items:center"><div><div style="font-family:var(--fh);font-size:20px;font-weight:800;color:var(--gold2);margin-bottom:4px">Wizzard Marketplace</div><div style="font-size:13px;color:#888;line-height:1.6">Beyond subscriptions — earn revenue from templates, commissions, job postings and partner referrals. Construction Wizzard is your all-in-one construction business platform.</div></div></div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">' + cards + '</div>';
+}
+
+// ---- ESTIMATING TEMPLATES ----
+function templatesPage() {
+  var cats = ['All','Residential','Commercial','Industrial','Civil'];
+  var catBtns = cats.map(function(c) {
+    return '<button data-tcat="' + c + '" class="tcat-btn" style="padding:6px 14px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer">' + c + '</button>';
+  }).join('');
+
+  var totalSold = MKT_TEMPLATES.reduce(function(a,t){return a+t.sold;},0);
+  var totalRev = MKT_TEMPLATES.reduce(function(a,t){return a+t.price*t.sold;},0);
+
+  var tmplCards = MKT_TEMPLATES.map(function(t) {
+    var stars = '';
+    for(var i=0;i<5;i++) stars += i < Math.floor(t.rating) ? '★' : '☆';
+    return '<div class="card"><div style="background:linear-gradient(135deg,var(--ink),#1a1a2a);border-radius:10px;padding:18px;margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="font-family:var(--fh);font-size:15px;font-weight:800;color:#fff">' + t.name + '</div><div style="background:var(--gold2);color:var(--ink);font-family:var(--fh);font-size:16px;font-weight:800;padding:4px 10px;border-radius:7px">$' + t.price + '</div></div><div style="color:#888;font-size:11px;margin-top:6px">' + t.items + ' line items &nbsp;·&nbsp; ' + t.trades.length + ' trades</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:10px">' + t.preview + '</div><div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">' + t.trades.map(function(tr){return '<span class="pill pgr">'+tr+'</span>';}).join('') + '</div><div style="display:flex;align-items:center;justify-content:space-between"><div><div style="color:var(--gold);font-size:13px">' + stars + ' <span style="color:var(--muted);font-size:11px">(' + t.reviews + ')</span></div><div style="font-size:11px;color:var(--faint);margin-top:2px">' + t.sold.toLocaleString() + ' sold</div></div><button class="btn bgold" onclick="toast(String.fromCharCode(65,100,100,101,100,32,116,111,32,99,97,114,116,33))">Buy Now</button></div></div>';
+  }).join('');
+
+  return ph('📋', 'Estimating Templates', 'Professional pre-built templates for every project type', '<button class="btn bink bsm" id="sellTemplateBtn">+ Sell Your Template</button>') +
+    '<div class="g4" style="margin-bottom:16px"><div class="sc"><div class="sv">' + MKT_TEMPLATES.length + '</div><div class="sl">Templates</div></div><div class="sc"><div class="sv">' + totalSold.toLocaleString() + '</div><div class="sl">Total Sold</div></div><div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">$' + (totalRev/1000).toFixed(0) + 'k</div><div class="sl">Marketplace Revenue</div></div><div class="sc"><div class="sv">4.8 ★</div><div class="sl">Avg Rating</div></div></div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">' + catBtns + '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">' + tmplCards + '</div>';
+}
+
+// ---- SUBCONTRACTOR NETWORK ----
+function subcontractorsPage() {
+  var trades = ['All','Electrical','HVAC','Framing','Asphalt','Drywall','Plumbing','Roofing','Concrete'];
+  var tradeBtns = trades.map(function(t) {
+    var active = SUB_TRADE_FILTER===t;
+    return '<button data-strade="' + t + '" class="strade-btn" style="padding:6px 14px;border-radius:7px;border:1px solid ' + (active?'var(--ink)':'var(--border2)') + ';background:' + (active?'var(--ink)':'transparent') + ';color:' + (active?'#fff':'var(--muted)') + ';font-size:12px;font-weight:600;cursor:pointer">' + t + '</button>';
+  }).join('');
+
+  var filtered = SUBCONTRACTORS.filter(function(s) {
+    var matchTrade = SUB_TRADE_FILTER==='All'||s.trade===SUB_TRADE_FILTER;
+    var matchSearch = !SUB_SEARCH||s.name.toLowerCase().indexOf(SUB_SEARCH.toLowerCase())>=0||s.trade.toLowerCase().indexOf(SUB_SEARCH.toLowerCase())>=0;
+    return matchTrade && matchSearch;
+  });
+
+  var subCards = filtered.map(function(s) {
+    var stars = '';
+    for(var i=0;i<5;i++) stars += i<Math.floor(s.rating)?'★':'☆';
+    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><div style="font-weight:800;font-size:14px">' + s.name + '</div>' + (s.verified?'<span style="background:var(--bbg);color:var(--blue);font-size:9px;font-weight:800;padding:2px 6px;border-radius:99px">VERIFIED</span>':'') + '</div><div style="font-size:12px;color:var(--muted)">' + s.trade + ' &nbsp;·&nbsp; ' + s.location + '</div><div style="color:var(--gold);font-size:12px;margin-top:3px">' + stars + ' <span style="color:var(--muted);font-size:11px">' + s.rating + ' (' + s.jobs + ' jobs)</span></div></div><span class="pill ' + (s.available?'pg':'pgr') + '">' + (s.available?'Available':'Booked') + '</span></div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px"><div style="padding:8px;background:var(--paper);border-radius:7px"><div style="font-size:9px;color:var(--faint);text-transform:uppercase;margin-bottom:2px">Rate</div><div style="font-size:12px;font-weight:700">' + s.rate + '</div></div><div style="padding:8px;background:var(--paper);border-radius:7px"><div style="font-size:9px;color:var(--faint);text-transform:uppercase;margin-bottom:2px">Response</div><div style="font-size:12px;font-weight:700">' + s.bid_response + '</div></div><div style="padding:8px;background:var(--paper);border-radius:7px"><div style="font-size:9px;color:var(--faint);text-transform:uppercase;margin-bottom:2px">WSIB</div><div style="font-size:12px;font-weight:700;color:var(--green)">' + s.wsib + '</div></div><div style="padding:8px;background:var(--paper);border-radius:7px"><div style="font-size:9px;color:var(--faint);text-transform:uppercase;margin-bottom:2px">Insurance</div><div style="font-size:12px;font-weight:700">' + s.insurance + '</div></div></div><div style="display:flex;gap:8px"><button class="btn bink" style="flex:1" onclick="toast(String.fromCharCode(66,105,100,32,114,101,113,117,101,115,116,32,115,101,110,116,33))">Request Bid</button><button class="btn bout bsm" onclick="toast(String.fromCharCode(65,100,100,101,100,33))">Save</button></div></div>';
+  }).join('');
+
+  return ph('👷', 'Subcontractor Network', 'Find WSIB-verified trades for your next project', '<button class="btn bink bsm" id="listSubBtn">+ List My Company</button>') +
+    '<div class="g4" style="margin-bottom:16px"><div class="sc"><div class="sv">' + SUBCONTRACTORS.length + '</div><div class="sl">Listed Subs</div></div><div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">' + SUBCONTRACTORS.filter(function(s){return s.verified;}).length + '</div><div class="sl">Verified</div></div><div class="sc"><div class="sv">' + SUBCONTRACTORS.filter(function(s){return s.available;}).length + '</div><div class="sl">Available Now</div></div><div class="sc"><div class="sv">GTA</div><div class="sl">Coverage Area</div></div></div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:12px"><input class="inp" id="subSearch" placeholder="Search by name or trade..." style="flex:1;max-width:280px" value="' + SUB_SEARCH + '"/></div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">' + tradeBtns + '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">' + subCards + '</div>';
+}
+
+// ---- JOB BOARD ----
+function jobBoardPage() {
+  var types = ['All','Full-time','Contract','Part-time'];
+  var typeBtns = types.map(function(t) {
+    var active = JOB_TYPE_FILTER===t;
+    return '<button data-jtype="' + t + '" class="jtype-btn" style="padding:6px 14px;border-radius:7px;border:1px solid ' + (active?'var(--ink)':'var(--border2)') + ';background:' + (active?'var(--ink)':'transparent') + ';color:' + (active?'#fff':'var(--muted)') + ';font-size:12px;font-weight:600;cursor:pointer">' + t + '</button>';
+  }).join('');
+
+  var filtered = JOB_POSTS.filter(function(j){ return JOB_TYPE_FILTER==='All'||j.type===JOB_TYPE_FILTER; });
+
+  var jobCards = filtered.map(function(j) {
+    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' + (j.urgent?'<span style="background:var(--rbg);color:var(--red);font-size:9px;font-weight:800;padding:2px 7px;border-radius:99px">URGENT</span>':'') + '<div style="font-family:var(--fh);font-size:15px;font-weight:800">' + j.title + '</div></div><div style="font-size:12px;color:var(--muted)">' + j.company + ' &nbsp;·&nbsp; ' + j.location + '</div><div style="font-size:11px;color:var(--faint);margin-top:2px">Posted ' + j.posted + '</div></div><div style="text-align:right"><div style="font-weight:800;color:var(--green);font-family:var(--fh);font-size:15px">' + j.pay + '</div><span class="pill pgr" style="margin-top:4px;display:inline-block">' + j.type + '</span></div></div><p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">' + j.desc + '</p><div style="display:flex;gap:6px;margin-bottom:12px"><span class="pill pgr">' + j.trade + '</span></div><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:11px;color:var(--faint)">' + j.applicants + ' applicants</div><div style="display:flex;gap:8px"><button class="btn bink bsm" onclick="toast(String.fromCharCode(65,112,112,108,105,101,100,33))">Apply</button><button class="btn bout bsm" onclick="toast(String.fromCharCode(83,97,118,101,100,33))">Save</button></div></div></div>';
+  }).join('');
+
+  return ph('💼', 'Construction Job Board', 'Post jobs or find your next project', '<button class="btn bink bsm" id="postJobBtn">+ Post a Job</button>') +
+    '<div class="g4" style="margin-bottom:16px"><div class="sc"><div class="sv">' + JOB_POSTS.length + '</div><div class="sl">Open Positions</div></div><div class="sc" style="background:var(--rbg)"><div class="sv" style="color:var(--red)">' + JOB_POSTS.filter(function(j){return j.urgent;}).length + '</div><div class="sl">Urgent Hiring</div></div><div class="sc"><div class="sv">' + JOB_POSTS.reduce(function(a,j){return a+j.applicants;},0) + '</div><div class="sl">Total Applicants</div></div><div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">Free</div><div class="sl">To Post</div></div></div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">' + typeBtns + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:12px">' + jobCards + '</div>';
+}
+
+// ---- EQUIPMENT RENTALS ----
+function equipmentPage() {
+  var cats = ['All','Crane','Excavator','Skid Steer','Aerial Lift','Concrete'];
+  var catBtns = cats.map(function(c) {
+    var active = EQUIP_CAT===c;
+    return '<button data-ecat="' + c + '" class="ecat-btn" style="padding:6px 14px;border-radius:7px;border:1px solid ' + (active?'var(--ink)':'var(--border2)') + ';background:' + (active?'var(--ink)':'transparent') + ';color:' + (active?'#fff':'var(--muted)') + ';font-size:12px;font-weight:600;cursor:pointer">' + c + '</button>';
+  }).join('');
+
+  var filtered = EQUIPMENT.filter(function(e){ return EQUIP_CAT==='All'||e.category===EQUIP_CAT; });
+
+  var equipCards = filtered.map(function(e) {
+    return '<div class="card"><div style="background:linear-gradient(135deg,' + (e.available?'var(--ink)':'#888') + ',#2a2a2a);border-radius:10px;height:110px;display:flex;align-items:center;justify-content:center;font-size:52px;margin-bottom:14px">' + e.img + '</div><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="font-weight:800;font-size:14px">' + e.name + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">' + e.owner + ' &nbsp;·&nbsp; ' + e.location + '</div></div>' + '<span class="pill ' + (e.available?'pg':'pgr') + '">' + (e.available?'Available':'Booked') + '</span></div><div style="font-size:12px;color:var(--muted);margin-bottom:12px">' + e.specs + '</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px"><div style="padding:8px;background:var(--paper);border-radius:7px;text-align:center"><div style="font-size:9px;color:var(--faint);text-transform:uppercase;margin-bottom:2px">Daily</div><div style="font-weight:800;font-size:13px">$' + e.daily.toLocaleString() + '</div></div><div style="padding:8px;background:var(--paper);border-radius:7px;text-align:center"><div style="font-size:9px;color:var(--faint);text-transform:uppercase;margin-bottom:2px">Weekly</div><div style="font-weight:800;font-size:13px">$' + e.weekly.toLocaleString() + '</div></div><div style="padding:8px;background:var(--paper);border-radius:7px;text-align:center"><div style="font-size:9px;color:var(--faint);text-transform:uppercase;margin-bottom:2px">Monthly</div><div style="font-weight:800;font-size:13px">$' + e.monthly.toLocaleString() + '</div></div></div><button class="btn ' + (e.available?'bink':'bout') + ' bfull" onclick="toast(String.fromCharCode(' + (e.available?'82,101,113,117,101,115,116,32,115,101,110,116,33':'78,111,116,32,97,118,97,105,108,97,98,108,101') + '))">' + (e.available?'Request Rental':'Join Waitlist') + '</button></div>';
+  }).join('');
+
+  return ph('🚧', 'Equipment Rentals', 'Cranes, excavators, lifts and more in the GTA', '<button class="btn bink bsm" id="listEquipBtn">+ List Equipment</button>') +
+    '<div class="g4" style="margin-bottom:16px"><div class="sc"><div class="sv">' + EQUIPMENT.length + '</div><div class="sl">Listings</div></div><div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">' + EQUIPMENT.filter(function(e){return e.available;}).length + '</div><div class="sl">Available Now</div></div><div class="sc"><div class="sv">$275</div><div class="sl">Daily From</div></div><div class="sc"><div class="sv">GTA</div><div class="sl">Coverage</div></div></div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">' + catBtns + '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">' + equipCards + '</div>';
+}
+
+// ---- TRAINING COURSES ----
+function coursesPage() {
+  var cats = ['All','Safety','Business','Legal'];
+  var catBtns = cats.map(function(c) {
+    var active = COURSE_CAT===c;
+    return '<button data-ccat="' + c + '" class="ccat-btn" style="padding:6px 14px;border-radius:7px;border:1px solid ' + (active?'var(--ink)':'var(--border2)') + ';background:' + (active?'var(--ink)':'transparent') + ';color:' + (active?'#fff':'var(--muted)') + ';font-size:12px;font-weight:600;cursor:pointer">' + c + '</button>';
+  }).join('');
+
+  var filtered = COURSES.filter(function(c){ return COURSE_CAT==='All'||c.category===COURSE_CAT; });
+  var totalEnrolled = COURSES.reduce(function(a,c){return a+c.enrolled;},0);
+
+  var courseCards = filtered.map(function(c) {
+    var stars = '';
+    for(var i=0;i<5;i++) stars += i<Math.floor(c.rating)?'★':'☆';
+    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div><span class="pill ' + (c.format==='Online'?'pb':'pg') + '" style="margin-bottom:6px;display:inline-block">' + c.format + '</span><div style="font-weight:800;font-size:14px">' + c.name + '</div><div style="font-size:12px;color:var(--muted);margin-top:2px">' + c.provider + '</div></div><div style="font-family:var(--fh);font-size:22px;font-weight:800;color:var(--ink)">$' + c.price + '</div></div><p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.6">' + c.desc + '</p><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px"><div style="padding:7px;background:var(--paper);border-radius:7px;text-align:center"><div style="font-size:9px;color:var(--faint);text-transform:uppercase;margin-bottom:1px">Duration</div><div style="font-size:11px;font-weight:700">' + c.duration + '</div></div><div style="padding:7px;background:var(--paper);border-radius:7px;text-align:center"><div style="font-size:9px;color:var(--faint);text-transform:uppercase;margin-bottom:1px">CEUs</div><div style="font-size:11px;font-weight:700">' + c.ceu + ' hrs</div></div><div style="padding:7px;background:var(--paper);border-radius:7px;text-align:center"><div style="font-size:9px;color:var(--faint);text-transform:uppercase;margin-bottom:1px">Cert</div><div style="font-size:10px;font-weight:700">' + c.cert + '</div></div></div><div style="display:flex;align-items:center;justify-content:space-between"><div><div style="color:var(--gold);font-size:12px">' + stars + '</div><div style="font-size:11px;color:var(--faint);margin-top:1px">' + c.enrolled.toLocaleString() + ' enrolled</div></div><button class="btn bgold" onclick="toast(String.fromCharCode(69,110,114,111,108,108,101,100,33))">Enroll Now</button></div></div>';
+  }).join('');
+
+  return ph('🎓', 'Training & Certification', 'Industry-recognized courses for your crew and business', '<button class="btn bink bsm" id="createCourseBtn">+ Create Course</button>') +
+    '<div class="g4" style="margin-bottom:16px"><div class="sc"><div class="sv">' + COURSES.length + '</div><div class="sl">Courses</div></div><div class="sc"><div class="sv">' + totalEnrolled.toLocaleString() + '</div><div class="sl">Students</div></div><div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">$' + (COURSES.reduce(function(a,c){return a+c.price*c.enrolled;},0)/1000).toFixed(0) + 'k</div><div class="sl">Course Revenue</div></div><div class="sc"><div class="sv">4.8 ★</div><div class="sl">Avg Rating</div></div></div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">' + catBtns + '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">' + courseCards + '</div>';
+}
+
+// ---- INSURANCE & FINANCING ----
+function partnersPage() {
+  var types = ['All','Insurance','Financing','Legal'];
+  var typeBtns = types.map(function(t) {
+    var active = PARTNER_TYPE===t;
+    return '<button data-ptype="' + t + '" class="ptype-btn" style="padding:6px 14px;border-radius:7px;border:1px solid ' + (active?'var(--ink)':'var(--border2)') + ';background:' + (active?'var(--ink)':'transparent') + ';color:' + (active?'#fff':'var(--muted)') + ';font-size:12px;font-weight:600;cursor:pointer">' + t + '</button>';
+  }).join('');
+
+  var filtered = PARTNERS.filter(function(p){ return PARTNER_TYPE==='All'||p.type===PARTNER_TYPE; });
+
+  var partnerCards = filtered.map(function(p) {
+    return '<div class="card"><div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px"><div style="width:52px;height:52px;background:' + p.color + '20;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">' + p.logo + '</div><div><span class="pill pgr" style="margin-bottom:5px;display:inline-block">' + p.type + '</span><div style="font-weight:800;font-size:14px">' + p.name + '</div></div></div><p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.6">' + p.desc + '</p><div style="padding:10px;background:var(--paper);border-radius:8px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:11px;color:var(--faint);text-transform:uppercase;font-weight:700">Key Benefit</div><div style="font-weight:700;color:' + p.color + '">' + p.feature + '</div></div><button class="btn bink bfull" style="background:' + p.color + '" onclick="toast(String.fromCharCode(82,101,100,105,114,101,99,116,105,110,103,32,116,111,32,112,97,114,116,110,101,114,46,46,46))">' + p.cta + '</button></div>';
+  }).join('');
+
+  return ph('🤝', 'Insurance & Financing', 'Trusted partners exclusively for construction professionals') +
+    '<div style="background:linear-gradient(135deg,#0c0c0c,#1a1200);border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;gap:14px;align-items:center"><div style="font-size:24px">💡</div><div style="font-size:13px;color:#888">Construction Wizzard earns a referral commission when you use a partner service — at no extra cost to you. All partners are vetted for contractor suitability.</div></div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">' + typeBtns + '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">' + partnerCards + '</div>';
 }
 
 // ---- VOICE ESTIMATING PAGE ----
@@ -2627,6 +2865,23 @@ function bindAll() {
   el = gid('matSearch'); if (el) el.oninput = function() { MAT_SEARCH = this.value; render(); };
 
   // RFI
+  // Marketplace bind events
+  document.querySelectorAll('.tcat-btn').forEach(function(b){ b.onclick=function(){ render(); }; });
+  document.querySelectorAll('.strade-btn').forEach(function(b){ b.onclick=function(){ SUB_TRADE_FILTER=this.dataset.strade; render(); }; });
+  document.querySelectorAll('.jtype-btn').forEach(function(b){ b.onclick=function(){ JOB_TYPE_FILTER=this.dataset.jtype; render(); }; });
+  document.querySelectorAll('.ecat-btn').forEach(function(b){ b.onclick=function(){ EQUIP_CAT=this.dataset.ecat; render(); }; });
+  document.querySelectorAll('.ccat-btn').forEach(function(b){ b.onclick=function(){ COURSE_CAT=this.dataset.ccat; render(); }; });
+  document.querySelectorAll('.ptype-btn').forEach(function(b){ b.onclick=function(){ PARTNER_TYPE=this.dataset.ptype; render(); }; });
+  var subSrch2=gid('subSearch'); if(subSrch2) subSrch2.oninput=function(){ SUB_SEARCH=this.value; render(); };
+  el=gid('sellTemplateBtn'); if(el) el.onclick=function(){ toast(String.fromCharCode(67,111,109,105,110,103,32,115,111,111,110,33)); };
+  el=gid('listSubBtn'); if(el) el.onclick=function(){ toast(String.fromCharCode(76,105,115,116,105,110,103,32,115,117,98,109,105,116,116,101,100,33)); };
+  el=gid('postJobBtn'); if(el) el.onclick=function(){
+    var title=prompt('Job title:'); var pay=prompt('Pay rate or salary:');
+    if(title&&pay){ JOB_POSTS.unshift({id:Date.now(),title:title,company:U?U.name:'My Company',location:'GTA, ON',type:'Full-time',trade:'General',pay:pay,posted:'Just now',applicants:0,urgent:false,desc:'Contact us for details.'}); render(); toast(String.fromCharCode(74,111,98,32,112,111,115,116,101,100,33)); }
+  };
+  el=gid('listEquipBtn'); if(el) el.onclick=function(){ toast(String.fromCharCode(76,105,115,116,105,110,103,32,102,111,114,109,32,99,111,109,105,110,103,32,115,111,111,110,33)); };
+  el=gid('createCourseBtn'); if(el) el.onclick=function(){ toast(String.fromCharCode(73,110,115,116,114,117,99,116,111,114,32,112,111,114,116,97,108,32,99,111,109,105,110,103,33)); };
+
   // AI Features bind events
   // Voice estimating
   el = gid('micBtn'); if(el) el.onclick = function(){
@@ -3073,6 +3328,14 @@ try {
   <button class="mob-item" onclick="go('suppliers');closeMob()"><span class="mi2">🏪</span>Supplier Price Database</button>
   <button class="mob-item" onclick="go('weather');closeMob()"><span class="mi2">🌤</span>Weather Integration</button>
   <button class="mob-item" onclick="go('rfi');closeMob()"><span class="mi2">📝</span>RFI Management</button>
+  <div class="mob-sec">Marketplace</div>
+  <button class="mob-item" onclick="go('marketplace');closeMob()"><span class="mi2">🏪</span>Wizzard Marketplace</button>
+  <button class="mob-item" onclick="go('templates');closeMob()"><span class="mi2">📋</span>Estimating Templates</button>
+  <button class="mob-item" onclick="go('subcontractors');closeMob()"><span class="mi2">👷</span>Subcontractor Network</button>
+  <button class="mob-item" onclick="go('jobboard');closeMob()"><span class="mi2">💼</span>Job Board</button>
+  <button class="mob-item" onclick="go('equipment');closeMob()"><span class="mi2">🚧</span>Equipment Rentals</button>
+  <button class="mob-item" onclick="go('courses');closeMob()"><span class="mi2">🎓</span>Training Courses</button>
+  <button class="mob-item" onclick="go('partners');closeMob()"><span class="mi2">🤝</span>Insurance & Financing</button>
   <div class="mob-sec">AI Features</div>
   <button class="mob-item" onclick="go('voiceestimate');closeMob()"><span class="mi2">🎙️</span>Voice Estimating <span class="mob-pro">PRO</span></button>
   <button class="mob-item" onclick="go('riskdetection');closeMob()"><span class="mi2">🔍</span>Risk Detection <span class="mob-pro">PRO</span></button>
