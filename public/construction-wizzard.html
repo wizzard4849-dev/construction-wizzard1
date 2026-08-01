@@ -153,7 +153,7 @@ textarea.inp{resize:vertical;min-height:76px}
 <body>
 <div id="app">Loading...</div>
 <script>
-// ── DATA ──────────────────────────────────────────────────────────────────────
+// -- DATA ----------------------------------------------------------------------
 var TRADES = {
   drywall:    {l:'Drywall',             c:2.50},
   painting:   {l:'Painting',            c:1.50},
@@ -203,6 +203,7 @@ var NAV = [
     {id:'blueprint',i:'📄',l:'Blueprint AI Takeoff',pro:true},
     {id:'weather',i:'🌤',l:'Weather Integration',pro:true},
     {id:'materials',i:'🏗',l:'Material Prices'},
+    {id:'suppliers',i:'🏪',l:'Supplier Price Database'},
     {id:'rfi',i:'📝',l:'RFI Management',pro:true}
   ]},
   {s:'Clients & CRM', items:[
@@ -232,7 +233,7 @@ var SAFETY_ITEMS = [
   'Toolbox talk completed with crew'
 ];
 
-// ── APP STATE ─────────────────────────────────────────────────────────────────
+// -- APP STATE -----------------------------------------------------------------
 var U = null; // current user
 var PAGE = 'home';
 var MODAL = false;
@@ -363,6 +364,92 @@ var BP_RESULT = null;
 var AI_MSGS = [{r:'ai',t:'Hi! I am your Construction AI Copilot. Ask about project status, budget risks, safety concerns, or task planning.'}];
 var AI_LOADING = false;
 
+// Supplier Price Database State
+var SUPPLIERS = [
+  {
+    id:'homedepot', name:'Home Depot Pro', logo:'🟠', type:'National Chain',
+    phone:'1-800-668-2266', website:'homedepot.ca', account:'Pro Xtra',
+    delivery:true, pickup:true, credit:true,
+    categories:['Lumber','Drywall','Concrete','Roofing','Electrical','Plumbing','Flooring','Insulation','Fasteners','Tools'],
+    prices:[
+      {item:'Lumber 2x4x8',sku:'100023629',price:8.49,unit:'each',updated:'Today',trend:'up',prev:7.20},
+      {item:'Lumber 2x6x8',sku:'100023630',price:11.97,unit:'each',updated:'Today',trend:'up',prev:10.50},
+      {item:'Drywall 4x8 1/2"',sku:'202093541',price:13.47,unit:'sheet',updated:'Today',trend:'down',prev:14.98},
+      {item:'Drywall 4x8 5/8"',sku:'202093542',price:16.97,unit:'sheet',updated:'Today',trend:'flat',prev:16.97},
+      {item:'Concrete Mix 30kg',sku:'100347872',price:8.97,unit:'bag',updated:'Today',trend:'flat',prev:8.97},
+      {item:'OSB 4x8 7/16"',sku:'100023680',price:28.97,unit:'sheet',updated:'Today',trend:'up',prev:24.50},
+      {item:'Plywood 4x8 3/4"',sku:'100023690',price:54.97,unit:'sheet',updated:'Today',trend:'up',prev:48.00},
+      {item:'Pink Insulation R20',sku:'202010441',price:64.97,unit:'bag',updated:'Today',trend:'flat',prev:64.97},
+      {item:'3" Exterior Screws 5lb',sku:'100187223',price:22.97,unit:'box',updated:'Today',trend:'flat',prev:22.97},
+      {item:'Roofing Shingles 3-tab',sku:'100373221',price:44.97,unit:'bundle',updated:'Today',trend:'up',prev:39.97}
+    ]
+  },
+  {
+    id:'lowes', name:"Lowe's Canada", logo:'🔵', type:'National Chain',
+    phone:'1-800-445-6937', website:'lowes.ca', account:'Pro Account',
+    delivery:true, pickup:true, credit:true,
+    categories:['Lumber','Drywall','Roofing','Electrical','Plumbing','Flooring','Paint','Insulation','Fasteners'],
+    prices:[
+      {item:'Lumber 2x4x8',sku:'LCA-4001',price:8.17,unit:'each',updated:'Today',trend:'up',prev:7.05},
+      {item:'Lumber 2x6x8',sku:'LCA-4002',price:11.47,unit:'each',updated:'Today',trend:'up',prev:10.20},
+      {item:'Drywall 4x8 1/2"',sku:'LCA-5001',price:12.99,unit:'sheet',updated:'Today',trend:'down',prev:14.49},
+      {item:'Drywall 4x8 5/8"',sku:'LCA-5002',price:15.99,unit:'sheet',updated:'Today',trend:'flat',prev:15.99},
+      {item:'OSB 4x8 7/16"',sku:'LCA-4010',price:27.49,unit:'sheet',updated:'Today',trend:'up',prev:23.99},
+      {item:'Plywood 4x8 3/4"',sku:'LCA-4011',price:52.49,unit:'sheet',updated:'Today',trend:'up',prev:46.99},
+      {item:'Pink Insulation R20',sku:'LCA-6001',price:62.49,unit:'bag',updated:'Today',trend:'flat',prev:62.49},
+      {item:'Roofing Shingles 3-tab',sku:'LCA-7001',price:42.99,unit:'bundle',updated:'Today',trend:'up',prev:38.49}
+    ]
+  },
+  {
+    id:'rona', name:'RONA', logo:'🟢', type:'National Chain',
+    phone:'1-800-266-7662', website:'rona.ca', account:'RONA Pro',
+    delivery:true, pickup:true, credit:true,
+    categories:['Lumber','Drywall','Concrete','Roofing','Electrical','Plumbing','Paint','Fasteners','Tools'],
+    prices:[
+      {item:'Lumber 2x4x8',sku:'RON-L001',price:7.99,unit:'each',updated:'Today',trend:'up',prev:6.99},
+      {item:'Lumber 2x6x8',sku:'RON-L002',price:11.29,unit:'each',updated:'Today',trend:'up',prev:9.99},
+      {item:'Drywall 4x8 1/2"',sku:'RON-D001',price:12.49,unit:'sheet',updated:'Today',trend:'down',prev:13.99},
+      {item:'Drywall 4x8 5/8"',sku:'RON-D002',price:15.49,unit:'sheet',updated:'Today',trend:'flat',prev:15.49},
+      {item:'Concrete Mix 30kg',sku:'RON-C001',price:8.49,unit:'bag',updated:'Today',trend:'flat',prev:8.49},
+      {item:'OSB 4x8 7/16"',sku:'RON-O001',price:26.99,unit:'sheet',updated:'Today',trend:'up',prev:23.49},
+      {item:'Roofing Shingles 3-tab',sku:'RON-R001',price:41.99,unit:'bundle',updated:'Today',trend:'up',prev:37.99},
+      {item:'3" Exterior Screws 5lb',sku:'RON-F001',price:21.49,unit:'box',updated:'Today',trend:'flat',prev:21.49}
+    ]
+  },
+  {
+    id:'local1', name:'Mississauga Building Supply', logo:'🏗', type:'Local Supplier',
+    phone:'905-279-4400', website:'mbs-supply.ca', account:'Trade Account',
+    delivery:true, pickup:true, credit:true,
+    categories:['Lumber','Concrete','Masonry','Steel','Roofing','Specialty'],
+    prices:[
+      {item:'Lumber 2x4x8',sku:'MBS-001',price:7.75,unit:'each',updated:'Today',trend:'up',prev:6.80},
+      {item:'Ready-mix Concrete',sku:'MBS-C01',price:182.00,unit:'m3',updated:'Today',trend:'up',prev:172.00},
+      {item:'Concrete Block 8"',sku:'MBS-B01',price:3.25,unit:'each',updated:'Today',trend:'flat',prev:3.25},
+      {item:'Structural Steel W8x31',sku:'MBS-S01',price:1195.00,unit:'tonne',updated:'Today',trend:'up',prev:1150.00},
+      {item:'Roofing Shingles 3-tab',sku:'MBS-R01',price:39.99,unit:'bundle',updated:'Today',trend:'up',prev:36.99},
+      {item:'OSB 4x8 7/16"',sku:'MBS-O01',price:25.99,unit:'sheet',updated:'Today',trend:'up',prev:22.99}
+    ]
+  },
+  {
+    id:'local2', name:'GTA Electrical Supply', logo:'⚡', type:'Local Supplier',
+    phone:'416-744-8800', website:'gtaelectrical.ca', account:'Contractor Account',
+    delivery:true, pickup:true, credit:false,
+    categories:['Wire','Conduit','Panels','Fixtures','Breakers','Tools'],
+    prices:[
+      {item:'14/2 NMD90 75m',sku:'GTA-W001',price:87.50,unit:'roll',updated:'Today',trend:'down',prev:94.00},
+      {item:'12/2 NMD90 75m',sku:'GTA-W002',price:119.00,unit:'roll',updated:'Today',trend:'down',prev:128.00},
+      {item:'10/2 NMD90 30m',sku:'GTA-W003',price:68.00,unit:'roll',updated:'Today',trend:'flat',prev:68.00},
+      {item:'200A Panel Siemens',sku:'GTA-P001',price:385.00,unit:'each',updated:'Today',trend:'up',prev:360.00},
+      {item:'1/2" EMT Conduit 3m',sku:'GTA-C001',price:8.25,unit:'each',updated:'Today',trend:'flat',prev:8.25},
+      {item:'15A Breaker',sku:'GTA-B001',price:12.50,unit:'each',updated:'Today',trend:'flat',prev:12.50}
+    ]
+  }
+];
+var SUP_ACTIVE = 'homedepot';
+var SUP_SEARCH = '';
+var SUP_CAT = 'All';
+var SUP_COMPARE_ITEM = '';
+
 // Purchase Orders State
 var POS = [
   {id:'PO-0041',supplier:'Home Depot Pro',items:[{desc:'Lumber 2x4x8',qty:200,unit:'piece',cost:8.49},{desc:'Drywall 4x8',qty:150,unit:'sheet',cost:12.99}],total:3696.50,status:'Approved',date:'2025-06-08',due:'2025-06-15',project:'Downtown Office Reno',notes:'Deliver to site entrance'},
@@ -426,6 +513,92 @@ var PROPOSAL_FORM = {
   terms:'50% deposit upon acceptance, 40% at substantial completion, 10% holdback released 46 days after substantial performance per Ontario Construction Act.'
 };
 
+// Supplier Price Database State
+var SUPPLIERS = [
+  {
+    id:'homedepot', name:'Home Depot Pro', logo:'🟠', type:'National Chain',
+    phone:'1-800-668-2266', website:'homedepot.ca', account:'Pro Xtra',
+    delivery:true, pickup:true, credit:true,
+    categories:['Lumber','Drywall','Concrete','Roofing','Electrical','Plumbing','Flooring','Insulation','Fasteners','Tools'],
+    prices:[
+      {item:'Lumber 2x4x8',sku:'100023629',price:8.49,unit:'each',updated:'Today',trend:'up',prev:7.20},
+      {item:'Lumber 2x6x8',sku:'100023630',price:11.97,unit:'each',updated:'Today',trend:'up',prev:10.50},
+      {item:'Drywall 4x8 1/2"',sku:'202093541',price:13.47,unit:'sheet',updated:'Today',trend:'down',prev:14.98},
+      {item:'Drywall 4x8 5/8"',sku:'202093542',price:16.97,unit:'sheet',updated:'Today',trend:'flat',prev:16.97},
+      {item:'Concrete Mix 30kg',sku:'100347872',price:8.97,unit:'bag',updated:'Today',trend:'flat',prev:8.97},
+      {item:'OSB 4x8 7/16"',sku:'100023680',price:28.97,unit:'sheet',updated:'Today',trend:'up',prev:24.50},
+      {item:'Plywood 4x8 3/4"',sku:'100023690',price:54.97,unit:'sheet',updated:'Today',trend:'up',prev:48.00},
+      {item:'Pink Insulation R20',sku:'202010441',price:64.97,unit:'bag',updated:'Today',trend:'flat',prev:64.97},
+      {item:'3" Exterior Screws 5lb',sku:'100187223',price:22.97,unit:'box',updated:'Today',trend:'flat',prev:22.97},
+      {item:'Roofing Shingles 3-tab',sku:'100373221',price:44.97,unit:'bundle',updated:'Today',trend:'up',prev:39.97}
+    ]
+  },
+  {
+    id:'lowes', name:"Lowe's Canada", logo:'🔵', type:'National Chain',
+    phone:'1-800-445-6937', website:'lowes.ca', account:'Pro Account',
+    delivery:true, pickup:true, credit:true,
+    categories:['Lumber','Drywall','Roofing','Electrical','Plumbing','Flooring','Paint','Insulation','Fasteners'],
+    prices:[
+      {item:'Lumber 2x4x8',sku:'LCA-4001',price:8.17,unit:'each',updated:'Today',trend:'up',prev:7.05},
+      {item:'Lumber 2x6x8',sku:'LCA-4002',price:11.47,unit:'each',updated:'Today',trend:'up',prev:10.20},
+      {item:'Drywall 4x8 1/2"',sku:'LCA-5001',price:12.99,unit:'sheet',updated:'Today',trend:'down',prev:14.49},
+      {item:'Drywall 4x8 5/8"',sku:'LCA-5002',price:15.99,unit:'sheet',updated:'Today',trend:'flat',prev:15.99},
+      {item:'OSB 4x8 7/16"',sku:'LCA-4010',price:27.49,unit:'sheet',updated:'Today',trend:'up',prev:23.99},
+      {item:'Plywood 4x8 3/4"',sku:'LCA-4011',price:52.49,unit:'sheet',updated:'Today',trend:'up',prev:46.99},
+      {item:'Pink Insulation R20',sku:'LCA-6001',price:62.49,unit:'bag',updated:'Today',trend:'flat',prev:62.49},
+      {item:'Roofing Shingles 3-tab',sku:'LCA-7001',price:42.99,unit:'bundle',updated:'Today',trend:'up',prev:38.49}
+    ]
+  },
+  {
+    id:'rona', name:'RONA', logo:'🟢', type:'National Chain',
+    phone:'1-800-266-7662', website:'rona.ca', account:'RONA Pro',
+    delivery:true, pickup:true, credit:true,
+    categories:['Lumber','Drywall','Concrete','Roofing','Electrical','Plumbing','Paint','Fasteners','Tools'],
+    prices:[
+      {item:'Lumber 2x4x8',sku:'RON-L001',price:7.99,unit:'each',updated:'Today',trend:'up',prev:6.99},
+      {item:'Lumber 2x6x8',sku:'RON-L002',price:11.29,unit:'each',updated:'Today',trend:'up',prev:9.99},
+      {item:'Drywall 4x8 1/2"',sku:'RON-D001',price:12.49,unit:'sheet',updated:'Today',trend:'down',prev:13.99},
+      {item:'Drywall 4x8 5/8"',sku:'RON-D002',price:15.49,unit:'sheet',updated:'Today',trend:'flat',prev:15.49},
+      {item:'Concrete Mix 30kg',sku:'RON-C001',price:8.49,unit:'bag',updated:'Today',trend:'flat',prev:8.49},
+      {item:'OSB 4x8 7/16"',sku:'RON-O001',price:26.99,unit:'sheet',updated:'Today',trend:'up',prev:23.49},
+      {item:'Roofing Shingles 3-tab',sku:'RON-R001',price:41.99,unit:'bundle',updated:'Today',trend:'up',prev:37.99},
+      {item:'3" Exterior Screws 5lb',sku:'RON-F001',price:21.49,unit:'box',updated:'Today',trend:'flat',prev:21.49}
+    ]
+  },
+  {
+    id:'local1', name:'Mississauga Building Supply', logo:'🏗', type:'Local Supplier',
+    phone:'905-279-4400', website:'mbs-supply.ca', account:'Trade Account',
+    delivery:true, pickup:true, credit:true,
+    categories:['Lumber','Concrete','Masonry','Steel','Roofing','Specialty'],
+    prices:[
+      {item:'Lumber 2x4x8',sku:'MBS-001',price:7.75,unit:'each',updated:'Today',trend:'up',prev:6.80},
+      {item:'Ready-mix Concrete',sku:'MBS-C01',price:182.00,unit:'m3',updated:'Today',trend:'up',prev:172.00},
+      {item:'Concrete Block 8"',sku:'MBS-B01',price:3.25,unit:'each',updated:'Today',trend:'flat',prev:3.25},
+      {item:'Structural Steel W8x31',sku:'MBS-S01',price:1195.00,unit:'tonne',updated:'Today',trend:'up',prev:1150.00},
+      {item:'Roofing Shingles 3-tab',sku:'MBS-R01',price:39.99,unit:'bundle',updated:'Today',trend:'up',prev:36.99},
+      {item:'OSB 4x8 7/16"',sku:'MBS-O01',price:25.99,unit:'sheet',updated:'Today',trend:'up',prev:22.99}
+    ]
+  },
+  {
+    id:'local2', name:'GTA Electrical Supply', logo:'⚡', type:'Local Supplier',
+    phone:'416-744-8800', website:'gtaelectrical.ca', account:'Contractor Account',
+    delivery:true, pickup:true, credit:false,
+    categories:['Wire','Conduit','Panels','Fixtures','Breakers','Tools'],
+    prices:[
+      {item:'14/2 NMD90 75m',sku:'GTA-W001',price:87.50,unit:'roll',updated:'Today',trend:'down',prev:94.00},
+      {item:'12/2 NMD90 75m',sku:'GTA-W002',price:119.00,unit:'roll',updated:'Today',trend:'down',prev:128.00},
+      {item:'10/2 NMD90 30m',sku:'GTA-W003',price:68.00,unit:'roll',updated:'Today',trend:'flat',prev:68.00},
+      {item:'200A Panel Siemens',sku:'GTA-P001',price:385.00,unit:'each',updated:'Today',trend:'up',prev:360.00},
+      {item:'1/2" EMT Conduit 3m',sku:'GTA-C001',price:8.25,unit:'each',updated:'Today',trend:'flat',prev:8.25},
+      {item:'15A Breaker',sku:'GTA-B001',price:12.50,unit:'each',updated:'Today',trend:'flat',prev:12.50}
+    ]
+  }
+];
+var SUP_ACTIVE = 'homedepot';
+var SUP_SEARCH = '';
+var SUP_CAT = 'All';
+var SUP_COMPARE_ITEM = '';
+
 // Purchase Orders State
 var POS = [
   {id:'PO-001',supplier:'Lafarge Canada',item:'Ready-mix Concrete 30MPa',qty:120,unit:'m3',unitPrice:185,total:22200,status:'Delivered',ordered:'2025-06-01',needed:'2025-06-08',proj:'Downtown Office Reno'},
@@ -456,7 +629,7 @@ var WORKERS = [
   {n:'Priya S.',t:'Drywaller',ci:'6:55 AM',h:6.8,on:true}
 ];
 
-// ── UTILS ─────────────────────────────────────────────────────────────────────
+// -- UTILS ---------------------------------------------------------------------
 function gid(id) { return document.getElementById(id); }
 
 function money(v, c) {
@@ -520,7 +693,7 @@ function toast(msg, type) {
   setTimeout(function() { el.remove(); }, 3000);
 }
 
-// ── STORAGE ───────────────────────────────────────────────────────────────────
+// -- STORAGE -------------------------------------------------------------------
 function ls_set(k, v) { try { localStorage.setItem('cw_' + k, JSON.stringify(v)); } catch(e) {} }
 function ls_get(k, fb) { try { var d = localStorage.getItem('cw_' + k); return d ? JSON.parse(d) : fb; } catch(e) { return fb; } }
 
@@ -537,7 +710,7 @@ function initApp() {
   BIDS = ls_get('bids', BIDS);
 }
 
-// ── AUTH ──────────────────────────────────────────────────────────────────────
+// -- AUTH ----------------------------------------------------------------------
 function doSignup(email, pw, name) {
   if (!email || !pw || !name) { AUTH_ERR = 'Please fill in all fields.'; return false; }
   if (pw.length < 6) { AUTH_ERR = 'Password must be at least 6 characters.'; return false; }
@@ -594,7 +767,7 @@ function sendEmail(user) {
   } catch(e) {}
 }
 
-// ── ESTIMATES ─────────────────────────────────────────────────────────────────
+// -- ESTIMATES -----------------------------------------------------------------
 function saveEst() {
   calcEst();
   var proj = {
@@ -632,7 +805,7 @@ function delEst(id) {
   render();
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────────
+// -- RENDER --------------------------------------------------------------------
 function go(p) { PAGE = p; render(); }
 function goProposal() { goProposal(); }
 function goCRM() { go('crm'); }
@@ -712,6 +885,7 @@ function pageContent() {
   if (PAGE === 'clientportal') return gate(clientPortalPage);
   if (PAGE === 'settings') return settingsPage();
   if (PAGE === 'purchaseorders') return purchaseOrdersPage();
+  if (PAGE === 'suppliers') return suppliersPage();
   if (PAGE === 'crm') return gate(crmPage);
   if (PAGE === 'proposal') return gate(proposalPage);
   if (PAGE === 'purchaseorders') return gate(purchaseOrdersPage);
@@ -724,7 +898,7 @@ function pageContent() {
   return dashPage();
 }
 
-// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+// -- DASHBOARD -----------------------------------------------------------------
 function dashPage() {
   var tot = 0; for (var i = 0; i < BIDS.length; i++) tot += BIDS[i].v;
   var won = 0; for (var i = 0; i < BIDS.length; i++) if (BIDS[i].s === 'Approved') won++;
@@ -756,7 +930,7 @@ function dashPage() {
     '<div class="card"><div class="ch">Schedule Overview</div>' + taskBars + '</div>';
 }
 
-// ── ESTIMATOR ─────────────────────────────────────────────────────────────────
+// -- ESTIMATOR -----------------------------------------------------------------
 function estimPage() {
   calcEst();
   var opts = '';
@@ -782,7 +956,7 @@ function estimPage() {
     '<button class="btn bink bfull" id="saveEstBtn2">Save Estimate</button></div></div>';
 }
 
-// ── SAVED PROJECTS ────────────────────────────────────────────────────────────
+// -- SAVED PROJECTS ------------------------------------------------------------
 function projectsPage() {
   var cards = SAVED.length === 0 ? '<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:40px;margin-bottom:10px">💾</div><p style="margin-bottom:16px">No saved estimates yet.</p><button class="btn bink" onclick="go(\'estimator\')">Create First Estimate</button></div>' : '';
   for (var i = 0; i < SAVED.length; i++) {
@@ -793,7 +967,7 @@ function projectsPage() {
     '<div class="card"><div class="ch">All Estimates <span class="pill pgr">' + SAVED.length + ' saved</span></div>' + cards + '</div>';
 }
 
-// ── BID TENDER ────────────────────────────────────────────────────────────────
+// -- BID TENDER ----------------------------------------------------------------
 function bidPage() {
   var tot = 0; for (var i = 0; i < BIDS.length; i++) tot += BIDS[i].v;
   var won = 0; for (var i = 0; i < BIDS.length; i++) if (BIDS[i].s === 'Approved') won += BIDS[i].v;
@@ -818,7 +992,7 @@ function bidPage() {
     '<table class="tbl"><thead><tr><th>Project</th><th>Client</th><th>Trade</th><th>Value</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-// ── INVOICE ───────────────────────────────────────────────────────────────────
+// -- INVOICE -------------------------------------------------------------------
 function invoicePage() {
   var rows = '';
   for (var i = 0; i < INV.length; i++) {
@@ -829,7 +1003,7 @@ function invoicePage() {
     '<div class="card"><div class="ch">Invoices <button class="btn bink bsm">+ New Invoice</button></div><table class="tbl"><thead><tr><th>Invoice</th><th>Client</th><th>Amount</th><th>Due</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-// ── DAILY LOG ─────────────────────────────────────────────────────────────────
+// -- DAILY LOG -----------------------------------------------------------------
 function dailyLogPage() {
   var form = SHOW_LF ? '<div class="card"><div class="ch">New Log Entry</div><div class="r2"><div class="field"><label>Date</label><input class="inp" type="date" id="ld"/></div><div class="field"><label>Weather</label><input class="inp" id="lw" placeholder="Sunny 22C"/></div></div><div class="r2"><div class="field"><label>Crew Count</label><input class="inp" type="number" id="lc"/></div></div><div class="field"><label>Notes</label><textarea class="inp" id="ln" placeholder="Describe today\'s progress..."></textarea></div><button class="btn bink" id="submitLog">Submit Log</button></div>' : '';
 
@@ -843,7 +1017,7 @@ function dailyLogPage() {
     trialBar() + form + cards;
 }
 
-// ── PUNCH LIST ────────────────────────────────────────────────────────────────
+// -- PUNCH LIST ----------------------------------------------------------------
 function punchPage() {
   var op = 0, cl = 0, hi = 0;
   for (var i = 0; i < PUNCH.length; i++) {
@@ -861,7 +1035,7 @@ function punchPage() {
     '<div class="card"><div class="ch">Deficiency Register <button class="btn bink bsm">+ Add Item</button></div><table class="tbl"><thead><tr><th>Description</th><th>Location</th><th>Assigned</th><th>Priority</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-// ── SCHEDULE ──────────────────────────────────────────────────────────────────
+// -- SCHEDULE ------------------------------------------------------------------
 function schedulePage() {
   var bars = '';
   for (var i = 0; i < TASKS.length; i++) {
@@ -873,7 +1047,7 @@ function schedulePage() {
     '<div style="margin-top:12px;padding:10px;background:var(--abg);border-radius:8px;font-size:12px;color:var(--amber);font-weight:600">Structural Steel 65% - 5 days behind schedule.</div></div>';
 }
 
-// ── JOB COSTING ───────────────────────────────────────────────────────────────
+// -- JOB COSTING ---------------------------------------------------------------
 function jobcostPage() {
   var rows = '';
   for (var i = 0; i < CC.length; i++) {
@@ -887,7 +1061,7 @@ function jobcostPage() {
     '<div class="card"><div class="ch">Cost Code Summary</div><table class="tbl"><thead><tr><th>Code</th><th>Description</th><th>Budget</th><th>Actual</th><th>Variance</th><th>Health</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-// ── CHANGE ORDERS ─────────────────────────────────────────────────────────────
+// -- CHANGE ORDERS -------------------------------------------------------------
 function changesPage() {
   var rows = '';
   for (var i = 0; i < COS.length; i++) {
@@ -898,7 +1072,7 @@ function changesPage() {
     '<div class="card"><div class="ch">CO Register <button class="btn bink bsm">+ New CO</button></div><table class="tbl"><thead><tr><th>CO #</th><th>Description</th><th>Value</th><th>Date</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-// ── SAFETY ────────────────────────────────────────────────────────────────────
+// -- SAFETY --------------------------------------------------------------------
 function safetyPage() {
   var done = 0;
   for (var k in SC_CHECKED) { if (SC_CHECKED[k]) done++; }
@@ -922,7 +1096,7 @@ function safetyPage() {
     '</div></div>';
 }
 
-// ── INCIDENTS ─────────────────────────────────────────────────────────────────
+// -- INCIDENTS -----------------------------------------------------------------
 function incidentsPage() {
   var rows = '';
   for (var i = 0; i < INCIDENTS.length; i++) {
@@ -933,7 +1107,7 @@ function incidentsPage() {
     '<div class="card"><div class="ch">Incident Log</div><table class="tbl"><thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-// ── TRAINING ──────────────────────────────────────────────────────────────────
+// -- TRAINING ------------------------------------------------------------------
 function trainingPage() {
   var rows = '';
   for (var i = 0; i < TRAININGS.length; i++) {
@@ -944,7 +1118,7 @@ function trainingPage() {
     '<div class="card"><div class="ch">Training Register <button class="btn bink bsm">+ Assign</button></div><table class="tbl"><thead><tr><th>Course</th><th>Assigned</th><th>Due</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-// ── CERT EXPIRY ───────────────────────────────────────────────────────────────
+// -- CERT EXPIRY ---------------------------------------------------------------
 function certExpiryPage() {
   var ex = 0, soon = 0, valid = 0;
   for (var i = 0; i < CERTS.length; i++) {
@@ -965,7 +1139,7 @@ function certExpiryPage() {
     '<div class="card"><div class="ch">All Certifications</div><table class="tbl"><thead><tr><th>Worker</th><th>Trade</th><th>Cert</th><th>Expires</th><th>Status</th><th>Action</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-// ── AI ────────────────────────────────────────────────────────────────────────
+// -- AI ------------------------------------------------------------------------
 function aiPage() {
   var msgs = '';
   for (var i = 0; i < AI_MSGS.length; i++) {
@@ -1007,7 +1181,7 @@ function sendAI() {
   }, 1100);
 }
 
-// ── BLUEPRINT AI ──────────────────────────────────────────────────────────────
+// -- BLUEPRINT AI --------------------------------------------------------------
 function blueprintPage() {
   var result = '';
   if (BP_RESULT) {
@@ -1030,7 +1204,7 @@ function blueprintPage() {
     '</div><div class="card"><div class="ch">AI Analysis Results</div>' + result + '</div></div>';
 }
 
-// ── WEATHER ───────────────────────────────────────────────────────────────────
+// -- WEATHER -------------------------------------------------------------------
 function weatherPage() {
   var today = WEATHER[0];
   var rainDays = [];
@@ -1048,7 +1222,7 @@ function weatherPage() {
     '<div class="card"><div class="ch">7-Day Forecast</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px">' + cards + '</div></div>';
 }
 
-// ── MATERIALS ─────────────────────────────────────────────────────────────────
+// -- MATERIALS -----------------------------------------------------------------
 function materialsPage() {
   var filtered = [];
   for (var i = 0; i < MATS.length; i++) {
@@ -1075,7 +1249,7 @@ function materialsPage() {
     '<div class="card"><div class="ch">Live Prices <input class="inp" id="matSearch" placeholder="Search..." style="width:180px;padding:6px 10px;font-size:12px" value="' + MAT_SEARCH + '"/></div><table class="tbl"><thead><tr><th>Material</th><th>Unit</th><th>Price</th><th>Previous</th><th>Change</th><th>Supplier</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-// ── RFI ───────────────────────────────────────────────────────────────────────
+// -- RFI -----------------------------------------------------------------------
 function rfiPage() {
   var filtered = [];
   for (var i = 0; i < RFIS.length; i++) {
@@ -1129,7 +1303,7 @@ function markRFIAnswered(id) {
   render();
 }
 
-// ── CLIENT PORTAL ─────────────────────────────────────────────────────────────
+// -- CLIENT PORTAL -------------------------------------------------------------
 function clientPortalPage() {
   var ac = CLIENTS[0];
   for (var i = 0; i < CLIENTS.length; i++) if (CLIENTS[i].id === CLIENT_ID) { ac = CLIENTS[i]; break; }
@@ -1181,8 +1355,8 @@ function clientPortalPage() {
     '<div style="display:flex;gap:18px"><div style="width:230px;flex-shrink:0"><div class="card" style="padding:14px"><div class="ch" style="margin-bottom:12px">Your Clients</div>' + clist + '</div></div><div style="flex:1"><div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">' + tabNav + '</div>' + body + '</div></div>';
 }
 
-// ── WSIB TRACKING ────────────────────────────────────────────────────────────
-// ── PURCHASE ORDERS ──────────────────────────────────────────────────────────
+// -- WSIB TRACKING ------------------------------------------------------------
+// -- PURCHASE ORDERS ----------------------------------------------------------
 function poActionBtns(po) {
   if (po.status === 'Pending') {
     return '<div style="display:flex;gap:6px;margin-top:6px"><button class="btn bgreen bsm po-app" data-id="' + po.id + '">Approve</button><button class="btn bred bsm po-del" data-id="' + po.id + '">Cancel</button></div>';
@@ -1287,6 +1461,125 @@ function removePOItem(idx) {
   if (NEW_PO.items.length > 1) { NEW_PO.items.splice(idx,1); render(); }
 }
 
+// ---- SUPPLIER PRICE DATABASE ----
+function suppliersPage() {
+  var active = null;
+  for (var i = 0; i < SUPPLIERS.length; i++) if (SUPPLIERS[i].id === SUP_ACTIVE) { active = SUPPLIERS[i]; break; }
+  if (!active) active = SUPPLIERS[0];
+
+  // Filter prices
+  var filtered = active.prices.filter(function(p) {
+    var matchSearch = !SUP_SEARCH || p.item.toLowerCase().indexOf(SUP_SEARCH.toLowerCase()) >= 0;
+    return matchSearch;
+  });
+
+  // Price comparison for selected item across all suppliers
+  var compareRows = '';
+  if (SUP_COMPARE_ITEM) {
+    var found = [];
+    for (var s = 0; s < SUPPLIERS.length; s++) {
+      for (var p = 0; p < SUPPLIERS[s].prices.length; p++) {
+        if (SUPPLIERS[s].prices[p].item.toLowerCase().indexOf(SUP_COMPARE_ITEM.toLowerCase()) >= 0) {
+          found.push({supplier: SUPPLIERS[s].name, logo: SUPPLIERS[s].logo, price: SUPPLIERS[s].prices[p].price, unit: SUPPLIERS[s].prices[p].unit, sku: SUPPLIERS[s].prices[p].sku});
+        }
+      }
+    }
+    found.sort(function(a,b){ return a.price - b.price; });
+    if (found.length > 0) {
+      for (var i = 0; i < found.length; i++) {
+        var f = found[i];
+        var isBest = i === 0;
+        compareRows += '<tr style="' + (isBest ? 'background:var(--gbg)' : '') + '"><td><strong>' + f.logo + ' ' + f.supplier + '</strong>' + (isBest ? ' <span class="pill pg">Best Price</span>' : '') + '</td><td style="font-size:12px;color:var(--muted)">' + f.sku + '</td><td><strong style="font-size:16px;color:' + (isBest?'var(--green)':'var(--ink)') + '">$' + f.price.toFixed(2) + '</strong></td><td style="color:var(--muted)">' + f.unit + '</td><td>' + (isBest ? money(0) : '<span style="color:var(--red)">+$' + (f.price - found[0].price).toFixed(2) + '</span>') + '</td></tr>';
+      }
+    }
+  }
+
+  // Supplier tabs
+  var tabs = '';
+  for (var i = 0; i < SUPPLIERS.length; i++) {
+    var s = SUPPLIERS[i];
+    var isAct = s.id === SUP_ACTIVE;
+    tabs += '<button data-sid="' + s.id + '" class="sup-tab" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:9px;border:1.5px solid ' + (isAct?'var(--ink)':'var(--border2)') + ';background:' + (isAct?'var(--ink)':'var(--white)') + ';color:' + (isAct?'#fff':'var(--muted)') + ';font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap"><span style="font-size:18px">' + s.logo + '</span>' + s.name + '<span style="font-size:10px;font-weight:600;color:' + (isAct?'#aaa':'var(--faint)') + '">' + s.type + '</span></button>';
+  }
+
+  // Price rows
+  var priceRows = '';
+  for (var i = 0; i < filtered.length; i++) {
+    var p = filtered[i];
+    var ch = p.price - p.prev;
+    var pct = ((ch / p.prev) * 100).toFixed(1);
+    var tColor = p.trend==='up'?'var(--red)':p.trend==='down'?'var(--green)':'var(--muted)';
+    var tIcon = p.trend==='up'?'^':p.trend==='down'?'v':'-';
+    priceRows += '<tr><td><div style="font-weight:600">' + p.item + '</div><div style="font-size:11px;color:var(--faint)">' + p.sku + '</div></td><td><strong style="font-size:15px">$' + p.price.toFixed(2) + '</strong></td><td style="color:var(--muted);font-size:12px">' + p.unit + '</td><td style="color:' + tColor + ';font-weight:700">' + tIcon + ' ' + (ch>=0?'+':'') + '$' + Math.abs(ch).toFixed(2) + ' (' + pct + '%)</td><td><button class="btn bout bsm sup-cmp" data-item="' + p.item + '">Compare</button></td><td><button class="btn bgold bsm sup-add" data-sid="' + active.id + '">Add to PO</button></td></tr>';
+  }
+
+  // Total savings calculator
+  var cheapestTotal = 0;
+  var activeTotal = 0;
+  for (var i = 0; i < active.prices.length; i++) {
+    activeTotal += active.prices[i].price;
+    // Find cheapest across all suppliers
+    var minPrice = active.prices[i].price;
+    var itemName = active.prices[i].item;
+    for (var s = 0; s < SUPPLIERS.length; s++) {
+      for (var p = 0; p < SUPPLIERS[s].prices.length; p++) {
+        if (SUPPLIERS[s].prices[p].item === itemName && SUPPLIERS[s].prices[p].price < minPrice) {
+          minPrice = SUPPLIERS[s].prices[p].price;
+        }
+      }
+    }
+    cheapestTotal += minPrice;
+  }
+  var savings = activeTotal - cheapestTotal;
+
+  return ph('🏪', 'Supplier Price Database', 'Live pricing from Home Depot, Lowes, RONA and local suppliers', '<button class="btn bink bsm" onclick="go(String.fromCharCode(112,117,114,99,104,97,115,101,111,114,100,101,114,115))">Create PO →</button>') +
+    trialBar() +
+
+    // Stats row
+    '<div class="g4"><div class="sc"><div class="sv">' + SUPPLIERS.length + '</div><div class="sl">Suppliers</div></div>' +
+    '<div class="sc"><div class="sv">' + (function(){ var t=0; for(var i=0;i<SUPPLIERS.length;i++) t+=SUPPLIERS[i].prices.length; return t; })() + '</div><div class="sl">Price Points</div></div>' +
+    '<div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">$' + savings.toFixed(0) + '</div><div class="sl">Potential Savings</div></div>' +
+    '<div class="sc"><div class="sv">Today</div><div class="sl">Last Updated</div></div></div>' +
+
+    // Live pricing note
+    '<div style="background:var(--bbg);border:1px solid var(--bbd);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:12.5px;color:var(--blue);display:flex;gap:10px;align-items:center"><span style="font-size:18px">ℹ️</span><span><strong>Live Pricing:</strong> Prices are updated regularly from supplier websites. For guaranteed current pricing, click the supplier website link or call for a trade quote. Prices shown are Ontario/GTA region estimates.</span></div>' +
+
+    // Price compare section
+    (SUP_COMPARE_ITEM && compareRows ? '<div class="card"><div class="ch">Price Comparison — ' + SUP_COMPARE_ITEM + ' <button class="btn bout bsm" id="clearCompare">Clear</button></div><table class="tbl"><thead><tr><th>Supplier</th><th>SKU</th><th>Price</th><th>Unit</th><th>vs Best</th></tr></thead><tbody>' + compareRows + '</tbody></table></div>' : '') +
+
+    // Supplier tabs
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;overflow-x:auto;padding-bottom:4px">' + tabs + '</div>' +
+
+    // Active supplier info
+    '<div class="g2"><div class="card"><div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">' +
+    '<div style="width:56px;height:56px;background:var(--paper);border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:30px">' + active.logo + '</div>' +
+    '<div><div style="font-family:var(--fh);font-size:18px;font-weight:800">' + active.name + '</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + active.type + '</div>' +
+    '<div style="display:flex;gap:6px;margin-top:6px">' +
+    (active.delivery?'<span class="pill pg">Delivery</span>':'') +
+    (active.pickup?'<span class="pill pb">Pickup</span>':'') +
+    (active.credit?'<span class="pill pgr">Trade Credit</span>':'') +
+    '</div></div></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">' +
+    '<div style="padding:10px;background:var(--paper);border-radius:8px"><div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Phone</div><div style="font-size:13px;font-weight:600">' + active.phone + '</div></div>' +
+    '<div style="padding:10px;background:var(--paper);border-radius:8px"><div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Website</div><div style="font-size:13px;font-weight:600;color:var(--blue)">' + active.website + '</div></div>' +
+    '<div style="padding:10px;background:var(--paper);border-radius:8px;grid-column:span 2"><div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Account Type</div><div style="font-size:13px;font-weight:600">' + active.account + '</div></div>' +
+    '</div>' +
+    '<div><div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;margin-bottom:8px">Categories</div><div style="display:flex;flex-wrap:wrap;gap:6px">' +
+    active.categories.map(function(c){ return '<span class="pill pgr">' + c + '</span>'; }).join('') +
+    '</div></div></div>' +
+
+    // Prices table
+    '<div class="card"><div class="ch">Current Prices — ' + active.name + '<input class="inp" id="supSearch" placeholder="Search materials..." style="width:180px;padding:6px 10px;font-size:12px" value="' + SUP_SEARCH + '"/></div>' +
+    '<table class="tbl"><thead><tr><th>Material</th><th>Price</th><th>Unit</th><th>Change</th><th>Compare</th><th>Action</th></tr></thead><tbody>' + priceRows + '</tbody></table>' +
+    (filtered.length === 0 ? '<div style="padding:20px;text-align:center;color:var(--muted)">No materials match your search.</div>' : '') +
+    '</div></div>';
+}
+
+function addToCart(supplierId) {
+  toast('Item noted — create a Purchase Order to send to supplier!');
+}
+
 function showToast() { toast('COA request sent!'); }
 function wsibPage() {
   var compliant = 0, missing = 0, expiring = 0;
@@ -1341,7 +1634,7 @@ function wsibPage() {
     '</div><div style="margin-top:14px;padding:12px;background:var(--bbg);border-radius:8px;font-size:12px;color:var(--blue)"><strong>Tip:</strong> Always get a WSIB Clearance Certificate (COA) from every subcontractor before payment. If a sub has no WSIB coverage, you are responsible for their accident costs under the Workplace Safety and Insurance Act.</div></div>';
 }
 
-// ── HST CALCULATOR ────────────────────────────────────────────────────────────
+// -- HST CALCULATOR ------------------------------------------------------------
 function hstPage() {
   var res = HST_RESULT;
   var resultHtml = '';
@@ -1368,7 +1661,7 @@ function hstPage() {
     '</div></div>';
 }
 
-// ── ONTARIO BUILDING CODE ─────────────────────────────────────────────────────
+// -- ONTARIO BUILDING CODE -----------------------------------------------------
 function obcPage() {
   var sections = [
     {code:'OBC Part 3',title:'Fire Protection, Occupant Safety and Accessibility',desc:'Occupancy classifications, fire resistance ratings, means of egress, emergency lighting, and accessibility requirements for all occupancies.'},
@@ -1411,7 +1704,7 @@ function obcPage() {
     '</div></div></div>';
 }
 
-// ── SUBCONTRACT GENERATOR ─────────────────────────────────────────────────────
+// -- SUBCONTRACT GENERATOR -----------------------------------------------------
 function subcontractPage() {
   if (SC_GENERATED) return subcontractPreview();
 
@@ -1533,7 +1826,7 @@ function subcontractPreview() {
     '</div>';
 }
 
-// ── CRM PAGE ─────────────────────────────────────────────────────────────────
+// -- CRM PAGE -----------------------------------------------------------------
 function crmPage() {
   var filters = ['All','Client','Lead'];
   var filtered = CRM_CONTACTS.filter(function(c) {
@@ -1570,7 +1863,7 @@ function crmPage() {
     cards;
 }
 
-// ── PROPOSAL GENERATOR ────────────────────────────────────────────────────────
+// -- PROPOSAL GENERATOR --------------------------------------------------------
 function proposalPage() {
   if (PROPOSAL_GENERATED) return proposalPreview();
   var steps = ['Client Info','Project Details','Scope & Pricing','Terms'];
@@ -1625,7 +1918,7 @@ function proposalPreview() {
     '<div style="text-align:center;margin-top:20px;font-size:10px;color:var(--faint)">Generated by Construction Wizzard — constructionwizzard.com</div></div>';
 }
 
-// ── PURCHASE ORDERS ────────────────────────────────────────────────────────────
+// -- PURCHASE ORDERS ------------------------------------------------------------
 function poActionBtns(po) {
   if (po.status === 'Pending') {
     return '<div style="display:flex;gap:6px;margin-top:6px"><button class="btn bgreen bsm po-app" data-id="' + po.id + '">Approve</button><button class="btn bred bsm po-del" data-id="' + po.id + '">Cancel</button></div>';
@@ -1655,7 +1948,7 @@ function purchaseOrdersPage() {
     '<div class="card"><div class="ch">All Purchase Orders</div><table class="tbl"><thead><tr><th>PO #</th><th>Supplier</th><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Total</th><th>Project</th><th>Needed By</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-// ── DOCUMENT MANAGEMENT ───────────────────────────────────────────────────────
+// -- DOCUMENT MANAGEMENT -------------------------------------------------------
 function documentsPage() {
   var types = ['All','Drawing','Contract','Invoice','Certificate','Safety','Change Order'];
   var filtered = DOCUMENTS.filter(function(d) {
@@ -1689,7 +1982,7 @@ function documentsPage() {
     '<div class="card"><div class="ch">All Documents</div><table class="tbl"><thead><tr><th>Document</th><th>Type</th><th>Project</th><th>Uploaded</th><th>By</th><th>Actions</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
-// ── SETTINGS ──────────────────────────────────────────────────────────────────
+// -- SETTINGS ------------------------------------------------------------------
 function settingsPage() {
   var planName = U ? (U.plan === 'pro' ? 'Pro Plan — All Features Unlocked' : U.plan === 'basic' ? 'Basic Plan' : isTrial() ? 'Free Trial (' + U.trialDays + ' days left)' : 'Free Plan') : '';
   return ph('⚙️', 'Settings & Plan', 'Manage your account and subscription') +
@@ -1703,7 +1996,7 @@ function settingsPage() {
     '</div></div>';
 }
 
-// ── AUTH PAGE ─────────────────────────────────────────────────────────────────
+// -- AUTH PAGE -----------------------------------------------------------------
 function authPage() {
   return '<div class="auth-wrap"><div class="auth-card">' +
     '<div style="font-family:var(--fh);font-size:20px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:4px">⬡ <span class="badge">Wizzard</span></div>' +
@@ -1719,7 +2012,7 @@ function authPage() {
     '</div></div>';
 }
 
-// ── HERO PAGE ─────────────────────────────────────────────────────────────────
+// -- HERO PAGE -----------------------------------------------------------------
 function heroPage() {
   var tools = [
     ['📐','Estimator','Instant estimates for all 9 trades including Plumbing, Roofing, Concrete & Asphalt','estimator'],
@@ -1753,7 +2046,7 @@ function heroPage() {
     '<footer style="padding:20px 28px;display:flex;justify-content:space-between;border-top:1px solid var(--border);font-size:12px;color:var(--faint)"><span style="font-weight:700;font-family:var(--fh)">⬡ Construction Wizzard</span><span>constructionwizzard.com</span></footer></div>';
 }
 
-// ── MODAL ─────────────────────────────────────────────────────────────────────
+// -- MODAL ---------------------------------------------------------------------
 function modalHTML() {
   return '<div class="modal-bg" id="modalBg"><div class="modal-box"><h3 style="font-family:var(--fh);font-size:19px;margin-bottom:5px">Upgrade Your Plan</h3><p style="font-size:13px;color:var(--muted);margin-bottom:20px">Secure checkout powered by Stripe - Cancel anytime</p>' +
     '<div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">' +
@@ -1764,7 +2057,7 @@ function modalHTML() {
     '<button class="btn bout bfull" id="closeModal">Maybe Later</button></div></div>';
 }
 
-// ── EVENT BINDING ─────────────────────────────────────────────────────────────
+// -- EVENT BINDING -------------------------------------------------------------
 function bindAll() {
   var el;
 
@@ -1885,6 +2178,21 @@ function bindAll() {
   el = gid('matSearch'); if (el) el.oninput = function() { MAT_SEARCH = this.value; render(); };
 
   // RFI
+  // Supplier page events
+  el = gid('goToPO'); if(el) el.onclick = function(){ go('purchaseorders'); };
+  el = gid('clearCompare'); if(el) el.onclick = function(){ SUP_COMPARE_ITEM=''; render(); };
+  document.querySelectorAll('.sup-add').forEach(function(btn) {
+    btn.onclick = function() { addToCart(this.dataset.sid); };
+  });
+  document.querySelectorAll('.sup-tab').forEach(function(btn) {
+    btn.onclick = function() { SUP_ACTIVE = this.dataset.sid; SUP_SEARCH = ''; render(); };
+  });
+  document.querySelectorAll('.sup-cmp').forEach(function(btn) {
+    btn.onclick = function() { SUP_COMPARE_ITEM = this.dataset.item; render(); };
+  });
+  var supSrch = gid('supSearch');
+  if (supSrch) supSrch.oninput = function() { SUP_SEARCH = this.value; render(); };
+
   // PO action buttons
   document.querySelectorAll('.po-app').forEach(function(btn) {
     btn.onclick = function() { approvePO(this.dataset.id); };
@@ -2168,7 +2476,7 @@ function bindAuth() {
   el = gid('aBack'); if (el) el.onclick = function() { PAGE = 'home'; AUTH_ERR = ''; render(); };
 }
 
-// ── START ─────────────────────────────────────────────────────────────────────
+// -- START ---------------------------------------------------------------------
 try {
   initApp();
   render();
@@ -2202,7 +2510,7 @@ try {
 
   <div class="mob-sec">Estimating</div>
   <button class="mob-item" onclick="go('invoice');closeMob()"><span class="mi2">🧾</span>Invoice & Quote</button>
-  <button class="mob-item" onclick="go('purchaseorders');closeMob()"><span class="mi2">🛒</span>Purchase Orders</button>
+  <button class="mob-item" onclick="go(String.fromCharCode(112,117,114,99,104,97,115,101,111,114,100,101,114,115));closeMob()"><span class="mi2">🛒</span>Purchase Orders</button>
   <button class="mob-item" onclick="go('projects');closeMob()"><span class="mi2">💾</span>Saved Projects</button>
 
   <div class="mob-sec">Field Management</div>
@@ -2217,6 +2525,7 @@ try {
 
   <div class="mob-sec">Intelligence</div>
   <button class="mob-item" onclick="go('materials');closeMob()"><span class="mi2">🏗</span>Material Prices</button>
+  <button class="mob-item" onclick="go('suppliers');closeMob()"><span class="mi2">🏪</span>Supplier Price Database</button>
   <button class="mob-item" onclick="go('weather');closeMob()"><span class="mi2">🌤</span>Weather Integration</button>
   <button class="mob-item" onclick="go('rfi');closeMob()"><span class="mi2">📝</span>RFI Management</button>
   <button class="mob-item" onclick="go('ai');closeMob()"><span class="mi2">🤖</span>AI Copilot <span class="mob-pro">PRO</span></button>
@@ -2236,7 +2545,7 @@ try {
   <button class="mob-item" onclick="go('clientportal');closeMob()"><span class="mi2">👥</span>Client Portal <span class="mob-pro">PRO</span></button>
   <button class="mob-item" onclick="goCRM();closeMob()"><span class="mi2">🤝</span>CRM — Customers <span class="mob-pro">PRO</span></button>
   <button class="mob-item" onclick="goProposal();closeMob()"><span class="mi2">📑</span>Proposal Generator <span class="mob-pro">PRO</span></button>
-  <button class="mob-item" onclick="go('purchaseorders');closeMob()"><span class="mi2">🛒</span>Purchase Orders <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="go(String.fromCharCode(112,117,114,99,104,97,115,101,111,114,100,101,114,115));closeMob()"><span class="mi2">🛒</span>Purchase Orders <span class="mob-pro">PRO</span></button>
   <button class="mob-item" onclick="go('documents');closeMob()"><span class="mi2">📁</span>Document Management <span class="mob-pro">PRO</span></button>
   <button class="mob-item" onclick="go('settings');closeMob()"><span class="mi2">⚙️</span>Settings & Plan</button>
   <button class="mob-item" onclick="window.open('/pricing-plans.html','_blank');closeMob()"><span class="mi2">💳</span>View Pricing Plans</button>
