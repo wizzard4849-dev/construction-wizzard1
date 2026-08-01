@@ -178,12 +178,15 @@ var NAV = [
     {id:'estimator',i:'📐',l:'Estimator'},
     {id:'projects',i:'💾',l:'Saved Projects'},
     {id:'bidtender',i:'📋',l:'Bid Tender'},
-    {id:'invoice',i:'🧾',l:'Invoice & Quote'}
+    {id:'invoice',i:'🧾',l:'Invoice & Quote'},
+    {id:'proposal',i:'📑',l:'Proposal Generator',pro:true},
+    {id:'purchaseorders',i:'🛒',l:'Purchase Orders',pro:true}
   ]},
   {s:'Field', items:[
     {id:'dailylog',i:'📓',l:'Daily Logs'},
     {id:'punchlist',i:'✅',l:'Punch Lists',pro:true},
-    {id:'schedule',i:'📅',l:'Schedule'}
+    {id:'schedule',i:'📅',l:'Schedule'},
+    {id:'documents',i:'📁',l:'Document Management',pro:true}
   ]},
   {s:'Finance', items:[
     {id:'jobcost',i:'💰',l:'Job Costing',pro:true},
@@ -202,8 +205,9 @@ var NAV = [
     {id:'materials',i:'🏗',l:'Material Prices'},
     {id:'rfi',i:'📝',l:'RFI Management',pro:true}
   ]},
-  {s:'Clients', items:[
-    {id:'clientportal',i:'👥',l:'Client Portal',pro:true}
+  {s:'Clients & CRM', items:[
+    {id:'clientportal',i:'👥',l:'Client Portal',pro:true},
+    {id:'crm',i:'🤝',l:'CRM — Customers',pro:true}
   ]},
   {s:'Ontario / Canada', items:[
     {id:'wsib',i:'🏛',l:'WSIB Tracking',pro:true},
@@ -359,6 +363,16 @@ var BP_RESULT = null;
 var AI_MSGS = [{r:'ai',t:'Hi! I am your Construction AI Copilot. Ask about project status, budget risks, safety concerns, or task planning.'}];
 var AI_LOADING = false;
 
+// Purchase Orders State
+var POS = [
+  {id:'PO-0041',supplier:'Home Depot Pro',items:[{desc:'Lumber 2x4x8',qty:200,unit:'piece',cost:8.49},{desc:'Drywall 4x8',qty:150,unit:'sheet',cost:12.99}],total:3696.50,status:'Approved',date:'2025-06-08',due:'2025-06-15',project:'Downtown Office Reno',notes:'Deliver to site entrance'},
+  {id:'PO-0040',supplier:'Lafarge Concrete',items:[{desc:'Ready-mix Concrete',qty:12,unit:'m3',cost:185.00}],total:2220.00,status:'Delivered',date:'2025-06-05',due:'2025-06-10',project:'Warehouse Electrical',notes:''},
+  {id:'PO-0039',supplier:'Metals Plus',items:[{desc:'Structural Steel W8x31',qty:4,unit:'tonne',cost:1240.00}],total:4960.00,status:'Pending',date:'2025-06-10',due:'2025-06-20',project:'Downtown Office Reno',notes:'Confirm lead time with supplier'}
+];
+var SHOW_PO_FORM = false;
+var PO_FILTER = 'All';
+var NEW_PO = {supplier:'',project:'',due:'',notes:'',items:[{desc:'',qty:1,unit:'piece',cost:0}]};
+
 // WSIB State
 var WSIB_WORKERS = [
   {id:1,n:'James H.',trade:'Framer',wsib:'7000012345',rate:2.85,hrs:1240,wages:61400,prem:1750,s:'Compliant',exp:'2026-03-31'},
@@ -388,6 +402,52 @@ var SC_FORM = {
 };
 var SC_STEP = 1;
 var SC_GENERATED = false;
+
+// CRM State
+var CRM_CONTACTS = [
+  {id:1,n:'David Chen',co:'North Star Builders',email:'david@northstar.com',phone:'416-555-0101',type:'Client',status:'Active',value:148200,jobs:3,lastContact:'2025-06-10',notes:'Prefers email. Interested in expanding to 3 more floors.'},
+  {id:2,n:'Maria Santos',co:'Apex Construction',email:'maria@apex.com',phone:'905-555-0202',type:'Client',status:'Active',value:93500,jobs:1,lastContact:'2025-06-01',notes:'Happy with electrical work. Potential roofing contract coming.'},
+  {id:3,n:'James Okafor',co:'Prime GC Ltd.',email:'jokafor@primegc.ca',phone:'647-555-0303',type:'Lead',status:'Prospect',value:0,jobs:0,lastContact:'2025-06-08',notes:'Met at trade show. Needs drywall sub for 4 upcoming projects.'},
+  {id:4,n:'Priya Sharma',co:'Skyline Developers',email:'priya@skyline.ca',phone:'416-555-0404',type:'Lead',status:'Quoted',value:280000,jobs:0,lastContact:'2025-06-05',notes:'Sent quote for full concrete package. Following up June 20.'}
+];
+var CRM_FILTER = 'All';
+var CRM_SHOW_FORM = false;
+
+// Proposal State
+var PROPOSAL_STEP = 1;
+var PROPOSAL_GENERATED = false;
+var PROPOSAL_FORM = {
+  clientName:'', clientEmail:'', clientCo:'', clientAddr:'',
+  projName:'', projAddr:'', projScope:'', trade:'drywall',
+  startDate:'', endDate:'', totalAmt:'',
+  inclusions:'All labour, materials and equipment as per scope|Supervision and project management|Cleanup and waste disposal|All required permits and inspections',
+  exclusions:'Design fees|Engineering and architectural drawings|Furnishings and equipment|Items not specifically listed in scope',
+  validity:'30',
+  terms:'50% deposit upon acceptance, 40% at substantial completion, 10% holdback released 46 days after substantial performance per Ontario Construction Act.'
+};
+
+// Purchase Orders State
+var POS = [
+  {id:'PO-001',supplier:'Lafarge Canada',item:'Ready-mix Concrete 30MPa',qty:120,unit:'m3',unitPrice:185,total:22200,status:'Delivered',ordered:'2025-06-01',needed:'2025-06-08',proj:'Downtown Office Reno'},
+  {id:'PO-002',supplier:'Home Depot Pro',item:'Drywall 4x8 Sheets',qty:850,unit:'sheets',unitPrice:12.99,total:11041,status:'Pending',ordered:'2025-06-10',needed:'2025-06-17',proj:'Downtown Office Reno'},
+  {id:'PO-003',supplier:'Metals Plus Inc.',item:'Structural Steel W200x100',qty:18,unit:'tonnes',unitPrice:1240,total:22320,status:'Ordered',ordered:'2025-06-05',needed:'2025-06-20',proj:'Warehouse Electrical'},
+  {id:'PO-004',supplier:'Electrical Plus',item:'Copper Wire 14AWG',qty:40,unit:'rolls',unitPrice:89.99,total:3599,status:'Pending',ordered:'2025-06-10',needed:'2025-06-15',proj:'Warehouse Electrical'}
+];
+var SHOW_PO_FORM = false;
+
+// Document Management State
+var DOCUMENTS = [
+  {id:1,name:'Downtown Office — Architectural Drawings Rev 3',type:'Drawing',proj:'Downtown Office Reno',size:'8.4 MB',uploaded:'2025-06-05',by:'GC',url:'#'},
+  {id:2,name:'Project Contract — North Star Builders Signed',type:'Contract',proj:'Downtown Office Reno',size:'1.2 MB',uploaded:'2025-06-01',by:'Client',url:'#'},
+  {id:3,name:'Invoice INV-0041',type:'Invoice',proj:'Downtown Office Reno',size:'0.3 MB',uploaded:'2025-06-01',by:'GC',url:'#'},
+  {id:4,name:'WSIB Clearance Certificate — Apex Electrical',type:'Certificate',proj:'Warehouse Electrical',size:'0.2 MB',uploaded:'2025-05-28',by:'Sub',url:'#'},
+  {id:5,name:'Safety Inspection Report June 10',type:'Safety',proj:'Downtown Office Reno',size:'0.5 MB',uploaded:'2025-06-10',by:'GC',url:'#'},
+  {id:6,name:'Structural Engineer Stamp — Foundation Rev 2',type:'Drawing',proj:'Downtown Office Reno',size:'3.1 MB',uploaded:'2025-06-03',by:'Engineer',url:'#'},
+  {id:7,name:'Change Order CO-002 — Lobby Upgrade Approved',type:'Change Order',proj:'Downtown Office Reno',size:'0.4 MB',uploaded:'2025-06-08',by:'Client',url:'#'},
+  {id:8,name:'Subcontract — FastFrame Carpentry Signed',type:'Contract',proj:'Warehouse Electrical',size:'0.8 MB',uploaded:'2025-05-30',by:'GC',url:'#'}
+];
+var DOC_FILTER = 'All';
+var DOC_SEARCH = '';
 
 var WORKERS = [
   {n:'James H.',t:'Framer',ci:'7:02 AM',h:6.5,on:true},
@@ -574,6 +634,8 @@ function delEst(id) {
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function go(p) { PAGE = p; render(); }
+function goProposal() { goProposal(); }
+function goCRM() { go('crm'); }
 
 function render() {
   var el = gid('app');
@@ -649,6 +711,11 @@ function pageContent() {
   if (PAGE === 'rfi') return rfiPage();
   if (PAGE === 'clientportal') return gate(clientPortalPage);
   if (PAGE === 'settings') return settingsPage();
+  if (PAGE === 'purchaseorders') return purchaseOrdersPage();
+  if (PAGE === 'crm') return gate(crmPage);
+  if (PAGE === 'proposal') return gate(proposalPage);
+  if (PAGE === 'purchaseorders') return gate(purchaseOrdersPage);
+  if (PAGE === 'documents') return gate(documentsPage);
   if (PAGE === 'pricing') { window.open('/pricing-plans.html','_blank'); PAGE='settings'; return settingsPage(); }
   if (PAGE === 'wsib') return wsibPage();
   if (PAGE === 'hst') return hstPage();
@@ -1073,7 +1140,6 @@ function clientPortalPage() {
 
   var clist = '';
   for (var i = 0; i < CLIENTS.length; i++) {
-    var c = CLIENTS[i];
     var sel = c.id === CLIENT_ID;
     clist += '<div onclick="CLIENT_ID=' + c.id + ';render()" style="padding:11px;border-radius:9px;cursor:pointer;margin-bottom:6px;background:' + (sel ? 'var(--ink)' : 'var(--paper)') + '"><div style="font-size:13px;font-weight:700;color:' + (sel ? '#fff' : 'var(--ink)') + '">' + c.n + '</div><div style="font-size:11px;color:' + (sel ? '#aaa' : 'var(--muted)') + ';margin-top:2px">' + c.proj + '</div><div style="margin-top:6px;height:3px;background:' + (sel ? '#444' : 'var(--border)') + ';border-radius:99px;overflow:hidden"><div style="height:100%;width:' + c.pct + '%;background:var(--blue);border-radius:99px"></div></div></div>';
   }
@@ -1116,6 +1182,111 @@ function clientPortalPage() {
 }
 
 // ── WSIB TRACKING ────────────────────────────────────────────────────────────
+// ── PURCHASE ORDERS ──────────────────────────────────────────────────────────
+function poActionBtns(po) {
+  if (po.status === 'Pending') {
+    return '<div style="display:flex;gap:6px;margin-top:6px"><button class="btn bgreen bsm po-app" data-id="' + po.id + '">Approve</button><button class="btn bred bsm po-del" data-id="' + po.id + '">Cancel</button></div>';
+  }
+  if (po.status === 'Approved') {
+    return '<button class="btn bink bsm po-dlv" data-id="' + po.id + '" style="margin-top:6px">Mark Delivered</button>';
+  }
+  return '';
+}
+function purchaseOrdersPage() {
+  var filters = ['All','Pending','Approved','Delivered'];
+  var filtered = POS.filter(function(p) {
+    return PO_FILTER === 'All' || p.status === PO_FILTER;
+  });
+
+  var totalPending = 0, totalApproved = 0, totalDelivered = 0;
+  for (var i = 0; i < POS.length; i++) {
+    if (POS[i].status === 'Pending') totalPending += POS[i].total;
+    if (POS[i].status === 'Approved') totalApproved += POS[i].total;
+    if (POS[i].status === 'Delivered') totalDelivered += POS[i].total;
+  }
+  var grandTotal = 0;
+  for (var i = 0; i < POS.length; i++) grandTotal += POS[i].total;
+
+  var filterBtns = '';
+  for (var i = 0; i < filters.length; i++) {
+    var f = filters[i];
+    var fa = PO_FILTER===f;
+    filterBtns += '<button data-f="' + f + '" class="po-fb" style="padding:6px 14px;border-radius:7px;border:1px solid ' + (fa?'var(--ink)':'var(--border2)') + ';background:' + (fa?'var(--ink)':'transparent') + ';color:' + (fa?'#fff':'var(--muted)') + ';font-size:12px;font-weight:600;cursor:pointer">' + f + '</button>';
+  }
+
+  var form = '';
+  if (SHOW_PO_FORM) {
+    var itemRows = '';
+    for (var i = 0; i < NEW_PO.items.length; i++) {
+      var it = NEW_PO.items[i];
+      itemRows += '<div style="display:grid;grid-template-columns:2fr 80px 80px 100px 36px;gap:8px;margin-bottom:8px;align-items:center"><input class="inp" placeholder="Description" id="pid_' + i + '" value="' + it.desc + '" style="font-size:12px;padding:7px 9px"/><input class="inp" type="number" placeholder="Qty" id="piq_' + i + '" value="' + it.qty + '" style="font-size:12px;padding:7px 9px"/><input class="inp" placeholder="Unit" id="piu_' + i + '" value="' + it.unit + '" style="font-size:12px;padding:7px 9px"/><input class="inp" type="number" placeholder="Cost $" id="pic_' + i + '" value="' + it.cost + '" style="font-size:12px;padding:7px 9px"/><button onclick="removePOItem(' + i + ')" style="background:var(--rbg);color:var(--red);border:none;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:16px">×</button></div>';
+    }
+    var poTotal = 0;
+    for (var i = 0; i < NEW_PO.items.length; i++) poTotal += (NEW_PO.items[i].qty * NEW_PO.items[i].cost);
+
+    form = '<div class="card"><div class="ch">New Purchase Order</div>' +
+      '<div class="r2"><div class="field"><label>Supplier</label><input class="inp" id="poSupplier" placeholder="Home Depot Pro" value="' + NEW_PO.supplier + '"/></div><div class="field"><label>Project</label><input class="inp" id="poProject" placeholder="Downtown Office Reno" value="' + NEW_PO.project + '"/></div></div>' +
+      '<div class="r2"><div class="field"><label>Required By Date</label><input class="inp" type="date" id="poDue" value="' + NEW_PO.due + '"/></div></div>' +
+      '<div class="field"><label>Line Items</label>' +
+      '<div style="background:var(--paper);border-radius:9px;padding:12px;margin-bottom:8px">' +
+      '<div style="display:grid;grid-template-columns:2fr 80px 80px 100px 36px;gap:8px;margin-bottom:8px"><div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase">Description</div><div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase">Qty</div><div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase">Unit</div><div style="font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase">Unit Cost</div><div></div></div>' +
+      itemRows +
+      '<button class="btn bout bsm" id="addPOItem" style="margin-top:4px">+ Add Line</button>' +
+      '<div style="display:flex;justify-content:flex-end;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:14px;font-weight:800">PO Total: <span style="color:var(--green)">' + money(poTotal) + '</span></div></div>' +
+      '</div></div>' +
+      '<div class="field"><label>Notes</label><textarea class="inp" id="poNotes" placeholder="Delivery instructions, contact info...">' + NEW_PO.notes + '</textarea></div>' +
+      '<div style="display:flex;gap:8px"><button class="btn bink" id="submitPO">Create Purchase Order</button><button class="btn bout" id="cancelPO">Cancel</button></div>' +
+      '</div>';
+  }
+
+  var cards = '';
+  for (var i = 0; i < filtered.length; i++) {
+    var po = filtered[i];
+    var itemList = '';
+    for (var j = 0; j < po.items.length; j++) {
+      var it = po.items[j];
+      itemList += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:.5px solid var(--border);font-size:12.5px"><span>' + it.desc + ' <span style="color:var(--faint)">(' + it.qty + ' ' + it.unit + ')</span></span><strong>' + money(it.qty * it.cost) + '</strong></div>';
+    }
+    var statusColor = po.status==='Delivered'?'var(--green)':po.status==='Approved'?'var(--blue)':'var(--amber)';
+    cards += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">' +
+      '<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-family:var(--fh);font-size:15px;font-weight:800">' + po.id + '</span>' + pill(po.status) + '</div>' +
+      '<div style="font-size:13px;font-weight:600">' + po.supplier + '</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px">Project: ' + po.project + ' &nbsp;·&nbsp; Required by: ' + po.due + '</div></div>' +
+      '<div style="text-align:right"><div style="font-family:var(--fh);font-size:20px;font-weight:800;color:var(--green)">' + money(po.total) + '</div>' +
+      poActionBtns(po) +
+      '</div></div>' +
+      '<div style="background:var(--paper);border-radius:9px;padding:12px;margin-bottom:10px">' + itemList + '<div style="display:flex;justify-content:flex-end;padding-top:8px;font-size:13px;font-weight:800">Total: ' + money(po.total) + '</div></div>' +
+      (po.notes?'<div style="font-size:12px;color:var(--muted);font-style:italic">Note: ' + po.notes + '</div>':'') +
+      '</div>';
+  }
+
+  return ph('🛒', 'Purchase Orders', 'Track and manage all material and supplier orders', '<button class="btn bink bsm" id="showPOForm">' + (SHOW_PO_FORM?'Cancel':'+ New PO') + '</button>') +
+    trialBar() +
+    '<div class="g4"><div class="sc"><div class="sv">' + POS.length + '</div><div class="sl">Total POs</div></div>' +
+    '<div class="sc" style="background:var(--abg)"><div class="sv" style="color:var(--amber)">' + money(totalPending) + '</div><div class="sl">Pending</div></div>' +
+    '<div class="sc" style="background:var(--bbg)"><div class="sv" style="color:var(--blue)">' + money(totalApproved) + '</div><div class="sl">Approved</div></div>' +
+    '<div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">' + money(grandTotal) + '</div><div class="sl">Total Ordered</div></div></div>' +
+    form +
+    '<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">' + filterBtns + '</div>' +
+    cards;
+}
+
+function approvePO(id) {
+  for (var i = 0; i < POS.length; i++) if (POS[i].id===id) { POS[i].status='Approved'; break; }
+  toast('PO approved!'); render();
+}
+function markPODelivered(id) {
+  for (var i = 0; i < POS.length; i++) if (POS[i].id===id) { POS[i].status='Delivered'; break; }
+  toast('PO marked as delivered!'); render();
+}
+function deletePO(id) {
+  POS = POS.filter(function(p){ return p.id!==id; });
+  toast('PO cancelled.','err'); render();
+}
+function removePOItem(idx) {
+  if (NEW_PO.items.length > 1) { NEW_PO.items.splice(idx,1); render(); }
+}
+
 function showToast() { toast('COA request sent!'); }
 function wsibPage() {
   var compliant = 0, missing = 0, expiring = 0;
@@ -1295,9 +1466,7 @@ function subcontractPage() {
       '</div>' +
       '<div style="padding:12px;background:var(--bbg);border-radius:9px;font-size:12px;color:var(--blue);margin-bottom:16px">This subcontract will be generated in accordance with the Ontario Construction Act (R.S.O. 1990), Workplace Safety and Insurance Act, and Ontario Building Code.</div>' +
       '<div style="display:flex;gap:8px;margin-top:8px"><button class="btn bout" id="scBack5">← Back</button><button class="btn bgold" id="scGenerate">Generate Subcontract →</button></div></div>';
-  }
-
-  return ph('📃', 'Subcontract Generator', 'Create a professional Ontario-compliant subcontract in minutes', '') +
+  }  return ph('📃', 'Subcontract Generator', 'Create a professional Ontario-compliant subcontract in minutes', '') +
     stepNav + form;
 }
 
@@ -1362,6 +1531,162 @@ function subcontractPreview() {
     '</div>' +
     '<div style="text-align:center;margin-top:20px;font-size:10px;color:var(--faint)">Generated by Construction Wizzard — constructionwizzard.com — This document is for informational purposes. Consult a lawyer for legal advice.</div>' +
     '</div>';
+}
+
+// ── CRM PAGE ─────────────────────────────────────────────────────────────────
+function crmPage() {
+  var filters = ['All','Client','Lead'];
+  var filtered = CRM_CONTACTS.filter(function(c) {
+    return CRM_FILTER === 'All' || c.type === CRM_FILTER;
+  });
+  var totalValue = 0;
+  for (var i = 0; i < CRM_CONTACTS.length; i++) totalValue += CRM_CONTACTS[i].value;
+  var clients = 0, leads = 0;
+  for (var i = 0; i < CRM_CONTACTS.length; i++) {
+    if (CRM_CONTACTS[i].type === 'Client') clients++;
+    else leads++;
+  }
+
+  var filterBtns = '';
+  for (var i = 0; i < filters.length; i++) {
+    var f = filters[i];
+    var fb=CRM_FILTER===f; filterBtns+='<button class="crm-f" data-f="'+f+'" style="padding:6px 14px;border-radius:7px;border:1px solid '+(fb?'var(--ink)':'var(--border2)')+';background:'+(fb?'var(--ink)':'transparent')+';color:'+(fb?'#fff':'var(--muted)')+';font-size:12px;font-weight:600;cursor:pointer">'+f+'s</button>';
+  }
+
+  var form = CRM_SHOW_FORM ? '<div class="card"><div class="ch">Add New Contact</div><div class="r2"><div class="field"><label>Full Name</label><input class="inp" id="crmName" placeholder="David Chen"/></div><div class="field"><label>Company</label><input class="inp" id="crmCo" placeholder="North Star Builders"/></div></div><div class="r2"><div class="field"><label>Email</label><input class="inp" id="crmEmail" type="email" placeholder="david@company.com"/></div><div class="field"><label>Phone</label><input class="inp" id="crmPhone" placeholder="416-555-0100"/></div></div><div class="r2"><div class="field"><label>Type</label><select class="inp" id="crmType"><option>Client</option><option>Lead</option><option>Subcontractor</option></select></div><div class="field"><label>Status</label><select class="inp" id="crmStatus"><option>Active</option><option>Prospect</option><option>Quoted</option><option>Inactive</option></select></div></div><div class="field"><label>Notes</label><textarea class="inp" id="crmNotes" placeholder="Any notes about this contact..."></textarea></div><button class="btn bink" id="saveCRM">Save Contact</button></div>' : '';
+
+  var cards = '';
+  for (var i = 0; i < filtered.length; i++) {
+    var c = filtered[i];
+    var typeColor = c.type === 'Client' ? 'var(--green)' : 'var(--blue)';
+    var typeBg = c.type === 'Client' ? 'var(--gbg)' : 'var(--bbg)';
+    cards += '<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="display:flex;gap:12px;align-items:flex-start"><div style="width:42px;height:42px;border-radius:50%;background:' + typeBg + ';color:' + typeColor + ';display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:16px;font-weight:800;flex-shrink:0">' + c.n.charAt(0) + '</div><div><div style="font-size:14px;font-weight:700">' + c.n + '</div><div style="font-size:12px;color:var(--muted)">' + c.co + '</div><div style="font-size:11px;color:var(--faint);margin-top:2px">' + c.email + ' · ' + c.phone + '</div></div></div><div style="text-align:right"><span class="pill ' + (c.type==='Client'?'pg':'pb') + '">' + c.type + '</span><div style="font-size:10.5px;color:var(--faint);margin-top:4px">Last contact: ' + c.lastContact + '</div>' + (c.value > 0 ? '<div style="font-size:13px;font-weight:700;color:var(--green);margin-top:2px">' + money(c.value) + '</div>' : '') + '</div></div>' + (c.notes ? '<div style="margin-top:10px;padding:9px 12px;background:var(--paper);border-radius:8px;font-size:12px;color:var(--muted);border-left:3px solid var(--border2)">' + c.notes + '</div>' : '') + '<div style="display:flex;gap:8px;margin-top:12px"><button class="btn bgreen bsm" onclick="toast(String.fromCharCode(69,109,97,105,108,33))">Send Email</button><button class="btn bout bsm" onclick="toast(String.fromCharCode(78,111,116,101,33))">Add Note</button><button class="btn bink bsm" onclick="goProposal()">Create Proposal</button></div></div>';
+  }
+
+  return ph('🤝', 'CRM — Customers', 'Manage clients, leads and relationships', '<button class="btn bink bsm" id="showCRMForm">' + (CRM_SHOW_FORM ? 'Cancel' : '+ Add Contact') + '</button>') +
+    '<div class="g4"><div class="sc"><div class="sv">' + CRM_CONTACTS.length + '</div><div class="sl">Total Contacts</div></div><div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">' + clients + '</div><div class="sl">Clients</div></div><div class="sc" style="background:var(--bbg)"><div class="sv" style="color:var(--blue)">' + leads + '</div><div class="sl">Leads</div></div><div class="sc"><div class="sv">' + money(totalValue) + '</div><div class="sl">Total Value</div></div></div>' +
+    form +
+    '<div style="display:flex;gap:6px;margin-bottom:14px">' + filterBtns + '</div>' +
+    cards;
+}
+
+// ── PROPOSAL GENERATOR ────────────────────────────────────────────────────────
+function proposalPage() {
+  if (PROPOSAL_GENERATED) return proposalPreview();
+  var steps = ['Client Info','Project Details','Scope & Pricing','Terms'];
+  var stepNav = '<div style="display:flex;gap:0;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid var(--border)">';
+  for (var i = 0; i < steps.length; i++) {
+    var active = PROPOSAL_STEP === i+1;
+    var done = PROPOSAL_STEP > i+1;
+    stepNav += '<div style="flex:1;padding:10px 4px;text-align:center;font-size:11px;font-weight:700;background:' + (active?'var(--ink)':done?'var(--gbg)':'var(--paper)') + ';color:' + (active?'#fff':done?'var(--green)':'var(--faint)') + ';border-right:1px solid var(--border)">' + (done?'✓ ':'') + steps[i] + '</div>';
+  }
+  stepNav += '</div>';
+
+  var form = '';
+  if (PROPOSAL_STEP === 1) {
+    // Pre-fill from CRM if available
+    form = '<div class="card"><div class="ch">Step 1 — Client Information</div><div class="r2"><div class="field"><label>Client Name</label><input class="inp" id="pr_cname" value="' + PROPOSAL_FORM.clientName + '" placeholder="David Chen"/></div><div class="field"><label>Company</label><input class="inp" id="pr_cco" value="' + PROPOSAL_FORM.clientCo + '" placeholder="North Star Builders"/></div></div><div class="r2"><div class="field"><label>Email</label><input class="inp" id="pr_cemail" type="email" value="' + PROPOSAL_FORM.clientEmail + '" placeholder="david@company.com"/></div></div><div class="field"><label>Client Address</label><input class="inp" id="pr_caddr" value="' + PROPOSAL_FORM.clientAddr + '" placeholder="123 Main St, Toronto ON"/></div><div style="margin-top:12px;padding:12px;background:var(--bbg);border-radius:9px;font-size:12.5px;color:var(--blue)">Tip: You can import contact info directly from your CRM by visiting <button class="btn bout bsm" style="margin-left:6px" onclick="goCRM()">CRM Contacts</button></div><button class="btn bink" id="prNext1" style="margin-top:14px">Next: Project Details →</button></div>';
+  } else if (PROPOSAL_STEP === 2) {
+    form = '<div class="card"><div class="ch">Step 2 — Project Details</div><div class="field"><label>Project Name</label><input class="inp" id="pr_pname" value="' + PROPOSAL_FORM.projName + '" placeholder="Downtown Office Renovation"/></div><div class="field"><label>Project Address</label><input class="inp" id="pr_paddr" value="' + PROPOSAL_FORM.projAddr + '" placeholder="456 Bay St, Toronto ON M5H 2S8"/></div><div class="r2"><div class="field"><label>Start Date</label><input class="inp" type="date" id="pr_start" value="' + PROPOSAL_FORM.startDate + '"/></div><div class="field"><label>End Date</label><input class="inp" type="date" id="pr_end" value="' + PROPOSAL_FORM.endDate + '"/></div></div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn bout" id="prBack2">← Back</button><button class="btn bink" id="prNext2">Next: Scope & Pricing →</button></div></div>';
+  } else if (PROPOSAL_STEP === 3) {
+    var trOpts = '';
+    var tkeys = Object.keys(TRADES);
+    for (var i = 0; i < tkeys.length; i++) trOpts += '<option value="' + tkeys[i] + '"' + (PROPOSAL_FORM.trade===tkeys[i]?' selected':'') + '>' + TRADES[tkeys[i]].l + '</option>';
+    form = '<div class="card"><div class="ch">Step 3 — Scope & Pricing</div><div class="field"><label>Trade</label><select class="inp" id="pr_trade">' + trOpts + '</select></div><div class="field"><label>Scope of Work</label><textarea class="inp" id="pr_scope" style="min-height:120px" placeholder="Describe exactly what work is included...">' + PROPOSAL_FORM.projScope + '</textarea></div><div class="field"><label>Inclusions</label><textarea class="inp" id="pr_incl" style="min-height:80px">' + PROPOSAL_FORM.inclusions.replace(/\|/g,'\n') + '</textarea></div><div class="field"><label>Exclusions</label><textarea class="inp" id="pr_excl" style="min-height:80px">' + PROPOSAL_FORM.exclusions.replace(/\|/g,'\n') + '</textarea></div><div class="field"><label>Total Proposal Amount ($)</label><input class="inp" type="number" id="pr_amt" value="' + PROPOSAL_FORM.totalAmt + '" placeholder="85000"/></div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn bout" id="prBack3">← Back</button><button class="btn bink" id="prNext3">Next: Terms →</button></div></div>';
+  } else if (PROPOSAL_STEP === 4) {
+    form = '<div class="card"><div class="ch">Step 4 — Terms & Validity</div><div class="field"><label>Payment Terms</label><textarea class="inp" id="pr_terms">' + PROPOSAL_FORM.terms + '</textarea></div><div class="field"><label>Proposal Valid For (days)</label><input class="inp" type="number" id="pr_validity" value="' + PROPOSAL_FORM.validity + '"/></div><div style="padding:12px;background:var(--bbg);border-radius:9px;font-size:12px;color:var(--blue);margin-bottom:14px">This proposal will be generated as a professional document ready to email or print.</div><div style="display:flex;gap:8px;margin-top:8px"><button class="btn bout" id="prBack4">← Back</button><button class="btn bgold" id="prGenerate">Generate Proposal →</button></div></div>';
+  }
+  return ph('📑', 'Proposal Generator', 'Create a professional winning proposal in minutes') + stepNav + form;
+}
+
+function proposalPreview() {
+  var f = PROPOSAL_FORM;
+  var amt = parseFloat(f.totalAmt) || 0;
+  var hst = amt * 0.13;
+  var total = amt + hst;
+  var today = new Date().toLocaleDateString('en-CA');
+  var expiry = new Date();
+  expiry.setDate(expiry.getDate() + parseInt(f.validity||30));
+  var expiryStr = expiry.toLocaleDateString('en-CA');
+
+  return ph('📑', 'Proposal Generated', 'Professional proposal ready to send',
+    '<div style="display:flex;gap:8px"><button class="btn bink bsm" onclick="window.print()">Print / Save PDF</button><button class="btn bgreen bsm" onclick="toast(String.fromCharCode(83,101,110,116,33))">Email to Client</button><button class="btn bout bsm" id="prReset">New Proposal</button></div>') +
+    '<div class="card" style="max-width:800px;margin:0 auto">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:20px;border-bottom:2px solid var(--ink);margin-bottom:20px">' +
+    '<div><div style="font-family:var(--fh);font-size:22px;font-weight:800;color:var(--ink)">⬡ Construction Wizzard</div><div style="font-size:12px;color:var(--muted);margin-top:3px">constructionwizzard.com</div></div>' +
+    '<div style="text-align:right"><div style="font-family:var(--fh);font-size:20px;font-weight:800">PROPOSAL</div><div style="font-size:12px;color:var(--muted)">Date: ' + today + '</div><div style="font-size:12px;color:var(--muted)">Valid Until: ' + expiryStr + '</div></div></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)"><div><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--faint);margin-bottom:6px">Prepared For</div><div style="font-size:14px;font-weight:700">' + (f.clientName||'Client Name') + '</div><div style="font-size:12px;color:var(--muted)">' + (f.clientCo||'') + '</div><div style="font-size:12px;color:var(--muted)">' + (f.clientEmail||'') + '</div><div style="font-size:12px;color:var(--muted)">' + (f.clientAddr||'') + '</div></div>' +
+    '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--faint);margin-bottom:6px">Project</div><div style="font-size:14px;font-weight:700">' + (f.projName||'Project Name') + '</div><div style="font-size:12px;color:var(--muted)">' + (f.projAddr||'') + '</div>' + (f.startDate ? '<div style="font-size:12px;color:var(--muted)">Start: ' + f.startDate + ' — End: ' + (f.endDate||'TBD') + '</div>' : '') + '</div></div>' +
+    '<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)"><div style="font-weight:700;margin-bottom:10px">SCOPE OF WORK — ' + (TRADES[f.trade]?TRADES[f.trade].l.toUpperCase():'') + '</div><div style="font-size:13px;color:var(--text);line-height:1.7;background:var(--paper);padding:14px;border-radius:8px">' + (f.projScope||'As discussed.') + '</div></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)"><div><div style="font-weight:700;margin-bottom:8px;font-size:13px">INCLUSIONS</div>' + f.inclusions.split('|').map(function(l){return l?'<div style="display:flex;gap:6px;font-size:12px;padding:3px 0"><span style="color:var(--green);font-weight:700">✓</span>'+l+'</div>':'';}).join('') + '</div><div><div style="font-weight:700;margin-bottom:8px;font-size:13px">EXCLUSIONS</div>' + f.exclusions.split('|').map(function(l){return l?'<div style="display:flex;gap:6px;font-size:12px;padding:3px 0"><span style="color:var(--red);font-weight:700">✕</span>'+l+'</div>':'';}).join('') + '</div></div>' +
+    '<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)"><table style="width:100%;font-size:13px;border-collapse:collapse"><tr><td style="padding:8px 0;color:var(--muted);border-bottom:.5px solid var(--border)">Subtotal (excl. HST)</td><td style="text-align:right;font-weight:700;border-bottom:.5px solid var(--border)">' + money(amt) + '</td></tr><tr><td style="padding:8px 0;color:var(--muted);border-bottom:.5px solid var(--border)">HST (13%)</td><td style="text-align:right;font-weight:700;border-bottom:.5px solid var(--border)">' + money(hst) + '</td></tr><tr><td style="padding:10px 0;font-weight:800;font-size:15px">TOTAL</td><td style="text-align:right;font-weight:800;font-size:20px;font-family:var(--fh);color:var(--green)">' + money(total) + '</td></tr></table></div>' +
+    '<div style="margin-bottom:20px"><div style="font-weight:700;margin-bottom:8px;font-size:13px">PAYMENT TERMS</div><div style="font-size:12.5px;color:var(--muted);line-height:1.7">' + f.terms + '</div></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:32px;padding-top:20px;border-top:2px solid var(--ink)"><div><div style="font-size:11px;color:var(--faint);margin-bottom:4px">Client Acceptance Signature</div><div style="border-bottom:1px solid var(--border2);height:40px;margin-bottom:8px"></div><div style="font-size:12px;font-weight:600">' + (f.clientName||'') + '</div><div style="font-size:11px;color:var(--faint)">Signature / Date</div></div><div><div style="font-size:11px;color:var(--faint);margin-bottom:4px">Prepared By</div><div style="border-bottom:1px solid var(--border2);height:40px;margin-bottom:8px"></div><div style="font-size:12px;font-weight:600">Construction Wizzard</div><div style="font-size:11px;color:var(--faint)">Authorized Signatory / Date</div></div></div>' +
+    '<div style="text-align:center;margin-top:20px;font-size:10px;color:var(--faint)">Generated by Construction Wizzard — constructionwizzard.com</div></div>';
+}
+
+// ── PURCHASE ORDERS ────────────────────────────────────────────────────────────
+function poActionBtns(po) {
+  if (po.status === 'Pending') {
+    return '<div style="display:flex;gap:6px;margin-top:6px"><button class="btn bgreen bsm po-app" data-id="' + po.id + '">Approve</button><button class="btn bred bsm po-del" data-id="' + po.id + '">Cancel</button></div>';
+  }
+  if (po.status === 'Approved') {
+    return '<button class="btn bink bsm po-dlv" data-id="' + po.id + '" style="margin-top:6px">Mark Delivered</button>';
+  }
+  return '';
+}
+function purchaseOrdersPage() {
+  var total = 0; for (var i = 0; i < POS.length; i++) total += POS[i].total;
+  var pending = 0; for (var i = 0; i < POS.length; i++) if (POS[i].status==='Pending') pending++;
+  var delivered = 0; for (var i = 0; i < POS.length; i++) if (POS[i].status==='Delivered') delivered++;
+
+  var form = SHOW_PO_FORM ? '<div class="card"><div class="ch">New Purchase Order</div><div class="r2"><div class="field"><label>Supplier</label><input class="inp" id="po_sup" placeholder="Lafarge Canada"/></div><div class="field"><label>Project</label><input class="inp" id="po_proj" placeholder="Downtown Office Reno"/></div></div><div class="field"><label>Item / Material Description</label><input class="inp" id="po_item" placeholder="Ready-mix Concrete 30MPa"/></div><div class="r2"><div class="field"><label>Quantity</label><input class="inp" type="number" id="po_qty" placeholder="120"/></div><div class="field"><label>Unit</label><input class="inp" id="po_unit" placeholder="m3, sheets, tonnes..."/></div></div><div class="r2"><div class="field"><label>Unit Price ($)</label><input class="inp" type="number" step="0.01" id="po_price" placeholder="185.00"/></div><div class="field"><label>Date Needed</label><input class="inp" type="date" id="po_due"/></div></div><button class="btn bink" id="savePO">Create Purchase Order</button></div>' : '';
+
+  var rows = '';
+  for (var i = 0; i < POS.length; i++) {
+    var po = POS[i];
+    var statusColor = po.status==='Delivered'?'pg':po.status==='Ordered'?'pb':'pa';
+    rows += '<tr><td><strong>' + po.id + '</strong></td><td>' + po.supplier + '</td><td>' + po.item + '</td><td style="text-align:right">' + po.qty + ' ' + po.unit + '</td><td style="text-align:right">' + money(po.total) + '</td><td>' + po.proj + '</td><td>' + po.needed + '</td><td>' + pill(po.status) + '</td></tr>';
+  }
+
+  return ph('🛒', 'Purchase Orders', 'Track all material orders and deliveries', '<button class="btn bink bsm" id="showPOForm">' + (SHOW_PO_FORM?'Cancel':'+ New PO') + '</button>') +
+    '<div class="g4"><div class="sc"><div class="sv">' + POS.length + '</div><div class="sl">Total POs</div></div><div class="sc" style="background:var(--abg)"><div class="sv" style="color:var(--amber)">' + pending + '</div><div class="sl">Pending</div></div><div class="sc" style="background:var(--gbg)"><div class="sv" style="color:var(--green)">' + delivered + '</div><div class="sl">Delivered</div></div><div class="sc"><div class="sv">' + money(total) + '</div><div class="sl">Total Value</div></div></div>' +
+    form +
+    '<div class="card"><div class="ch">All Purchase Orders</div><table class="tbl"><thead><tr><th>PO #</th><th>Supplier</th><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Total</th><th>Project</th><th>Needed By</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+// ── DOCUMENT MANAGEMENT ───────────────────────────────────────────────────────
+function documentsPage() {
+  var types = ['All','Drawing','Contract','Invoice','Certificate','Safety','Change Order'];
+  var filtered = DOCUMENTS.filter(function(d) {
+    var typeMatch = DOC_FILTER==='All' || d.type===DOC_FILTER;
+    var searchMatch = !DOC_SEARCH || d.name.toLowerCase().indexOf(DOC_SEARCH.toLowerCase())>=0;
+    return typeMatch && searchMatch;
+  });
+
+  var typeCounts = {};
+  for (var i = 0; i < DOCUMENTS.length; i++) {
+    typeCounts[DOCUMENTS[i].type] = (typeCounts[DOCUMENTS[i].type]||0)+1;
+  }
+
+  var typeIcons = {Drawing:'🗺',Contract:'📄',Invoice:'🧾',Certificate:'✅',Safety:'🦺','Change Order':'🔄'};
+
+  var filterBtns = '';
+  for (var i = 0; i < types.length; i++) {
+    var f = types[i];
+    var docA=DOC_FILTER===f; filterBtns+='<button data-docf="'+f+'" class="doc-filter-btn" style="padding:6px 12px;border-radius:7px;border:1px solid '+(docA?'var(--ink)':'var(--border2)')+';background:'+(docA?'var(--ink)':'transparent')+';color:'+(docA?'#fff':'var(--muted)')+';font-size:11.5px;font-weight:600;cursor:pointer">'+(typeIcons[f]||'📁')+' '+f+'</button>';
+  }
+
+  var rows = '';
+  for (var i = 0; i < filtered.length; i++) {
+    var d = filtered[i];
+    rows += '<tr><td><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">' + (typeIcons[d.type]||'📄') + '</span><div><div style="font-size:13px;font-weight:600">' + d.name + '</div><div style="font-size:10.5px;color:var(--faint)">' + d.size + '</div></div></div></td><td>' + pill(d.type) + '</td><td style="font-size:12px;color:var(--muted)">' + d.proj + '</td><td style="font-size:12px;color:var(--muted)">' + d.uploaded + '</td><td style="font-size:12px;color:var(--muted)">' + d.by + '</td><td><div style="display:flex;gap:6px"><button class="btn bgreen bsm" onclick="toast(String.fromCharCode(68,111,119,110,108,111,97,100,105,110,103,46,46,46))">Download</button><button class="btn bout bsm" onclick="toast(String.fromCharCode(76,105,110,107,32,99,111,112,105,101,100,33))">Share</button></div></td></tr>';
+  }
+
+  return ph('📁', 'Document Management', 'All project files in one place', '<button class="btn bink bsm" onclick="toast(String.fromCharCode(85,112,108,111,97,100,33))">+ Upload File</button>') +
+    '<div class="g4"><div class="sc"><div class="sv">' + DOCUMENTS.length + '</div><div class="sl">Total Files</div></div><div class="sc"><div class="sv">' + (typeCounts['Drawing']||0) + '</div><div class="sl">Drawings</div></div><div class="sc"><div class="sv">' + (typeCounts['Contract']||0) + '</div><div class="sl">Contracts</div></div><div class="sc"><div class="sv">' + (typeCounts['Certificate']||0) + '</div><div class="sl">Certificates</div></div></div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center"><input class="inp" id="docSearch" placeholder="Search documents..." style="width:220px;padding:7px 11px;font-size:12px" value="' + DOC_SEARCH + '"/>' + filterBtns + '</div>' +
+    '<div class="card"><div class="ch">All Documents</div><table class="tbl"><thead><tr><th>Document</th><th>Type</th><th>Project</th><th>Uploaded</th><th>By</th><th>Actions</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
@@ -1560,6 +1885,26 @@ function bindAll() {
   el = gid('matSearch'); if (el) el.oninput = function() { MAT_SEARCH = this.value; render(); };
 
   // RFI
+  // PO action buttons
+  document.querySelectorAll('.po-app').forEach(function(btn) {
+    btn.onclick = function() { approvePO(this.dataset.id); };
+  });
+  document.querySelectorAll('.po-del').forEach(function(btn) {
+    btn.onclick = function() { deletePO(this.dataset.id); };
+  });
+  document.querySelectorAll('.po-dlv').forEach(function(btn) {
+    btn.onclick = function() { markPODelivered(this.dataset.id); };
+  });
+
+  // RFI filter buttons
+  document.querySelectorAll('.rfi-fb').forEach(function(btn) {
+    btn.onclick = function() { RFI_FILTER = this.dataset.f; render(); };
+  });
+  // PO filter buttons
+  document.querySelectorAll('.po-fb').forEach(function(btn) {
+    btn.onclick = function() { PO_FILTER = this.dataset.f; render(); };
+  });
+
   el = gid('showRFIForm'); if (el) el.onclick = function() { SHOW_RFI_FORM = !SHOW_RFI_FORM; render(); };
   el = gid('submitRFI'); if (el) el.onclick = function() {
     var sub = gid('rfiSub') ? gid('rfiSub').value : '';
@@ -1658,6 +2003,127 @@ function bindAll() {
     render();
   };
 
+  // CRM
+  el = gid('showCRMForm'); if(el) el.onclick = function(){ CRM_SHOW_FORM=!CRM_SHOW_FORM; render(); };
+  el = gid('saveCRM'); if(el) el.onclick = function(){
+    var n=gid('crmName')?gid('crmName').value:'';
+    var co=gid('crmCo')?gid('crmCo').value:'';
+    var em=gid('crmEmail')?gid('crmEmail').value:'';
+    var ph2=gid('crmPhone')?gid('crmPhone').value:'';
+    var ty=gid('crmType')?gid('crmType').value:'Client';
+    var st=gid('crmStatus')?gid('crmStatus').value:'Active';
+    var no=gid('crmNotes')?gid('crmNotes').value:'';
+    if(!n){ toast('Please enter a name','err'); return; }
+    CRM_CONTACTS.push({id:Date.now(),n:n,co:co,email:em,phone:ph2,type:ty,status:st,value:0,jobs:0,lastContact:new Date().toLocaleDateString('en-CA'),notes:no});
+    CRM_SHOW_FORM=false; render(); toast('Contact saved!');
+  };
+
+  // Proposal
+  el = gid('prNext1'); if(el) el.onclick = function(){
+    PROPOSAL_FORM.clientName=gid('pr_cname')?gid('pr_cname').value:'';
+    PROPOSAL_FORM.clientCo=gid('pr_cco')?gid('pr_cco').value:'';
+    PROPOSAL_FORM.clientEmail=gid('pr_cemail')?gid('pr_cemail').value:'';
+    PROPOSAL_FORM.clientAddr=gid('pr_caddr')?gid('pr_caddr').value:'';
+    if(!PROPOSAL_FORM.clientName){ toast('Please enter client name','err'); return; }
+    PROPOSAL_STEP=2; render();
+  };
+  el = gid('prNext2'); if(el) el.onclick = function(){
+    PROPOSAL_FORM.projName=gid('pr_pname')?gid('pr_pname').value:'';
+    PROPOSAL_FORM.projAddr=gid('pr_paddr')?gid('pr_paddr').value:'';
+    PROPOSAL_FORM.startDate=gid('pr_start')?gid('pr_start').value:'';
+    PROPOSAL_FORM.endDate=gid('pr_end')?gid('pr_end').value:'';
+    PROPOSAL_STEP=3; render();
+  };
+  el = gid('prBack2'); if(el) el.onclick = function(){ PROPOSAL_STEP=1; render(); };
+  el = gid('prNext3'); if(el) el.onclick = function(){
+    PROPOSAL_FORM.trade=gid('pr_trade')?gid('pr_trade').value:'drywall';
+    PROPOSAL_FORM.projScope=gid('pr_scope')?gid('pr_scope').value:'';
+    PROPOSAL_FORM.inclusions=gid('pr_incl')?(gid('pr_incl').value.replace(/\n/g,'|')):'';
+    PROPOSAL_FORM.exclusions=gid('pr_excl')?(gid('pr_excl').value.replace(/\n/g,'|')):'';
+    PROPOSAL_FORM.totalAmt=gid('pr_amt')?gid('pr_amt').value:'';
+    if(!PROPOSAL_FORM.totalAmt){ toast('Please enter proposal amount','err'); return; }
+    PROPOSAL_STEP=4; render();
+  };
+  el = gid('prBack3'); if(el) el.onclick = function(){ PROPOSAL_STEP=2; render(); };
+  el = gid('prBack4'); if(el) el.onclick = function(){ PROPOSAL_STEP=3; render(); };
+  el = gid('prGenerate'); if(el) el.onclick = function(){
+    PROPOSAL_FORM.terms=gid('pr_terms')?gid('pr_terms').value:'';
+    PROPOSAL_FORM.validity=gid('pr_validity')?gid('pr_validity').value:'30';
+    PROPOSAL_GENERATED=true; render(); toast('Proposal generated!');
+  };
+  el = gid('prReset'); if(el) el.onclick = function(){
+    PROPOSAL_GENERATED=false; PROPOSAL_STEP=1;
+    PROPOSAL_FORM.clientName=''; PROPOSAL_FORM.projName=''; PROPOSAL_FORM.totalAmt=''; PROPOSAL_FORM.projScope='';
+    render();
+  };
+
+  // Purchase Orders
+  el = gid('showPOForm'); if(el) el.onclick = function(){ SHOW_PO_FORM=!SHOW_PO_FORM; render(); };
+  el = gid('savePO'); if(el) el.onclick = function(){
+    var sup=gid('po_sup')?gid('po_sup').value:'';
+    var proj=gid('po_proj')?gid('po_proj').value:'';
+    var item=gid('po_item')?gid('po_item').value:'';
+    var qty=parseFloat(gid('po_qty')?gid('po_qty').value:0)||0;
+    var unit=gid('po_unit')?gid('po_unit').value:'units';
+    var price=parseFloat(gid('po_price')?gid('po_price').value:0)||0;
+    var due=gid('po_due')?gid('po_due').value:'TBD';
+    if(!sup||!item){ toast('Fill in supplier and item','err'); return; }
+    var id='PO-00'+(POS.length+1);
+    POS.unshift({id:id,supplier:sup,item:item,qty:qty,unit:unit,unitPrice:price,total:qty*price,status:'Pending',ordered:new Date().toLocaleDateString('en-CA'),needed:due,proj:proj||'General'});
+    SHOW_PO_FORM=false; render(); toast('Purchase Order created!');
+  };
+
+  // CRM filter buttons (event delegation)
+  document.querySelectorAll('.crm-filter-btn').forEach(function(btn){
+    btn.onclick = function(){ CRM_FILTER = this.dataset.crmf; render(); };
+  });
+
+  // Doc filter buttons (event delegation)
+  document.querySelectorAll('.doc-filter-btn').forEach(function(btn){
+    btn.onclick = function(){ DOC_FILTER = this.dataset.docf; render(); };
+  });
+
+  // Documents
+  el = gid('docSearch'); if(el) el.oninput = function(){ DOC_SEARCH=this.value; render(); };
+
+  // Purchase Orders
+  el = gid('showPOForm'); if (el) el.onclick = function() { SHOW_PO_FORM = !SHOW_PO_FORM; render(); };
+  el = gid('addPOItem'); if (el) el.onclick = function() {
+    // Save current item values first
+    for (var i = 0; i < NEW_PO.items.length; i++) {
+      var d=gid('pid_'+i), q=gid('piq_'+i), u=gid('piu_'+i), c2=gid('pic_'+i);
+      if(d) NEW_PO.items[i].desc=d.value;
+      if(q) NEW_PO.items[i].qty=parseFloat(q.value)||1;
+      if(u) NEW_PO.items[i].unit=u.value;
+      if(c2) NEW_PO.items[i].cost=parseFloat(c2.value)||0;
+    }
+    NEW_PO.items.push({desc:'',qty:1,unit:'piece',cost:0});
+    render();
+  };
+  el = gid('cancelPO'); if (el) el.onclick = function() { SHOW_PO_FORM=false; render(); };
+  el = gid('submitPO'); if (el) el.onclick = function() {
+    var sup = gid('poSupplier')?gid('poSupplier').value:'';
+    var proj = gid('poProject')?gid('poProject').value:'';
+    var due = gid('poDue')?gid('poDue').value:'TBD';
+    var notes = gid('poNotes')?gid('poNotes').value:'';
+    if (!sup) { toast('Enter supplier name','err'); return; }
+    // Collect items
+    var items = [];
+    var total = 0;
+    for (var i = 0; i < NEW_PO.items.length; i++) {
+      var d=gid('pid_'+i), q=gid('piq_'+i), u=gid('piu_'+i), c2=gid('pic_'+i);
+      var desc=d?d.value:'', qty=parseFloat(q?q.value:1)||1, unit=u?u.value:'piece', cost=parseFloat(c2?c2.value:0)||0;
+      if (desc) { items.push({desc:desc,qty:qty,unit:unit,cost:cost}); total+=qty*cost; }
+    }
+    if (items.length===0) { toast('Add at least one item','err'); return; }
+    var newPO = {id:'PO-00'+(POS.length+42),supplier:sup,items:items,total:total,status:'Pending',date:new Date().toLocaleDateString('en-CA'),due:due,project:proj,notes:notes};
+    POS.unshift(newPO);
+    NEW_PO = {supplier:'',project:'',due:'',notes:'',items:[{desc:'',qty:1,unit:'piece',cost:0}]};
+    SHOW_PO_FORM=false;
+    render();
+    toast('Purchase Order created!');
+  };
+
   // Settings
   el = gid('saveSettings'); if (el) el.onclick = function() {
     var n = gid('settName') ? gid('settName').value : '';
@@ -1736,6 +2202,7 @@ try {
 
   <div class="mob-sec">Estimating</div>
   <button class="mob-item" onclick="go('invoice');closeMob()"><span class="mi2">🧾</span>Invoice & Quote</button>
+  <button class="mob-item" onclick="go('purchaseorders');closeMob()"><span class="mi2">🛒</span>Purchase Orders</button>
   <button class="mob-item" onclick="go('projects');closeMob()"><span class="mi2">💾</span>Saved Projects</button>
 
   <div class="mob-sec">Field Management</div>
@@ -1767,6 +2234,10 @@ try {
 
   <div class="mob-sec">Clients & Account</div>
   <button class="mob-item" onclick="go('clientportal');closeMob()"><span class="mi2">👥</span>Client Portal <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="goCRM();closeMob()"><span class="mi2">🤝</span>CRM — Customers <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="goProposal();closeMob()"><span class="mi2">📑</span>Proposal Generator <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="go('purchaseorders');closeMob()"><span class="mi2">🛒</span>Purchase Orders <span class="mob-pro">PRO</span></button>
+  <button class="mob-item" onclick="go('documents');closeMob()"><span class="mi2">📁</span>Document Management <span class="mob-pro">PRO</span></button>
   <button class="mob-item" onclick="go('settings');closeMob()"><span class="mi2">⚙️</span>Settings & Plan</button>
   <button class="mob-item" onclick="window.open('/pricing-plans.html','_blank');closeMob()"><span class="mi2">💳</span>View Pricing Plans</button>
   <div style="height:16px"></div>
@@ -1796,13 +2267,4 @@ s0.parentNode.insertBefore(s1,s0);
 })();
 </script>
 
-<!-- Service Worker -->
-<script>
-if('serviceWorker' in navigator){
-  window.addEventListener('load',function(){
-    navigator.serviceWorker.register('/sw.js').catch(function(){});
-  });
-}
-</script>
-</body>
-</html>
+      (function(){ return poActionBtns(po); })() +
